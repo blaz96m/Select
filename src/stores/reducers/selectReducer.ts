@@ -117,7 +117,7 @@ export const selectReducer = (
     case SelectReducerActionTypes.SET_OPTIONS:
       return { ...state, selectOptions: action.paylod };
     case SelectReducerActionTypes.GO_TO_NEXT_PAGE:
-      return { ...state, page: ++state.page };
+      return { ...state, page: state.page + 1 };
 
     case SelectReducerActionTypes.ADD_OPTION_LISTS:
       return {

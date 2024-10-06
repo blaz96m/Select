@@ -17,6 +17,7 @@ import {
   isEmpty,
   isFunction,
   isNil,
+  slice,
 } from "lodash";
 
 import { DEFAULT_SELECT_PLACEHOLDER } from "src/utils/select/constants";
@@ -50,7 +51,7 @@ import {
   SelectOptionT,
   SelectSorterFunction,
 } from "./types";
-import { useSelect } from "src/hooks/select";
+import { useSelect, useSelectRef } from "src/hooks/select";
 import "./styles/_select.scss";
 import useSelectComputation from "src/hooks/select/useSelectComputation";
 import { stat } from "fs";
@@ -73,6 +74,7 @@ export type SelectProps = {
   sorterFn?: SelectSorterFunction;
   categoryKey?: keyof SelectOptionT;
   categorizeFunction?: (options: SelectOptionList) => CategorizedSelectOptions;
+  recordsPerPage?: number;
 };
 
 const Select = ({
@@ -91,6 +93,7 @@ const Select = ({
   hasInput = true,
   fetchOnScrool,
   lazyInit,
+  recordsPerPage = 15,
   closeDropdownOnSelect,
 }: SelectProps) => {
   const [state, dispatch] = useReducer(
@@ -98,20 +101,35 @@ const Select = ({
     selectOptions,
     initializeState
   );
-  const selectApi = useSelect(dispatch, { setValue: onChange }, state, {
-    isMultiValue,
-    labelKey,
-  });
+  const originalOptions = useRef<SelectOptionList>(state.selectOptions);
+
+  const selectApi = useSelect(
+    dispatch,
+    { setValue: onChange },
+    { ...state },
+    {
+      isMultiValue,
+      labelKey,
+    },
+    originalOptions.current
+  );
+
+  const refs = useSelectRef();
 
   const displayedOptions = useSelectComputation(
     { ...state, value },
-    { isCategorized, labelKey, categoryKey, categorizeFunction },
-    sorterFn
+    {
+      isCategorized,
+      labelKey,
+      categoryKey,
+      categorizeFunction,
+      sorterFn,
+      fetchFunc,
+      recordsPerPage,
+    }
   );
 
   const { clearAllValues, setOptions } = selectApi;
-
-  const originalOptions = useRef<SelectOptionList>(state.selectOptions);
 
   //INPUT
   /*TODO CHECK IF THE FILTERING WORKS AFTER FETCHING NEXT PAGE*/
@@ -173,7 +191,12 @@ const Select = ({
       </Select.Top>
       {state.isOpen && (
         <Select.OptionList
+          loadNextPage={selectApi.loadNextPage}
+          ref={refs.selectListContainerRef}
           displayedOptions={displayedOptions}
+          page={state.page}
+          recordsPerPage={recordsPerPage}
+          totalRecords={originalOptions.current?.length}
           renderOption={renderOptionElement}
         />
       )}

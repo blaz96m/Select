@@ -15,8 +15,9 @@ import {
   CategorizedSelectOptions,
   SelectOptionT,
   SelectState,
+  SelectFetchFunction,
 } from "src/components/Select/types";
-import { filter, isEmpty } from "lodash";
+import { filter, isEmpty, isFunction, slice } from "lodash";
 import {
   filterOptionListBySearchValue,
   filterSelectedValues,
@@ -33,6 +34,7 @@ export type SelectApi = {
   handleValueChange: (option: SelectOptionT, isMultiValue: boolean) => void;
   clearValue: (optionId: string) => void;
   clearAllValues: () => void;
+  loadNextPage: () => void;
 };
 
 type StateSetter<T> = Dispatch<SetStateAction<T>>;
@@ -46,10 +48,13 @@ const useSelect = (
   dispatch: SelectReducerDispatch,
   customStateUpdaters: CustomSelectStateSetters,
   selectState: SelectState,
-  selectProps: { isMultiValue: boolean; labelKey: keyof SelectOptionT }
+  selectProps: {
+    isMultiValue: boolean;
+    labelKey: keyof SelectOptionT;
+  },
+  originalOptions: SelectOptionList
 ) => {
   const { setValue } = customStateUpdaters;
-  const { labelKey } = selectProps;
   const onHandleValueChange = useCallback(
     (option: SelectOptionT, isMultiValue: boolean) => {
       setValue((prevState) =>
@@ -92,6 +97,8 @@ const useSelect = (
         type: SelectReducerActionTypes.ADD_OPTION_LISTS,
         payload: options,
       }),
+    loadNextPage: () =>
+      dispatch({ type: SelectReducerActionTypes.GO_TO_NEXT_PAGE }),
   });
 
   const selectApi = useMemo(() => buildSelectApi(dispatch), []);

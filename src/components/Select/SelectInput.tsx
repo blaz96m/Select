@@ -27,7 +27,7 @@ const SelectInput = memo(
     clearValues,
     filterSearchedOptions,
   }: SelectInputProps) => {
-    const { openDropdown, setInputValue, setOptions } = selectApi;
+    const { openDropdown, setInputValue } = selectApi;
 
     const shouldPreventInputChange = useCallback(
       (updatedValue: string) => !trim(updatedValue) && !inputValue,

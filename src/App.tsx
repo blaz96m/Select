@@ -6,7 +6,7 @@ import "src/style.scss";
 function App() {
   const options = Array.from({ length: 50 }, (val, index) => ({
     id: `${index}`,
-    name: `Select Value - ${index}`,
+    name: `Select Value - ${index + 1}`,
   }));
   const [value, setValue] = useState<SelectOptionT[]>([]);
 
@@ -15,7 +15,7 @@ function App() {
       <Select
         isMultiValue={false}
         value={value}
-        valueKey="name"
+        labelKey="name"
         selectOptions={options}
         onChange={setValue}
       />
