@@ -48,15 +48,16 @@ const useInput = (
 
   useEffect(() => {
     let timeoutId: number | undefined;
+    const inputState = !isNil(customInputState) ? customInputState : input;
     if (!isFunction(inputEffectTriggerFunction)) {
       return;
     }
     if (isAsyncFunction(inputEffectTriggerFunction)) {
       (async () => {
-        timeoutId = await inputEffectTriggerFunction();
+        timeoutId = await inputEffectTriggerFunction(inputState);
       })();
     } else {
-      timeoutId = inputEffectTriggerFunction();
+      timeoutId = inputEffectTriggerFunction(inputState);
     }
     if (isNumber(timeoutId)) {
       return () => clearTimeout(timeoutId);

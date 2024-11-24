@@ -1,19 +1,26 @@
-import { Dispatch, SetStateAction, memo } from "react";
+import { Dispatch, SetStateAction, forwardRef, memo } from "react";
 import clsx from "clsx";
 
 import {
   SelectOptionList,
   SelectOptionT,
 } from "src/components/Select/types/selectTypes";
-import { SelectApi } from "src/hooks/select/useSelect";
-import { isNil } from "lodash";
+import { SelectApi, SelectStateSetters } from "src/hooks/select/useSelect";
+import { isEmpty, isNil } from "lodash";
 
 type SelectOptionProps = {
   labelKey: keyof SelectOptionT;
   option: SelectOptionT;
   isMultiValue: boolean;
-  selectApi: SelectApi;
+  handleFocusOnClick: (optionId: string, optionCategory: string) => void;
+  getSelectStateSetters: () => SelectStateSetters;
+  isFocused: boolean;
+  focusInput: () => void;
+  getSelectOptionsMap: () => Map<string, HTMLDivElement>;
+  isCategorized: boolean;
   closeDropdownOnOptionSelect?: boolean;
+  categoryKey?: string;
+  isSelected: boolean;
 };
 
 const SelectOption = memo(
@@ -21,30 +28,55 @@ const SelectOption = memo(
     labelKey,
     option,
     isMultiValue,
-    selectApi,
+    isFocused,
     closeDropdownOnOptionSelect,
+    getSelectStateSetters,
+    handleFocusOnClick,
+    getSelectOptionsMap,
+    categoryKey,
+    focusInput,
+    isCategorized,
+    isSelected,
   }: SelectOptionProps) => {
-    const { closeDropdown, clearInput, handleValueChange } = selectApi;
+    const shouldDropdownStayOpenAfterClick =
+      !isNil(closeDropdownOnOptionSelect) && !closeDropdownOnOptionSelect;
 
-    const onOptionClick = (option: SelectOptionT) => {
-      handleValueChange(option, isMultiValue);
-      !isMultiValue && clearInput();
-      //DEFAULT behaviour if the closeDropdownOnOptionSelect prop is not specified
-      if (isNil(closeDropdownOnOptionSelect)) {
-        return isMultiValue ? null : closeDropdown();
-      }
-      closeDropdownOnOptionSelect && closeDropdown();
+    const handleOptionClick = (option: SelectOptionT) => {
+      const hasCategories = categoryKey && isCategorized;
+      const optionCategory = hasCategories ? option[categoryKey] : "";
+      const selectStateSetters = getSelectStateSetters();
+      handleFocusOnClick(option.id, optionCategory);
+      selectStateSetters.addValue(option);
+      !isMultiValue && selectStateSetters.clearInput();
+      shouldDropdownStayOpenAfterClick && focusInput();
+    };
+
+    const handleMouseHover = (
+      e: React.MouseEvent<HTMLDivElement, MouseEvent>
+    ) => {
+      const selectStateSetters = getSelectStateSetters();
+      selectStateSetters.setFocusDetails(e.currentTarget.id);
     };
 
     return (
       <div
+        onMouseMove={handleMouseHover}
         key={option.id}
-        //ref={ref}
+        ref={(node) => {
+          const selectOptionsMap = getSelectOptionsMap();
+          if (node) {
+            selectOptionsMap.set(option.id, node);
+          } else {
+            selectOptionsMap.delete(option.id);
+          }
+        }}
+        id={option.id}
         className={clsx({
           select__option: true,
-          //"dropdown__option--focused": isFocused,
+          "select__option--selected": isSelected,
+          "select__option--focused": isFocused,
         })}
-        //onClick={() => onOptionClick(option)}
+        onClick={() => handleOptionClick(option)}
       >
         {option[labelKey]}
       </div>

@@ -7,7 +7,7 @@ import {
   SelectOptionList,
   SelectOptionT,
   SelectSorterFunction,
-  SelectFetchFunction,
+  SelectFetchFunc,
 } from "src/components/Select/types";
 import {
   categorizeOptions,
@@ -17,9 +17,10 @@ import {
 type SelectComputationProps = {
   labelKey: keyof SelectOptionT;
   isCategorized: boolean;
+  removeSelectedOptionsFromList: boolean;
   categorizeFunction?: (options: SelectOptionList) => CategorizedSelectOptions;
   sorterFn?: SelectSorterFunction;
-  fetchFunc?: SelectFetchFunction;
+  fetchFunc?: SelectFetchFunc;
   categoryKey?: keyof SelectOptionT;
   recordsPerPage?: number;
 };
@@ -35,13 +36,14 @@ const useSelectComputation = (
     sorterFn,
     fetchFunc,
     recordsPerPage,
+    removeSelectedOptionsFromList,
   } = selectProps;
 
   const hasCategories =
     isCategorized && (!isEmpty(categoryKey) || isFunction(categorizeFunction));
 
-  const partitionedOptions = useMemo((): SelectOptionList => {
-    const options = [...state.selectOptions];
+  const partitionedOptions = useMemo((): SelectOptionList | null => {
+    const options = state.selectOptions;
     if (
       !isFunction(fetchFunc) &&
       recordsPerPage &&
@@ -49,11 +51,11 @@ const useSelectComputation = (
     ) {
       return slice(options, 0, state.page * recordsPerPage);
     }
-    return options;
+    return null;
   }, [state.selectOptions, state.page]);
 
   const categorizedOptions = useMemo((): CategorizedSelectOptions => {
-    const options = [...partitionedOptions];
+    const options = partitionedOptions || state.selectOptions;
     return hasCategories
       ? isFunction(categorizeFunction)
         ? categorizeFunction(options)
@@ -66,26 +68,29 @@ const useSelectComputation = (
     | CategorizedSelectOptions => {
     const options = isCategorized
       ? { ...(categorizedOptions as CategorizedSelectOptions) }
-      : [...partitionedOptions];
+      : partitionedOptions || state.selectOptions;
     const categoryKeyVal = isCategorized
       ? (categoryKey as keyof SelectOptionT)
       : "";
-    return filterDataBySelectedValues(options, state.value, categoryKeyVal);
-  }, [categorizedOptions]);
+    return removeSelectedOptionsFromList
+      ? filterDataBySelectedValues(options, state.value, categoryKeyVal)
+      : options;
+  }, [categorizedOptions, state.value]);
 
   const sortedOptions = useMemo(():
     | SelectOptionList
-    | CategorizedSelectOptions => {
+    | CategorizedSelectOptions
+    | null => {
     const options = isCategorized
       ? { ...(filteredOptions as CategorizedSelectOptions) }
-      : [...(filteredOptions as SelectOptionList)];
+      : (filteredOptions as SelectOptionList);
     if (isFunction(sorterFn)) {
       return sorterFn(options);
     }
-    return options;
+    return null;
   }, [filteredOptions, sorterFn]);
 
-  return sortedOptions;
+  return sortedOptions || filteredOptions;
 };
 
 export default useSelectComputation;

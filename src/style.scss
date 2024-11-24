@@ -4,6 +4,15 @@
   padding: 0;
 }
 
+.opter {
+  padding: 20px;
+  margin-bottom: 50px;
+
+  &-huver {
+    background-color: red;
+  }
+}
+
 body {
   padding: 4rem;
   width: 100%;

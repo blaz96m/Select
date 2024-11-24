@@ -4,10 +4,6 @@ import {
   SelectOptionList,
   SelectOptionT,
 } from "src/components/Select/types/selectTypes";
-import {
-  concatObjects,
-  getObjectKeys,
-} from "src/utils/data-types/objects/helpers";
 
 export enum SelectReducerActionTypes {
   OPEN = "OPEN",
@@ -20,10 +16,7 @@ export enum SelectReducerActionTypes {
   SET_OPTIONS = "SET_OPTIONS",
   ADD_OPTION_LISTS = "ADD_OPTION_LISTS",
   ADD_OPTION_CATEGORIES = "ADD_OPTION_CATEGORIES",
-  SET_FOCUSED_OPTION_LIST = "SET_FOCUSED_OPTION_LIST",
-  SET_FOCUSED_OPTION_CATEGORY = "SET_FOCUSED_OPTION_CATEGORY",
-  FOCUS_FIRST_OPTION_LIST = "FOCUS_FIRST_OPTION_LIST",
-  FOCUS_LAST_OPTION_LIST = "FOCUS_LAST_OPTION_LIST",
+  SET_FOCUSED_OPTION = "SET_FOCUSED:OPTION",
   GO_TO_NEXT_PAGE = "GO_TO_NEXT_PAGE",
 }
 
@@ -59,16 +52,11 @@ export type AddSelectOptionsListAction = {
   payload: SelectOptionList;
 };
 
-export type SetFocusedListOptionActions = {
-  type: SelectReducerActionTypes.SET_FOCUSED_OPTION_LIST;
-  payload: string;
-};
-
-export type SetFocusedCategoryOptionActions = {
-  type: SelectReducerActionTypes.SET_FOCUSED_OPTION_CATEGORY;
+export type SetFocusedOptionActions = {
+  type: SelectReducerActionTypes.SET_FOCUSED_OPTION;
   payload: {
-    focusedCategory: string;
     focusedOptionId: string;
+    focusedCategory?: keyof SelectOptionT;
   };
 };
 
@@ -82,8 +70,7 @@ type SelectActions =
   | SelectValueActions
   | SelectOptionSetterAction
   | SelectPageActions
-  | SetFocusedListOptionActions
-  | SetFocusedCategoryOptionActions
+  | SetFocusedOptionActions
   | AddSelectOptionsListAction
   | SelectPageAction;
 
@@ -105,13 +92,6 @@ export const selectReducer = (
       return { ...state, inputValue: action.payload };
     case SelectReducerActionTypes.CLEAR_INPUT:
       return { ...state, inputValue: "" };
-    case SelectReducerActionTypes.SET_VALUE:
-      const isMultiValue = action.payload.isMultiValue;
-      const option = action.payload.option;
-      return {
-        ...state,
-        value: isMultiValue ? [...state.value, option] : [option],
-      };
     case SelectReducerActionTypes.CLEAR_VALUE:
       return { ...state, value: [] };
     case SelectReducerActionTypes.SET_OPTIONS:
@@ -128,16 +108,13 @@ export const selectReducer = (
         ],
       };
 
-    case SelectReducerActionTypes.SET_FOCUSED_OPTION_LIST: {
-      return { ...state, focusedOptionId: action.payload };
-    }
-
-    case SelectReducerActionTypes.SET_FOCUSED_OPTION_CATEGORY:
+    case SelectReducerActionTypes.SET_FOCUSED_OPTION: {
       return {
         ...state,
-        focusedCategory: action.payload.focusedCategory,
         focusedOptionId: action.payload.focusedOptionId,
+        focusedCategory: action.payload.focusedCategory,
       };
+    }
 
     default:
       return state;

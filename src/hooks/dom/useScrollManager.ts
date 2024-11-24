@@ -10,23 +10,24 @@ import {
 import useThrottle from "../general/useThrottle";
 
 type ScrollActions = {
-  onArrive?: (...args: any) => void;
-  onLeave?: (...args: any) => void;
+  onArrive?: ((...args: any) => void) | null;
+  onLeave?: ((...args: any) => void) | null;
 };
 
 const useScrollManager = <T extends HTMLElement>(
   targetRef: RefObject<T>,
-  bottomActions: ScrollActions = { onArrive: noop, onLeave: noop },
-  topActions: ScrollActions = { onArrive: noop, onLeave: noop },
+  bottomActions: ScrollActions = { onArrive: null, onLeave: null },
+  topActions: ScrollActions = { onArrive: null, onLeave: null },
   captureEnabled = true
 ) => {
-  const applyAction = (e: WheelEvent, action?: () => void) => {
-    isFunction(action) && action();
-    e.preventDefault();
+  const applyAction = (e: WheelEvent, action?: (() => void) | null) => {
+    if (isFunction(action)) {
+      action();
+      e.preventDefault();
+    }
   };
   const handleScroll = useCallback(
     (scrollEvent: WheelEvent) => {
-      console.log(targetRef.current);
       if (!targetRef.current) return;
       const isScrolledToBottom = isScrolledToEnd(targetRef);
       const isScrolledToTop = isScrolledToTheStart(targetRef);

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 import clsx from "clsx";
 
 export type SelectContainerProps = {
@@ -7,13 +7,13 @@ export type SelectContainerProps = {
 };
 // DROPDOWN TOP REF - DROPDOWN TOP CONTAINER
 
-const SelectContainer = ({ children }: SelectContainerProps) => {
+const SelectContainer = memo(({ children }: SelectContainerProps) => {
   return (
     <div className="select__container">
       {/* Container Ref Here */}
       {children}
     </div>
   );
-};
+});
 
 export default SelectContainer;

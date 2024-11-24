@@ -45,6 +45,10 @@
     width: auto;
     border: 0;
     outline: none;
+
+    &.hidden {
+      opacity: 0;
+    }
     &__wrapper {
       width: 10px;
       display: inline;
@@ -77,9 +81,16 @@
     flex-wrap: wrap;
     width: 100%;
     gap: 7px;
+    &__container {
+      width: 100%;
+      display: flex;
+    }
   }
+
   &__value {
     width: 100%;
+    display: flex;
+    gap: 5px;
     &--multi {
       background-color: #e6e6e6;
       max-height: 50px;
@@ -123,10 +134,17 @@
     }
 
     &__list {
+      height: 100%;
+      width: 100%;
       display: flex;
       flex-wrap: wrap;
       align-items: center;
       gap: 5px;
+
+      &.empty {
+        justify-content: center;
+        align-items: center;
+      }
     }
   }
   &__input {
@@ -138,15 +156,16 @@
       border: 1px solid $dropdown-color;
       border-radius: 7px;
       margin-top: 5px;
+      min-height: 150px;
       max-height: 300px;
       overflow-y: auto;
       width: 100%;
-    }
 
-    &--empty {
-      justify-content: center;
-      align-items: center;
-      display: flex;
+      &.empty {
+        justify-content: center;
+        align-items: center;
+        display: flex;
+      }
     }
   }
 
@@ -154,8 +173,12 @@
     padding: 0.5rem 1rem;
     cursor: pointer;
     transition: 0.2s;
-    &:hover,
     &--focused {
+      background-color: $blue-light;
+
+      color: white;
+    }
+    &--selected {
       background-color: $blue;
       color: white;
     }

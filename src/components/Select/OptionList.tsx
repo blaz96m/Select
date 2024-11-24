@@ -12,50 +12,47 @@ import {
   CategorizedSelectOptions,
   SelectOptionList,
   SelectOptionT,
+  selectRendererOverload,
 } from "./types";
 import { useScrollManager } from "src/hooks/dom";
 
 export type OptionListProps = {
-  loadNextPage: () => void;
   displayedOptions: SelectOptionList | CategorizedSelectOptions;
-  renderOption: (option: SelectOptionT) => React.JSX.Element;
-  page: number;
-  recordsPerPage?: number;
-  totalRecords?: number;
+  renderFn: selectRendererOverload;
+  handlePageChange: () => void;
+  isCategorized: boolean;
+  categoryKey: string;
 };
 
 const OptionList = memo(
   forwardRef<HTMLDivElement, OptionListProps>(
     (
       {
-        renderOption,
+        renderFn,
         displayedOptions,
-        loadNextPage,
-        page,
-        recordsPerPage,
-        totalRecords,
+        handlePageChange,
+        isCategorized,
+        categoryKey,
       },
       ref
     ) => {
-      const handlePageChange = () => {
-        if (totalRecords && recordsPerPage) {
-          if (page * recordsPerPage < totalRecords) {
-            loadNextPage();
-          }
-          return;
-        }
-        loadNextPage();
-      };
+      const hasCategories = categoryKey && isCategorized;
       const bottomScrollActions = { onArrive: handlePageChange };
       const innerRef = useRef<HTMLDivElement>(null);
-      useImperativeHandle(ref, () => innerRef.current!, []);
-      useScrollManager<HTMLDivElement>(innerRef, bottomScrollActions);
+      // TODO - Check if imperative handles are required across the proj.
+      useImperativeHandle(ref, () => innerRef.current!);
+      useScrollManager<HTMLDivElement>(innerRef, bottomScrollActions, {}, true);
       return (
         <div className="select__options__wrapper" ref={innerRef}>
           <ul className="select__options__list">
             {map(displayedOptions, (value, key) => {
-              const option = value as SelectOptionT;
-              return renderOption(option);
+              if (hasCategories) {
+                return renderFn({
+                  categoryName: key,
+                  categoryOptions: value as SelectOptionList,
+                });
+              }
+              return renderFn(value as SelectOptionT);
             })}
           </ul>
         </div>

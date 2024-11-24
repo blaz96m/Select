@@ -18,6 +18,9 @@ import {
   isFunction,
   isNil,
   slice,
+  find,
+  includes,
+  some,
 } from "lodash";
 
 import { DEFAULT_SELECT_PLACEHOLDER } from "src/utils/select/constants";
@@ -33,28 +36,25 @@ import {
   OptionList,
   SelectOption,
 } from "src/components/Select";
+import { selectReducer } from "src/stores/reducers/selectReducer";
 import {
-  SelectReducerActionTypes,
-  selectReducer,
-  SelectReducerDispatch,
-} from "src/stores/reducers/selectReducer";
-import {
-  categorizeOptions,
   filterOptionListBySearchValue,
   initializeState,
 } from "src/utils/select";
 
 import {
   CategorizedSelectOptions,
-  SelectFetchFunction,
+  SelectFetchFunc,
   SelectOptionList,
   SelectOptionT,
   SelectSorterFunction,
+  selectRendererOverload,
 } from "./types";
 import { useSelect, useSelectRef } from "src/hooks/select";
 import "./styles/_select.scss";
 import useSelectComputation from "src/hooks/select/useSelectComputation";
-import { stat } from "fs";
+import SelectCategory from "../SelectCategory";
+import useSelectAsync from "src/hooks/select/useSelectAsync";
 
 export type SelectProps = {
   value: SelectOptionT[] | [];
@@ -63,16 +63,19 @@ export type SelectProps = {
   selectOptions?: SelectOptionT[] | [];
   onChange: Dispatch<SetStateAction<SelectOptionT[]>>;
   hasInput?: boolean;
-  fetchOnScrool?: boolean;
+  fetchOnScroll?: boolean;
   lazyInit?: boolean;
   isMultiValue: boolean;
   closeDropdownOnOptionSelect?: boolean;
   placeHolder?: string;
   onInputChange?: (inputValue?: string) => {};
   closeDropdownOnSelect?: boolean;
-  fetchFunc?: SelectFetchFunction;
+  fetchFunc?: SelectFetchFunc;
   sorterFn?: SelectSorterFunction;
-  categoryKey?: keyof SelectOptionT;
+  fetchOnInputChange: boolean;
+  removeSelectedOptionsFromList: boolean;
+  disableInputFetchTrigger: boolean;
+  categoryKey: keyof SelectOptionT & string;
   categorizeFunction?: (options: SelectOptionList) => CategorizedSelectOptions;
   recordsPerPage?: number;
 };
@@ -84,37 +87,30 @@ const Select = ({
   onInputChange,
   placeHolder = DEFAULT_SELECT_PLACEHOLDER,
   selectOptions = [],
-  categoryKey,
   categorizeFunction,
   labelKey = "name",
   isCategorized = false,
   sorterFn,
   fetchFunc,
-  hasInput = true,
-  fetchOnScrool,
   lazyInit,
+  closeDropdownOnOptionSelect,
   recordsPerPage = 15,
-  closeDropdownOnSelect,
+  closeDropdownOnSelect = false,
+  fetchOnInputChange = true,
+  disableInputFetchTrigger = false,
+  hasInput = true,
+  fetchOnScroll = false,
+  removeSelectedOptionsFromList = true,
+  categoryKey = "",
 }: SelectProps) => {
   const [state, dispatch] = useReducer(
     selectReducer,
     selectOptions,
     initializeState
   );
+  // The originalOptions ref is only used in case all the data for the select comes from the frontend, enabling the partitioning of the options while storing the original value that never changes.
   const originalOptions = useRef<SelectOptionList>(state.selectOptions);
-
-  const selectApi = useSelect(
-    dispatch,
-    { setValue: onChange },
-    { ...state },
-    {
-      isMultiValue,
-      labelKey,
-    },
-    originalOptions.current
-  );
-
-  const refs = useSelectRef();
+  const totalRecords = useRef<number>(0);
 
   const displayedOptions = useSelectComputation(
     { ...state, value },
@@ -126,78 +122,165 @@ const Select = ({
       sorterFn,
       fetchFunc,
       recordsPerPage,
+      removeSelectedOptionsFromList,
     }
   );
 
-  const { clearAllValues, setOptions } = selectApi;
+  const { refs, refHelpers } = useSelectRef(state);
 
-  //INPUT
-  /*TODO CHECK IF THE FILTERING WORKS AFTER FETCHING NEXT PAGE*/
-  const filterSearchedOptions = useCallback(() => {
-    const filteredOptions = filterOptionListBySearchValue(
-      originalOptions.current,
+  const selectApi = useSelect(
+    dispatch,
+    { setValue: onChange },
+    {
+      ...state,
+      displayedOptions,
+      originalOptions: originalOptions.current,
+      totalRecords: totalRecords.current,
+    },
+    refHelpers,
+    {
+      isMultiValue,
       labelKey,
-      state.inputValue
-    );
-    setOptions(filteredOptions);
-  }, [state.selectOptions, state.inputValue]);
+      isCategorized,
+      recordsPerPage,
+      categoryKey,
+      closeDropdownOnOptionSelect,
+    }
+  );
+
+  const {
+    getSelectStateSetters,
+    handlePageChange,
+    filterSearchedOptions,
+    focusOptionAfterClick,
+    getFocusValues,
+    focusLastOption,
+    focusFirstOption,
+    addOptionOnKeyPress,
+  } = selectApi;
+
+  const { selectAsyncApi, selectAsyncState } = useSelectAsync(
+    state,
+    selectApi,
+    {
+      isLazyInit: lazyInit,
+      recordsPerPage,
+      fetchOnInputChange,
+      fetchFunc,
+      fetchOnScroll,
+    }
+  );
+
+  const { getIsLastPage, getSelectAsyncStateSetters } = selectAsyncApi;
+
+  const usesInputAsync = isFunction(fetchFunc) && fetchOnInputChange;
+  const selectInputValue = usesInputAsync
+    ? selectAsyncState.searchQuery
+    : state.inputValue;
 
   const renderOptionElement = useCallback(
-    (option: SelectOptionT) => (
-      <SelectOption
-        selectApi={selectApi}
-        isMultiValue={isMultiValue}
-        closeDropdownOnOptionSelect={closeDropdownOnSelect}
-        //getNextFocusedOptionOnClick={getNextFocusedOptionOnClick}
-        key={option.id}
-        option={option}
-        //ref={option.id === focusedOptionId ? ref : null}
-        labelKey={labelKey}
-      />
-    ),
+    (option: SelectOptionT) => {
+      const isSelected =
+        !removeSelectedOptionsFromList &&
+        some(value, (val) => val.id == option.id);
+      const isFocused = state.focusedOptionId == option.id;
+      return (
+        <SelectOption
+          isMultiValue={isMultiValue}
+          closeDropdownOnOptionSelect={closeDropdownOnSelect}
+          key={option.id}
+          option={option}
+          getSelectOptionsMap={refHelpers.getSelectOptionsMap}
+          getSelectStateSetters={getSelectStateSetters}
+          handleFocusOnClick={focusOptionAfterClick}
+          categoryKey={categoryKey}
+          isCategorized={isCategorized}
+          labelKey={labelKey}
+          focusInput={refHelpers.focusInput}
+          isFocused={isFocused}
+          isSelected={isSelected}
+        />
+      );
+    },
 
-    [selectApi, isMultiValue, closeDropdownOnSelect, labelKey]
+    [
+      isMultiValue,
+      closeDropdownOnSelect,
+      labelKey,
+      state.focusedOptionId,
+      displayedOptions,
+    ]
+  );
+
+  const selectRenderFn: selectRendererOverload = useCallback(
+    (value) => {
+      if (value.categoryOptions) {
+        const { categoryName, categoryOptions } = value;
+        return (
+          <SelectCategory
+            key={categoryName}
+            categoryName={categoryName}
+            categoryOptions={categoryOptions}
+            renderOption={renderOptionElement}
+          />
+        );
+      } else {
+        return renderOptionElement(value as SelectOptionT);
+      }
+    },
+    [renderOptionElement]
   );
 
   return (
     <Select.Container>
-      <Select.Top>
+      <Select.Top focusInput={refHelpers.focusInput}>
         <Select.ValueSection isMultiValue={isMultiValue}>
           <Select.Value
+            getSelectStateSetters={getSelectStateSetters}
             labelKey={labelKey}
             isMultiValue={isMultiValue}
             placeHolder={placeHolder}
             inputValue={state.inputValue}
             value={value}
-          />
-
-          <Select.Input
-            inputValue={state.inputValue}
-            isMultiValue={isMultiValue}
-            customOnChange={onInputChange}
-            clearValues={clearAllValues}
-            selectOptions={state.selectOptions}
-            labelKey={labelKey}
-            selectApi={selectApi}
-            filterSearchedOptions={filterSearchedOptions}
-          />
+          >
+            <Select.Input
+              inputValue={selectInputValue}
+              isMultiValue={isMultiValue}
+              customOnChange={onInputChange}
+              labelKey={labelKey}
+              getSelectStateSetters={getSelectStateSetters}
+              getFocusValues={getFocusValues}
+              focusFirstOption={focusFirstOption}
+              focusLastOption={focusLastOption}
+              addOptionOnKeyPress={addOptionOnKeyPress}
+              usesInputAsync={usesInputAsync}
+              getIsLastPage={getIsLastPage}
+              getSelectAsyncStateSetters={getSelectAsyncStateSetters}
+              onKeyPress={refHelpers.handleScrollToFocusedOption}
+              filterSearchedOptions={filterSearchedOptions}
+              disableInputFetchTrigger={disableInputFetchTrigger}
+              ref={refs.inputRef}
+              hasInput={hasInput}
+            />
+          </Select.Value>
         </Select.ValueSection>
         <Select.IndicatorSection isLoading={false} spinner={<Select.Spinner />}>
           <Select.DropdownIndicator
-            toggleDropdown={selectApi.toggleDropdown}
+            focusInput={refHelpers.focusInput}
+            getSelectStateSetters={getSelectStateSetters}
+            focusFirstOption={focusFirstOption}
             isOpen={state.isOpen}
           />
         </Select.IndicatorSection>
       </Select.Top>
       {state.isOpen && (
         <Select.OptionList
-          loadNextPage={selectApi.loadNextPage}
+          categoryKey={categoryKey}
           ref={refs.selectListContainerRef}
           displayedOptions={displayedOptions}
-          page={state.page}
-          recordsPerPage={recordsPerPage}
-          totalRecords={originalOptions.current?.length}
-          renderOption={renderOptionElement}
+          handlePageChange={handlePageChange}
+          renderFn={selectRenderFn}
+          isCategorized={isCategorized}
         />
       )}
     </Select.Container>

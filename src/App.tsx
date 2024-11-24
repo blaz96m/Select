@@ -4,10 +4,17 @@ import { SelectOptionT } from "./components/Select/types/selectTypes";
 import "src/style.scss";
 
 function App() {
-  const options = Array.from({ length: 50 }, (val, index) => ({
-    id: `${index}`,
-    name: `Select Value - ${index + 1}`,
-  }));
+  let currCategoryCount = 1;
+  const options = Array.from({ length: 100 }, (val, index) => {
+    if ((index + 1) % 5 === 0) {
+      currCategoryCount += 1;
+    }
+    return {
+      id: `${index}`,
+      name: `Select Value - ${index + 1}`,
+      category: `Category-${currCategoryCount}`,
+    };
+  });
   const [value, setValue] = useState<SelectOptionT[]>([]);
 
   return (
@@ -17,7 +24,12 @@ function App() {
         value={value}
         labelKey="name"
         selectOptions={options}
+        categoryKey="category"
+        isCategorized={false}
         onChange={setValue}
+        fetchOnInputChange={false}
+        closeDropdownOnOptionSelect={false}
+        removeSelectedOptionsFromList={false}
       />
     </>
   );
