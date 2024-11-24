@@ -109,10 +109,13 @@ export const selectReducer = (
       };
 
     case SelectReducerActionTypes.SET_FOCUSED_OPTION: {
+      const { focusedOptionId } = action.payload;
+      if (state.focusedOptionId == focusedOptionId) {
+        return state;
+      }
       return {
         ...state,
-        focusedOptionId: action.payload.focusedOptionId,
-        focusedCategory: action.payload.focusedCategory,
+        focusedOptionId: focusedOptionId,
       };
     }
 

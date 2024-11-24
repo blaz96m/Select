@@ -29,18 +29,20 @@ import {
   SelectContainer,
   SelectInput,
   SelectValue,
-  TopContainer,
-  ValueSection,
-  IndicatorSection,
+  SelectTopSection,
   DropdownIndicator,
   OptionList,
   SelectOption,
+  SelectValueSection,
+  SelectIndicatorSection,
 } from "src/components/Select";
 import { selectReducer } from "src/stores/reducers/selectReducer";
 import {
   filterOptionListBySearchValue,
   initializeState,
 } from "src/utils/select";
+
+SelectTopContainer;
 
 import {
   CategorizedSelectOptions,
@@ -55,6 +57,7 @@ import "./styles/_select.scss";
 import useSelectComputation from "src/hooks/select/useSelectComputation";
 import SelectCategory from "../SelectCategory";
 import useSelectAsync from "src/hooks/select/useSelectAsync";
+import SelectTopContainer from "./SelectTopSection";
 
 export type SelectProps = {
   value: SelectOptionT[] | [];
@@ -208,7 +211,7 @@ const Select = ({
       closeDropdownOnSelect,
       labelKey,
       state.focusedOptionId,
-      displayedOptions,
+      value,
     ]
   );
 
@@ -228,7 +231,13 @@ const Select = ({
         return renderOptionElement(value as SelectOptionT);
       }
     },
-    [renderOptionElement]
+    [
+      isMultiValue,
+      closeDropdownOnSelect,
+      labelKey,
+      state.focusedOptionId,
+      value,
+    ]
   );
 
   return (
@@ -242,27 +251,27 @@ const Select = ({
             placeHolder={placeHolder}
             inputValue={state.inputValue}
             value={value}
-          >
-            <Select.Input
-              inputValue={selectInputValue}
-              isMultiValue={isMultiValue}
-              customOnChange={onInputChange}
-              labelKey={labelKey}
-              getSelectStateSetters={getSelectStateSetters}
-              getFocusValues={getFocusValues}
-              focusFirstOption={focusFirstOption}
-              focusLastOption={focusLastOption}
-              addOptionOnKeyPress={addOptionOnKeyPress}
-              usesInputAsync={usesInputAsync}
-              getIsLastPage={getIsLastPage}
-              getSelectAsyncStateSetters={getSelectAsyncStateSetters}
-              onKeyPress={refHelpers.handleScrollToFocusedOption}
-              filterSearchedOptions={filterSearchedOptions}
-              disableInputFetchTrigger={disableInputFetchTrigger}
-              ref={refs.inputRef}
-              hasInput={hasInput}
-            />
-          </Select.Value>
+          />
+
+          <Select.Input
+            inputValue={selectInputValue}
+            isMultiValue={isMultiValue}
+            customOnChange={onInputChange}
+            labelKey={labelKey}
+            getSelectStateSetters={getSelectStateSetters}
+            getFocusValues={getFocusValues}
+            focusFirstOption={focusFirstOption}
+            focusLastOption={focusLastOption}
+            addOptionOnKeyPress={addOptionOnKeyPress}
+            usesInputAsync={usesInputAsync}
+            getIsLastPage={getIsLastPage}
+            getSelectAsyncStateSetters={getSelectAsyncStateSetters}
+            onKeyPress={refHelpers.handleScrollToFocusedOption}
+            filterSearchedOptions={filterSearchedOptions}
+            disableInputFetchTrigger={disableInputFetchTrigger}
+            ref={refs.inputRef}
+            hasInput={hasInput}
+          />
         </Select.ValueSection>
         <Select.IndicatorSection isLoading={false} spinner={<Select.Spinner />}>
           <Select.DropdownIndicator
@@ -287,10 +296,10 @@ const Select = ({
   );
 };
 
-Select.Container = SelectContainer;
-Select.Top = TopContainer;
-Select.ValueSection = ValueSection;
-Select.IndicatorSection = IndicatorSection;
+Select.Container = memo(SelectContainer);
+Select.Top = memo(SelectTopSection);
+Select.ValueSection = memo(SelectValueSection);
+Select.IndicatorSection = memo(SelectIndicatorSection);
 Select.Spinner = Spinner;
 Select.Value = SelectValue;
 Select.Input = SelectInput;

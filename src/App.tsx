@@ -25,7 +25,7 @@ function App() {
         labelKey="name"
         selectOptions={options}
         categoryKey="category"
-        isCategorized={false}
+        isCategorized={true}
         onChange={setValue}
         fetchOnInputChange={false}
         closeDropdownOnOptionSelect={false}

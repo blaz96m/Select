@@ -8,70 +8,57 @@ type SelectValuePropTypes = {
   labelKey: keyof SelectOptionT;
   value: SelectOptionList;
   getSelectStateSetters: () => SelectStateSetters;
-  children: any;
 };
 
 type SelectValueContainerPropTypes = SelectValuePropTypes & {
   isMultiValue: boolean;
   placeHolder: string;
   inputValue: string;
-  children: any;
 };
 
-const SelectValue = ({
-  labelKey,
-  isMultiValue,
-  children,
-  placeHolder,
-  inputValue,
-  getSelectStateSetters,
-  value,
-}: SelectValueContainerPropTypes) => {
-  console.count("DAFUQ");
-  const showPlaceholder = isEmpty(value) && isEmpty(inputValue);
-  return (
-    <>
-      <div className="select__value">
-        {showPlaceholder && (
-          <span className="select__placeholder">{placeHolder}</span>
-        )}
-        {isMultiValue ? (
-          <MultiValue
-            children={children}
-            value={value}
-            labelKey={labelKey}
-            getSelectStateSetters={getSelectStateSetters}
-          />
-        ) : (
-          <SingleValue value={value} labelKey={labelKey} children={children} />
-        )}
-      </div>
-    </>
-  );
-};
-
-const SingleValue = memo(
+const SelectValue = memo(
   ({
-    value,
     labelKey,
-    children,
-  }: Omit<SelectValuePropTypes, "getSelectStateSetters">) => {
-    console.count("LOL");
-    const valueLabel = !isEmpty(value) ? value[0][labelKey] : "";
+    isMultiValue,
+    placeHolder,
+    inputValue,
+    getSelectStateSetters,
+    value,
+  }: SelectValueContainerPropTypes) => {
+    const showPlaceholder = isEmpty(value) && isEmpty(inputValue);
     return (
       <>
-        {valueLabel}
-        {children}
+        <div className="select__value">
+          {showPlaceholder && (
+            <span className="select__placeholder">{placeHolder}</span>
+          )}
+          {isMultiValue ? (
+            <MultiValue
+              value={value}
+              labelKey={labelKey}
+              getSelectStateSetters={getSelectStateSetters}
+            />
+          ) : (
+            <SingleValue value={value} labelKey={labelKey} />
+          )}
+        </div>
       </>
     );
   }
 );
 
+const SingleValue = ({
+  value,
+  labelKey,
+}: Omit<SelectValuePropTypes, "getSelectStateSetters">) => {
+  const valueLabel = !isEmpty(value) ? value[0][labelKey] : "";
+  return <>{valueLabel}</>;
+};
+
 const MultiValue = ({
   value,
   labelKey,
   getSelectStateSetters,
-  children,
 }: SelectValuePropTypes) => {
   return (
     <ul className="select__value__list">
@@ -83,7 +70,6 @@ const MultiValue = ({
           getSelectStateSetters={getSelectStateSetters}
         />
       ))}
-      {children}
     </ul>
   );
 };
