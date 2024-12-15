@@ -2,13 +2,16 @@ import { Dispatch, SetStateAction, forwardRef, memo } from "react";
 import clsx from "clsx";
 
 import {
-  SelectOptionList,
+  SelectComponents,
+  SelectOptionInnerProps,
   SelectOptionT,
+  SelectStateSetters,
+  CustomSelectOptionRenderer,
 } from "src/components/Select/types/selectTypes";
-import { SelectApi, SelectStateSetters } from "src/hooks/select/useSelect";
-import { isEmpty, isNil } from "lodash";
+import { isFunction, isNil } from "lodash";
+import { generateComponentInnerProps } from "src/utils/select";
 
-type SelectOptionProps = {
+export type SelectOptionProps = {
   labelKey: keyof SelectOptionT;
   option: SelectOptionT;
   isMultiValue: boolean;
@@ -19,34 +22,59 @@ type SelectOptionProps = {
   getSelectOptionsMap: () => Map<string, HTMLDivElement>;
   isCategorized: boolean;
   closeDropdownOnOptionSelect?: boolean;
-  categoryKey?: string;
+  categoryKey?: keyof SelectOptionT;
   isSelected: boolean;
+  removeSelectedOptionsFromList: boolean;
 };
 
 const SelectOption = memo(
-  ({
-    labelKey,
-    option,
-    isMultiValue,
-    isFocused,
-    closeDropdownOnOptionSelect,
-    getSelectStateSetters,
-    handleFocusOnClick,
-    getSelectOptionsMap,
-    categoryKey,
-    focusInput,
-    isCategorized,
-    isSelected,
-  }: SelectOptionProps) => {
+  (
+    props: SelectOptionProps & {
+      customComponent?: CustomSelectOptionRenderer;
+    }
+  ) => {
+    const {
+      labelKey,
+      option,
+      isMultiValue,
+      isFocused,
+      closeDropdownOnOptionSelect,
+      getSelectStateSetters,
+      handleFocusOnClick,
+      getSelectOptionsMap,
+      categoryKey,
+      focusInput,
+      isCategorized,
+      isSelected,
+      customComponent,
+      removeSelectedOptionsFromList,
+    } = props;
     const shouldDropdownStayOpenAfterClick =
       !isNil(closeDropdownOnOptionSelect) && !closeDropdownOnOptionSelect;
 
+    const hasCategories = categoryKey && isCategorized;
+    const className = clsx({
+      select__option: true,
+      "select__option--selected": isSelected,
+      "select__option--focused": isFocused,
+    });
+
+    const refCallback = (node: HTMLDivElement | null) => {
+      const selectOptionsMap = getSelectOptionsMap();
+      if (node) {
+        selectOptionsMap.set(option.id, node);
+      } else {
+        selectOptionsMap.delete(option.id);
+      }
+    };
+
     const handleOptionClick = (option: SelectOptionT) => {
-      const hasCategories = categoryKey && isCategorized;
       const optionCategory = hasCategories ? option[categoryKey] : "";
       const selectStateSetters = getSelectStateSetters();
       handleFocusOnClick(option.id, optionCategory);
-      selectStateSetters.addValue(option);
+      !removeSelectedOptionsFromList && isSelected
+        ? selectStateSetters.clearValue(option.id)
+        : selectStateSetters.addValue(option);
       !isMultiValue && selectStateSetters.clearInput();
       shouldDropdownStayOpenAfterClick && focusInput();
     };
@@ -55,13 +83,32 @@ const SelectOption = memo(
       e: React.MouseEvent<HTMLDivElement, MouseEvent>
     ) => {
       const selectStateSetters = getSelectStateSetters();
-      selectStateSetters.setFocusDetails(e.currentTarget.id);
+      const optionCategory = e.currentTarget.dataset.category;
+      selectStateSetters.setFocusDetails(e.currentTarget.id, optionCategory);
     };
+
+    if (isFunction(customComponent)) {
+      const innerProps = generateComponentInnerProps(
+        SelectComponents.SELECT_OPTION,
+        {
+          option,
+          handleOptionClick: () => handleOptionClick(option),
+          handleMouseHover: (e: React.MouseEvent<HTMLDivElement, MouseEvent>) =>
+            handleMouseHover(e),
+          refCallback,
+          className,
+          isCategorized,
+          categoryKey,
+        }
+      );
+      return customComponent(props, innerProps as SelectOptionInnerProps);
+    }
 
     return (
       <div
         onMouseMove={handleMouseHover}
         key={option.id}
+        data-category={hasCategories ? option[categoryKey] : ""}
         ref={(node) => {
           const selectOptionsMap = getSelectOptionsMap();
           if (node) {
@@ -71,11 +118,7 @@ const SelectOption = memo(
           }
         }}
         id={option.id}
-        className={clsx({
-          select__option: true,
-          "select__option--selected": isSelected,
-          "select__option--focused": isFocused,
-        })}
+        className={className}
         onClick={() => handleOptionClick(option)}
       >
         {option[labelKey]}

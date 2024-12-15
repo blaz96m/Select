@@ -6,4 +6,5 @@ export { default as SelectOption } from "./SelectOption";
 export { default as SelectTopSection } from "./SelectTopSection";
 export { default as SelectValueSection } from "./SelectValueSection";
 export { default as SelectIndicatorSection } from "./SelectIndicatorSection";
-export * from "./Indicators";
+export { default as SelectDropdownIndicator } from "./SelectDropdownIndicator";
+export { default as SelectClearIndicator } from "./SelectClearIndicator";

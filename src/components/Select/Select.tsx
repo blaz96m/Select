@@ -30,11 +30,12 @@ import {
   SelectInput,
   SelectValue,
   SelectTopSection,
-  DropdownIndicator,
   OptionList,
   SelectOption,
   SelectValueSection,
   SelectIndicatorSection,
+  SelectDropdownIndicator,
+  SelectClearIndicator,
 } from "src/components/Select";
 import { selectReducer } from "src/stores/reducers/selectReducer";
 import {
@@ -42,10 +43,9 @@ import {
   initializeState,
 } from "src/utils/select";
 
-SelectTopContainer;
-
 import {
   CategorizedSelectOptions,
+  SelectCustomComponents,
   SelectFetchFunc,
   SelectOptionList,
   SelectOptionT,
@@ -79,8 +79,10 @@ export type SelectProps = {
   removeSelectedOptionsFromList: boolean;
   disableInputFetchTrigger: boolean;
   categoryKey: keyof SelectOptionT & string;
+  showClearIndicator?: boolean;
   categorizeFunction?: (options: SelectOptionList) => CategorizedSelectOptions;
   recordsPerPage?: number;
+  customComponents: SelectCustomComponents;
 };
 
 const Select = ({
@@ -104,6 +106,8 @@ const Select = ({
   hasInput = true,
   fetchOnScroll = false,
   removeSelectedOptionsFromList = true,
+  showClearIndicator = true,
+  customComponents = {},
   categoryKey = "",
 }: SelectProps) => {
   const [state, dispatch] = useReducer(
@@ -202,6 +206,8 @@ const Select = ({
           focusInput={refHelpers.focusInput}
           isFocused={isFocused}
           isSelected={isSelected}
+          removeSelectedOptionsFromList={removeSelectedOptionsFromList}
+          customComponent={customComponents.SelectOptionElement}
         />
       );
     },
@@ -224,6 +230,7 @@ const Select = ({
             key={categoryName}
             categoryName={categoryName}
             categoryOptions={categoryOptions}
+            customComponent={customComponents.SelectCategoryElement}
             renderOption={renderOptionElement}
           />
         );
@@ -251,6 +258,10 @@ const Select = ({
             placeHolder={placeHolder}
             inputValue={state.inputValue}
             value={value}
+            singleValueCustomComponent={
+              customComponents.SelectSingleValueElement
+            }
+            multiValueCustomComponent={customComponents.SelectMultiValueElement}
           />
 
           <Select.Input
@@ -269,8 +280,14 @@ const Select = ({
             onKeyPress={refHelpers.handleScrollToFocusedOption}
             filterSearchedOptions={filterSearchedOptions}
             disableInputFetchTrigger={disableInputFetchTrigger}
+            customComponent={
+              customComponents?.SelectInputElement?.customComponent
+            }
             ref={refs.inputRef}
             hasInput={hasInput}
+            renderInputContainerForCustomComponent={
+              customComponents?.SelectInputElement?.renderContainer
+            }
           />
         </Select.ValueSection>
         <Select.IndicatorSection isLoading={false} spinner={<Select.Spinner />}>
@@ -278,8 +295,18 @@ const Select = ({
             focusInput={refHelpers.focusInput}
             getSelectStateSetters={getSelectStateSetters}
             focusFirstOption={focusFirstOption}
+            customComponent={customComponents.SelectDropdownIndicatorElement}
             isOpen={state.isOpen}
           />
+          {showClearIndicator && (
+            <Select.ClearIndicator
+              getSelectStateSetters={getSelectStateSetters}
+              isMultiValue={isMultiValue}
+              value={value}
+              inputValue={selectInputValue}
+              customComponent={customComponents.SelectClearIndicatorElement}
+            />
+          )}
         </Select.IndicatorSection>
       </Select.Top>
       {state.isOpen && (
@@ -303,6 +330,7 @@ Select.IndicatorSection = memo(SelectIndicatorSection);
 Select.Spinner = Spinner;
 Select.Value = SelectValue;
 Select.Input = SelectInput;
-Select.DropdownIndicator = DropdownIndicator;
+Select.DropdownIndicator = SelectDropdownIndicator;
+Select.ClearIndicator = SelectClearIndicator;
 Select.OptionList = OptionList;
 export default Select;

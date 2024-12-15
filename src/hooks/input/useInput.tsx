@@ -28,6 +28,7 @@ const useInput = (
   const updateInputValue = isFunction(customInputSetter)
     ? customInputSetter
     : setInput;
+
   const inputValue = !isNil(customInputState) ? customInputState : input;
 
   const shouldCancelInputUpdate = useCallback(

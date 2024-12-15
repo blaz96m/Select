@@ -1,7 +1,31 @@
-import { useState } from "react";
+import { useState, memo } from "react";
 import Select from "./components/Select/Select";
-import { SelectOptionT } from "./components/Select/types/selectTypes";
+import {
+  SelectOptionT,
+  SelectOptionInnerProps,
+  SelectMultiValueInnerProps,
+  SelectSingleValueInnerProps,
+  SelectSingleValueProps,
+  SelectDropdownIndicatorInnerProps,
+  SelectInputInnerProps,
+  SelectClearIndicatorInnerProps,
+  SelectCategoryCustomComponentProps,
+  BasicComponentInnerProps,
+} from "./components/Select/types/selectTypes";
 import "src/style.scss";
+import { SelectOptionProps } from "./components/Select/SelectOption";
+import { isEmpty } from "lodash";
+import { SelectMultiValueProps } from "./components/Select/SelectMultiValueElement";
+import { SelectValueProps } from "./components/Select/SelectValue";
+import { SelectDropdownIndicatorProps } from "./components/Select/SelectDropdownIndicator";
+import {
+  faEarthAfrica,
+  faEarthAmerica,
+} from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { SelectInputProps } from "./components/Select/SelectInput";
+import { SelectClearIndicatorProps } from "./components/Select/SelectClearIndicator";
+import { SelectCategoryProps } from "./components/SelectCategory";
 
 function App() {
   let currCategoryCount = 1;
@@ -16,9 +40,109 @@ function App() {
     };
   });
   const [value, setValue] = useState<SelectOptionT[]>([]);
+  const [currLabel, setCurrLabel] = useState("");
+
+  const SelectCheckBox = (
+    componentProps: SelectOptionProps,
+    innerProps: SelectOptionInnerProps
+  ) => {
+    const { isSelected, labelKey, option } = componentProps;
+    const { onClick, ...otherProps } = innerProps!;
+    const className = otherProps.className;
+    return (
+      <div {...otherProps} className={`${className} select__check`}>
+        <input type="checkbox" checked={isSelected} onClick={onClick} />
+        <p>{option[labelKey]}</p>
+      </div>
+    );
+  };
+
+  const CustomMultiVal = (
+    componentProps: SelectMultiValueProps,
+    innerProps: SelectMultiValueInnerProps
+  ) => {
+    const { getSelectStateSetters, labelKey, value } = componentProps;
+    const superDelete = () => {
+      console.log(value);
+    };
+    const del = () => {
+      const stateSetters = getSelectStateSetters();
+      stateSetters.clearValue(value.id);
+    };
+    const { onClick } = innerProps;
+    console.log(value);
+    return (
+      <div className="custom-multi-val">
+        {`${value[labelKey]} (${value["category"]})`}
+        <span onClick={del}>CLOSE</span>
+      </div>
+    );
+  };
+
+  const CustomDropdownIndicator = (
+    componentProps: SelectDropdownIndicatorProps,
+    innerProps: SelectDropdownIndicatorInnerProps
+  ) => {
+    const { focusFirstOption, focusInput, getSelectStateSetters, isOpen } =
+      componentProps;
+    const { onClick } = innerProps;
+
+    return (
+      <div {...innerProps} className="icon-cont">
+        <FontAwesomeIcon icon={isOpen ? faEarthAmerica : faEarthAfrica} />
+      </div>
+    );
+  };
+
+  const CustomCategoryComponent = (
+    componentProps: SelectCategoryCustomComponentProps,
+    innerProps: BasicComponentInnerProps
+  ) => {
+    const { className } = innerProps;
+    const { categoryName, categoryOptions } = componentProps;
+    return <div {...innerProps}>{categoryName}</div>;
+  };
+
+  const CustomSingleVal = (componentProps: SelectSingleValueProps) => {
+    const { getSelectStateSetters, labelKey, value } = componentProps;
+    const cloze = () => {
+      const selectStateSetters = getSelectStateSetters();
+      selectStateSetters.clearValue(value.id);
+    };
+    return (
+      <div className="select-cont">
+        {`${value[labelKey]} (${value["category"]})`}
+        <span onClick={cloze}>CLOSER</span>
+      </div>
+    );
+  };
+
+  const ClearIndikator = (
+    componentProps: SelectClearIndicatorProps,
+    innerProps: SelectClearIndicatorInnerProps
+  ) => {
+    const { getSelectStateSetters, value } = componentProps;
+    const clearThisBitch = () => {
+      const selectStateSetters = getSelectStateSetters();
+      !isEmpty(value) && selectStateSetters.clearAllValues();
+    };
+    return <div onClick={clearThisBitch}>Clear THIS BITCH!!</div>;
+  };
+
+  const CustomInputComponent = (
+    componentProps: SelectInputProps,
+    innerProps: SelectInputInnerProps
+  ) => {
+    const {} = componentProps;
+    const { ref, onChange } = innerProps;
+
+    console.log(ref);
+    return <input {...innerProps} />;
+  };
 
   return (
     <>
+      <div>Selected Value: {currLabel}</div>
       <Select
         isMultiValue={false}
         value={value}
@@ -30,6 +154,19 @@ function App() {
         fetchOnInputChange={false}
         closeDropdownOnOptionSelect={false}
         removeSelectedOptionsFromList={false}
+        customComponents={
+          {
+            //SelectOptionElement: SelectCheckBox,
+            //SelectMultiValueElement: CustomMultiVal,
+            //SelectSingleValueElement: CustomSingleVal,
+            //SelectDropdownIndicatorElement: CustomDropdownIndicator,
+            //SelectClearIndicatorElement: ClearIndikator,
+            /*SelectInputElement: {
+            customComponent: CustomInputComponent,
+            renderContainer: true,
+          },*/
+          }
+        }
       />
     </>
   );

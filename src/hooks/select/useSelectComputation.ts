@@ -1,5 +1,5 @@
 import { useMemo, useRef } from "react";
-import { isFunction, isEmpty, slice } from "lodash";
+import { isFunction, isEmpty, slice, cloneDeep } from "lodash";
 
 import {
   CategorizedSelectOptions,
@@ -67,7 +67,7 @@ const useSelectComputation = (
     | SelectOptionList
     | CategorizedSelectOptions => {
     const options = isCategorized
-      ? { ...(categorizedOptions as CategorizedSelectOptions) }
+      ? cloneDeep(categorizedOptions)
       : partitionedOptions || state.selectOptions;
     const categoryKeyVal = isCategorized
       ? (categoryKey as keyof SelectOptionT)
@@ -82,7 +82,7 @@ const useSelectComputation = (
     | CategorizedSelectOptions
     | null => {
     const options = isCategorized
-      ? { ...(filteredOptions as CategorizedSelectOptions) }
+      ? cloneDeep(filteredOptions)
       : (filteredOptions as SelectOptionList);
     if (isFunction(sorterFn)) {
       return sorterFn(options);

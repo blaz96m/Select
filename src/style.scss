@@ -4,15 +4,6 @@
   padding: 0;
 }
 
-.opter {
-  padding: 20px;
-  margin-bottom: 50px;
-
-  &-huver {
-    background-color: red;
-  }
-}
-
 body {
   padding: 4rem;
   width: 100%;
@@ -43,4 +34,28 @@ ul {
 
 .blue {
   background-color: blue;
+}
+
+.select__check {
+  width: 100%;
+  padding: 10px;
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.select__single-val__custom {
+  border: 1px solid red;
+  padding: 7px;
+}
+
+.custom-multi-val {
+  border: 1px solid red;
+  display: flex;
+  gap: 30px;
+}
+
+.select-cont {
+  display: flex;
+  gap: 20px;
 }

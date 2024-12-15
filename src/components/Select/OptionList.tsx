@@ -7,7 +7,7 @@ import {
   useImperativeHandle,
   useRef,
 } from "react";
-import { isNull, isNumber, map } from "lodash";
+import { isEmpty, isNull, isNumber, map } from "lodash";
 import {
   CategorizedSelectOptions,
   SelectOptionList,
@@ -15,6 +15,7 @@ import {
   selectRendererOverload,
 } from "./types";
 import { useScrollManager } from "src/hooks/dom";
+import clsx from "clsx";
 
 export type OptionListProps = {
   displayedOptions: SelectOptionList | CategorizedSelectOptions;
@@ -44,16 +45,25 @@ const OptionList = memo(
       useScrollManager<HTMLDivElement>(innerRef, bottomScrollActions, {}, true);
       return (
         <div className="select__options__wrapper" ref={innerRef}>
-          <ul className="select__options__list">
-            {map(displayedOptions, (value, key) => {
-              if (hasCategories) {
-                return renderFn({
-                  categoryName: key,
-                  categoryOptions: value as SelectOptionList,
-                });
-              }
-              return renderFn(value as SelectOptionT);
+          <ul
+            className={clsx({
+              select__options__list: true,
+              "select__options__list--empty": isEmpty(displayedOptions),
             })}
+          >
+            {!isEmpty(displayedOptions) ? (
+              map(displayedOptions, (value, key) => {
+                if (hasCategories) {
+                  return renderFn({
+                    categoryName: key,
+                    categoryOptions: value as SelectOptionList,
+                  });
+                }
+                return renderFn(value as SelectOptionT);
+              })
+            ) : (
+              <div>No Options Found</div>
+            )}
           </ul>
         </div>
       );

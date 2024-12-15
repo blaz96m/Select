@@ -17,6 +17,7 @@ import {
   SelectState,
   SelectKeyboardNavigationDirection,
   SelectFocusDetails,
+  SelectStateSetters,
 } from "src/components/Select/types";
 import {
   filter,
@@ -37,25 +38,6 @@ import {
 } from "src/utils/select";
 import { SelectRefHelpers } from "./useSelectRef";
 import { getObjectKeys } from "src/utils/data-types/objects/helpers";
-
-export type SelectStateSetters = {
-  closeDropdown: () => void;
-  openDropdown: () => void;
-  toggleDropdown: () => void;
-  setInputValue: (value: string) => void;
-  clearInput: () => void;
-  setOptions: (options: SelectOptionList) => void;
-  addOptions: (options: SelectOptionList) => void;
-  addValue: (option: SelectOptionT) => void;
-  clearValue: (optionId: string) => void;
-  clearAllValues: () => void;
-  loadNextPage: () => void;
-
-  setFocusDetails: (
-    focusedoptionId: string,
-    focusedCategory?: keyof SelectOptionT
-  ) => void;
-};
 
 type StateSetter<T> = Dispatch<SetStateAction<T>>;
 
@@ -104,7 +86,7 @@ const useSelect = (
 
   const totalRecords =
     selectState.totalRecords || selectState.originalOptions.length;
-  const hasCategories = isCategorized && categoryKey;
+  const hasCategories = isCategorized && !isEmpty(categoryKey);
 
   const selectStateSettersRef = useRef<null | SelectStateSetters>(null);
 

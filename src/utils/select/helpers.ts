@@ -18,9 +18,16 @@ import {
   SelectOptionT,
   SelectKeyboardNavigationDirection,
   SelectFocusDetails,
+  SelectComponents,
+  SelectOptionInnerProps,
+  SelectOptionComponentHandlers,
+  SelectInputComponentHandlers,
+  SelectInputInnerProps,
+  SelectComponentHandlers,
 } from "src/components/Select/types";
 import { getObjectKeys } from "../data-types/objects/helpers";
 import { INITIAL_STATE } from "./constants";
+import { SelectOptionProps } from "src/components/Select/SelectOption";
 
 export const initializeState = (
   selectOptions: SelectOptionList | []
@@ -285,4 +292,59 @@ export const scrollToTarget = (
 ) => {
   if (!target) return;
   target.scrollIntoView(options);
+};
+
+export const generateComponentInnerProps = (
+  componentType: keyof typeof SelectComponents,
+  props: SelectComponentHandlers
+) => {
+  switch (componentType) {
+    case SelectComponents.SELECT_OPTION:
+      return generateSelectOptionInnerProps(
+        props as SelectOptionComponentHandlers
+      );
+    case SelectComponents.INPUT:
+      return generateSelectInputInnerProps(
+        props as SelectInputComponentHandlers
+      );
+  }
+};
+
+const generateSelectOptionInnerProps = (
+  props: SelectOptionComponentHandlers
+): SelectOptionInnerProps => {
+  const {
+    handleMouseHover,
+    handleOptionClick,
+    option,
+    isCategorized,
+    categoryKey,
+    className,
+    refCallback,
+  } = props;
+  const hasCategories = categoryKey && isCategorized;
+  const id = option!.id;
+
+  return {
+    id,
+    "data-category": hasCategories ? option![categoryKey] : "",
+    className,
+    ref: refCallback,
+    onClick: handleOptionClick,
+    onMouseMove: handleMouseHover,
+  };
+};
+
+const generateSelectInputInnerProps = (
+  props: SelectInputComponentHandlers
+): SelectInputInnerProps => {
+  const { handleInputChange, handleKeyPress, inputValue, innerRef, className } =
+    props;
+  return {
+    onChange: handleInputChange,
+    onKeyDown: handleKeyPress,
+    value: inputValue,
+    ref: innerRef,
+    className,
+  };
 };

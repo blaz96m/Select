@@ -1,19 +1,27 @@
-import { map, isEmpty } from "lodash";
-import { SelectOptionList, SelectOptionT } from "./types/selectTypes";
+import { map, isEmpty, isFunction } from "lodash";
+import {
+  SelectOptionList,
+  SelectOptionT,
+  SelectStateSetters,
+  SelectSingleValueProps,
+  CustomSelectMultiValueRenderer,
+  CustomSelectSingleValueRenderer,
+} from "./types/selectTypes";
 import SelectMultiValueElement from "./SelectMultiValueElement";
 import { memo } from "react";
-import { SelectStateSetters } from "src/hooks/select/useSelect";
 
-type SelectValuePropTypes = {
+export type SelectValueProps = {
   labelKey: keyof SelectOptionT;
   value: SelectOptionList;
   getSelectStateSetters: () => SelectStateSetters;
 };
 
-type SelectValueContainerPropTypes = SelectValuePropTypes & {
+type SelectValueContainerPropTypes = SelectValueProps & {
   isMultiValue: boolean;
   placeHolder: string;
   inputValue: string;
+  singleValueCustomComponent?: CustomSelectSingleValueRenderer;
+  multiValueCustomComponent?: CustomSelectMultiValueRenderer;
 };
 
 const SelectValue = memo(
@@ -23,6 +31,8 @@ const SelectValue = memo(
     placeHolder,
     inputValue,
     getSelectStateSetters,
+    singleValueCustomComponent,
+    multiValueCustomComponent,
     value,
   }: SelectValueContainerPropTypes) => {
     const showPlaceholder = isEmpty(value) && isEmpty(inputValue);
@@ -37,9 +47,15 @@ const SelectValue = memo(
               value={value}
               labelKey={labelKey}
               getSelectStateSetters={getSelectStateSetters}
+              customComponent={multiValueCustomComponent}
             />
           ) : (
-            <SingleValue value={value} labelKey={labelKey} />
+            <SingleValue
+              value={value[0]}
+              labelKey={labelKey}
+              getSelectStateSetters={getSelectStateSetters}
+              customComponent={singleValueCustomComponent}
+            />
           )}
         </div>
       </>
@@ -50,24 +66,45 @@ const SelectValue = memo(
 const SingleValue = ({
   value,
   labelKey,
-}: Omit<SelectValuePropTypes, "getSelectStateSetters">) => {
-  const valueLabel = !isEmpty(value) ? value[0][labelKey] : "";
-  return <>{valueLabel}</>;
+  customComponent,
+  getSelectStateSetters,
+}: SelectSingleValueProps & {
+  customComponent?: (props: SelectSingleValueProps) => JSX.Element;
+}) => {
+  const valueLabel = !isEmpty(value) ? value[labelKey] : "";
+  if (!isEmpty(value)) {
+    if (isFunction(customComponent)) {
+      return customComponent({
+        getSelectStateSetters,
+        value: value || {},
+        labelKey,
+      });
+    }
+    return <>{valueLabel}</>;
+  }
 };
 
 const MultiValue = ({
   value,
   labelKey,
   getSelectStateSetters,
-}: SelectValuePropTypes) => {
+  customComponent,
+}: SelectValueProps & {
+  customComponent?: CustomSelectMultiValueRenderer;
+}) => {
+  if (isEmpty(value)) {
+    return;
+  }
   return (
     <ul className="select__value__list">
       {map(value, (val) => (
         <SelectMultiValueElement
+          valueList={value}
           key={val.id}
           value={val}
           labelKey={labelKey}
           getSelectStateSetters={getSelectStateSetters}
+          customComponent={customComponent}
         />
       ))}
     </ul>
