@@ -29,7 +29,7 @@ const REQUEST_CONFIG_DEFAULT_VALUES: RequestConfig = {
 
 const setConfig = <T>(
   propValues?: Partial<RequestConfig>,
-  fetchFunc?: (...args: any) => Promise<Response<T>>
+  fetchFunc?: (...args: any) => Promise<Response<T> | void>
 ) => {
   const config = REQUEST_CONFIG_DEFAULT_VALUES;
   if (!isFunction(fetchFunc) || !propValues) {
@@ -68,7 +68,7 @@ type QueryManagerApi<ResponseItemT> = {
 type QueryManagerFetchFunc<ResponseItemT> = (
   params?: Partial<RequestParams>,
   ...args: any
-) => Promise<Response<ResponseItemT>>;
+) => Promise<Response<ResponseItemT> | void>;
 // TODO ADD GO TO PREVIOUS PAGE
 export type QueryStateSetters = {
   clearSorting: () => void;
@@ -94,7 +94,7 @@ const useQueryManager = <ResponseItemT>(
   fetchFunc?: (
     params: RequestParams,
     ...args: any
-  ) => Promise<Response<ResponseItemT>>,
+  ) => Promise<Response<ResponseItemT>> | Promise<void>,
   onAfterFetch?: (responseDetails: ResponseDetails<ResponseItemT>) => void,
   config?: Partial<RequestConfig>
 ): {
@@ -103,13 +103,12 @@ const useQueryManager = <ResponseItemT>(
 } => {
   const [state, dispatch] = useReducer(queryManagerReducer, INITIAL_STATE);
   const requestConfigRef = useRef<RequestConfig | null>(null);
-  const requestConfig = setConfig<ResponseItemT>(config, fetchFunc);
   const fetchTriggeredByInput = useRef(false);
   const isInitialFetchRef = useRef(true);
   const totalRecordsRef = useRef(0);
   const stateSettersRef = useRef<QueryStateSetters | null>(null);
 
-  if (requestConfig.current == null) {
+  if (requestConfigRef.current == null) {
     requestConfigRef.current = setConfig<ResponseItemT>(config, fetchFunc);
   }
 
@@ -125,7 +124,7 @@ const useQueryManager = <ResponseItemT>(
     async (
       params?: Partial<RequestParams>,
       ...args: any
-    ): Promise<Response<ResponseItemT>> => {
+    ): Promise<Response<ResponseItemT> | void> => {
       if (!isFunction(fetchFunc)) return { data: [] };
       const requestConfig = getRequestConfig();
       const requestParams = {
@@ -137,16 +136,18 @@ const useQueryManager = <ResponseItemT>(
         ...params,
       };
       const response = await fetchFunc(requestParams, ...args);
-      totalRecordsRef.current = response.totalRecords || 0;
-      return response;
+      if (response) {
+        totalRecordsRef.current = response.totalRecords || 0;
+        return response;
+      }
     },
     [fetchFunc, state.searchQuery, state.page, state.sort]
   );
-  // TODO MAKE RECORDS PER PAGE OR RATHER PAGE SIZE A PART OF STATE
+  // TODO MAKE RECORDS PER PAGE OR RATHER PAGE SIZE A PART OF STATE, ALSO RENAME
   const getIsLastPage = useCallback(() => {
     const totalRecords = totalRecordsRef.current;
     const { recordsPerPage } = getRequestConfig();
-    if (totalRecords && requestConfig.recordsPerPage) {
+    if (totalRecords && recordsPerPage) {
       return state.page * recordsPerPage < totalRecords;
     }
     return false;
@@ -260,7 +261,8 @@ const useQueryManager = <ResponseItemT>(
   }, [state.searchQuery]);
 
   useEffect(() => {
-    if (requestConfig.isDisabled || isInitialFetch) return;
+    const { isDisabled } = getRequestConfig();
+    if (isDisabled || isInitialFetch) return;
     (async () => {
       const response = await fetch();
       if (isFunction(onAfterFetch) && response) {

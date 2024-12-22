@@ -72,14 +72,20 @@ export type SelectProps = {
   closeDropdownOnOptionSelect?: boolean;
   placeHolder?: string;
   onInputChange?: (inputValue?: string) => {};
+  onScrollToBottom?: (
+    page: number,
+    options: SelectOptionList | CategorizedSelectOptions
+  ) => void;
   closeDropdownOnSelect?: boolean;
   fetchFunc?: SelectFetchFunc;
   sorterFn?: SelectSorterFunction;
   fetchOnInputChange: boolean;
   removeSelectedOptionsFromList: boolean;
   disableInputFetchTrigger: boolean;
+  onPageChange?: (page: number) => void;
   categoryKey: keyof SelectOptionT & string;
   showClearIndicator?: boolean;
+  useDataPartitioning?: boolean;
   categorizeFunction?: (options: SelectOptionList) => CategorizedSelectOptions;
   recordsPerPage?: number;
   customComponents: SelectCustomComponents;
@@ -99,6 +105,9 @@ const Select = ({
   fetchFunc,
   lazyInit,
   closeDropdownOnOptionSelect,
+  useDataPartitioning,
+  onScrollToBottom,
+  onPageChange,
   recordsPerPage = 15,
   closeDropdownOnSelect = false,
   fetchOnInputChange = true,
@@ -110,17 +119,17 @@ const Select = ({
   customComponents = {},
   categoryKey = "",
 }: SelectProps) => {
-  const [state, dispatch] = useReducer(
+  const [selectState, dispatch] = useReducer(
     selectReducer,
     selectOptions,
     initializeState
   );
-  // The originalOptions ref is only used in case all the data for the select comes from the frontend, enabling the partitioning of the options while storing the original value that never changes.
-  const originalOptions = useRef<SelectOptionList>(state.selectOptions);
+  // The originalOptions ref is only used in case all the data for the select comes from the frontend, enabling the pagination of the options while storing the original value that never changes.
+  const originalOptions = useRef<SelectOptionList>(selectState.selectOptions);
   const totalRecords = useRef<number>(0);
 
   const displayedOptions = useSelectComputation(
-    { ...state, value },
+    { ...selectState, value },
     {
       isCategorized,
       labelKey,
@@ -133,13 +142,13 @@ const Select = ({
     }
   );
 
-  const { refs, refHelpers } = useSelectRef(state);
+  const { refs, refHelpers } = useSelectRef(selectState);
 
   const selectApi = useSelect(
     dispatch,
     { setValue: onChange },
     {
-      ...state,
+      ...selectState,
       displayedOptions,
       originalOptions: originalOptions.current,
       totalRecords: totalRecords.current,
@@ -167,7 +176,7 @@ const Select = ({
   } = selectApi;
 
   const { selectAsyncApi, selectAsyncState } = useSelectAsync(
-    state,
+    selectState,
     selectApi,
     {
       isLazyInit: lazyInit,
@@ -183,14 +192,20 @@ const Select = ({
   const usesInputAsync = isFunction(fetchFunc) && fetchOnInputChange;
   const selectInputValue = usesInputAsync
     ? selectAsyncState.searchQuery
-    : state.inputValue;
+    : selectState.inputValue;
+
+  const fetchOnScrollToBottom = isFunction(fetchFunc) && fetchOnScroll;
+
+  const currentPage = fetchOnScrollToBottom
+    ? selectAsyncState.page
+    : selectState.page;
 
   const renderOptionElement = useCallback(
     (option: SelectOptionT) => {
       const isSelected =
         !removeSelectedOptionsFromList &&
         some(value, (val) => val.id == option.id);
-      const isFocused = state.focusedOptionId == option.id;
+      const isFocused = selectState.focusedOptionId == option.id;
       return (
         <SelectOption
           isMultiValue={isMultiValue}
@@ -216,7 +231,7 @@ const Select = ({
       isMultiValue,
       closeDropdownOnSelect,
       labelKey,
-      state.focusedOptionId,
+      selectState.focusedOptionId,
       value,
     ]
   );
@@ -242,7 +257,7 @@ const Select = ({
       isMultiValue,
       closeDropdownOnSelect,
       labelKey,
-      state.focusedOptionId,
+      selectState.focusedOptionId,
       value,
     ]
   );
@@ -256,7 +271,7 @@ const Select = ({
             labelKey={labelKey}
             isMultiValue={isMultiValue}
             placeHolder={placeHolder}
-            inputValue={state.inputValue}
+            inputValue={selectState.inputValue}
             value={value}
             singleValueCustomComponent={
               customComponents.SelectSingleValueElement
@@ -296,7 +311,7 @@ const Select = ({
             getSelectStateSetters={getSelectStateSetters}
             focusFirstOption={focusFirstOption}
             customComponent={customComponents.SelectDropdownIndicatorElement}
-            isOpen={state.isOpen}
+            isOpen={selectState.isOpen}
           />
           {showClearIndicator && (
             <Select.ClearIndicator
@@ -309,12 +324,18 @@ const Select = ({
           )}
         </Select.IndicatorSection>
       </Select.Top>
-      {state.isOpen && (
+      {selectState.isOpen && (
         <Select.OptionList
           categoryKey={categoryKey}
           ref={refs.selectListContainerRef}
           displayedOptions={displayedOptions}
           handlePageChange={handlePageChange}
+          customOnScrollToBottom={onScrollToBottom}
+          onPageChange={onPageChange}
+          page={currentPage}
+          fetchOnScrollToBottom={fetchOnScrollToBottom}
+          useDataPartitioning={useDataPartitioning}
+          getSelectAsyncStateSetters={getSelectAsyncStateSetters}
           renderFn={selectRenderFn}
           isCategorized={isCategorized}
         />

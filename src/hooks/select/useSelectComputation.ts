@@ -45,6 +45,7 @@ const useSelectComputation = (
   const partitionedOptions = useMemo((): SelectOptionList | null => {
     const options = state.selectOptions;
     if (
+      // TODO DECIDE WETHER THIS SHOULD BE DECIDED ON FETCH FUNC ALONE (PROBLY NOT)
       !isFunction(fetchFunc) &&
       recordsPerPage &&
       !isEmpty(state.selectOptions)

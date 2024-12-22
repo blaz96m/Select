@@ -4,13 +4,13 @@ import {
   SelectOptionT,
   SelectOptionInnerProps,
   SelectMultiValueInnerProps,
-  SelectSingleValueInnerProps,
   SelectSingleValueProps,
   SelectDropdownIndicatorInnerProps,
   SelectInputInnerProps,
   SelectClearIndicatorInnerProps,
   SelectCategoryCustomComponentProps,
   BasicComponentInnerProps,
+  SelectOptionList,
 } from "./components/Select/types/selectTypes";
 import "src/style.scss";
 import { SelectOptionProps } from "./components/Select/SelectOption";
@@ -27,6 +27,8 @@ import { SelectInputProps } from "./components/Select/SelectInput";
 import { SelectClearIndicatorProps } from "./components/Select/SelectClearIndicator";
 import { SelectCategoryProps } from "./components/SelectCategory";
 
+import axiosClient from "./api/axios/axiosClient";
+
 function App() {
   let currCategoryCount = 1;
   const options = Array.from({ length: 100 }, (val, index) => {
@@ -41,6 +43,19 @@ function App() {
   });
   const [value, setValue] = useState<SelectOptionT[]>([]);
   const [currLabel, setCurrLabel] = useState("");
+
+  const getMovieList = async ({ page = 1, searchTerm = "a" }) => {
+    try {
+      const reselt = await axiosClient.get(
+        `/search/movie?query=${searchTerm || "a"}&page=${page}`
+      );
+      const data = reselt.data;
+      const totalRecords = data["total_results"];
+      return { data: data.results as SelectOptionList, totalRecords };
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   const SelectCheckBox = (
     componentProps: SelectOptionProps,
@@ -144,6 +159,7 @@ function App() {
     <>
       <div>Selected Value: {currLabel}</div>
       <Select
+        fetchFunc={getMovieList}
         isMultiValue={false}
         value={value}
         labelKey="name"

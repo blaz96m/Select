@@ -11,3 +11,5 @@ export const INITIAL_STATE: SelectState = {
   focusedCategory: "",
   focusedOptionId: "",
 };
+
+export const OPTIONS_EMPTY_TEXT = "No Options Found";

@@ -15,8 +15,13 @@ import {
 } from "../requests/useQueryManager";
 import { QueryManagerState } from "src/stores/reducers/queryManagerReducer";
 
+export type SelectAsyncStateSetters = Pick<
+  QueryStateSetters,
+  "clearSearchQuery" | "goToNextPage" | "setSearchQuery"
+>;
+
 export type SelectAsyncApi = {
-  getSelectAsyncStateSetters: () => QueryStateSetters;
+  getSelectAsyncStateSetters: () => SelectAsyncStateSetters;
   getIsLastPage: () => boolean;
 };
 
@@ -60,7 +65,6 @@ const useSelectAsync = (
     getQueryManagerStateSetters,
     getIsLastPage,
     fetch,
-    getTotalRecords,
     getIsInitialFetch,
   } = queryManagerApi;
 
@@ -69,13 +73,13 @@ const useSelectAsync = (
     if (isInitialFetch && isLazyInit && isFunction(fetchFunc)) {
       (async () => {
         const result = await fetch();
-        updateSelectOptions(result);
+        result && updateSelectOptions(result);
       })();
     }
   }, [state.isOpen]);
 
   const selectAsyncApi = {
-    getSelectAsyncStateSetters: queryManagerApi.getQueryManagerStateSetters,
+    getSelectAsyncStateSetters: getQueryManagerStateSetters,
     getIsLastPage,
   };
 

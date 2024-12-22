@@ -22,6 +22,7 @@ export const SelectDropdownIndicator = ({
 }: SelectDropdownIndicatorProps & {
   customComponent?: CustomSelectDropdownIndicatorRenderer;
 }) => {
+  
   const className = "select__indicator";
   const handleClick = (
     e: React.MouseEvent<HTMLDivElement, MouseEvent>,

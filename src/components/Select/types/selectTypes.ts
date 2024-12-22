@@ -79,7 +79,7 @@ export type selectRendererOverload = {
 export type SelectFetchFunc = (params: {
   page?: number;
   searchQuery?: string;
-}) => Promise<{ data: SelectOptionList; totalRecords: number }>;
+}) => Promise<{ data: SelectOptionList; totalRecords: number }> | Promise<void>;
 
 export type SelectOptionInnerProps = {
   onClick: (...args: any) => void;

@@ -6,7 +6,7 @@ import {
   useRef,
   useImperativeHandle,
 } from "react";
-import { hasIn, isEmpty, isFunction, noop, trim } from "lodash";
+import { isEmpty, isFunction, trim } from "lodash";
 import {
   SelectOptionList,
   SelectOptionT,
@@ -17,17 +17,13 @@ import {
   SelectComponents,
   SelectInputInnerProps,
 } from "src/components/Select/types";
-import { SelectApi } from "src/hooks/select/useSelect";
 import { useInput } from "src/hooks/input";
 import {
   generateComponentInnerProps,
   isDirectionBottom,
 } from "src/utils/select";
-import { SelectAsyncApi } from "src/hooks/select/useSelectAsync";
 import clsx from "clsx";
-import { QueryStateSetters as SelectAsyncStateSetters } from "src/hooks/requests/useQueryManager";
-import { debug } from "console";
-import { render } from "react-dom";
+import { SelectAsyncStateSetters } from "src/hooks/select/useSelectAsync";
 
 export type SelectInputProps = {
   isMultiValue: boolean;
