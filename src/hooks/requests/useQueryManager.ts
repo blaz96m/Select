@@ -46,7 +46,7 @@ export type Response<T> = {
 };
 
 export type ResponseDetails<T> = Response<T> & {
-  updatedParams?: Partial<RequestParams>;
+  params?: Partial<RequestParams>;
 };
 
 type RequestParams = {
@@ -61,8 +61,9 @@ type QueryManagerApi<ResponseItemT> = {
   getQueryManagerStateSetters: () => QueryStateSetters;
   getTotalRecords: () => number;
   getIsInitialFetch: () => boolean;
-  getIsLastPage: () => boolean;
+  isLastPage: () => boolean;
   fetch: QueryManagerFetchFunc<ResponseItemT>;
+  endInitialFetch: () => void;
 };
 
 type QueryManagerFetchFunc<ResponseItemT> = (
@@ -78,7 +79,6 @@ export type QueryStateSetters = {
   resetPage: () => void;
   goToPage: (page: number) => void;
   goToNextPage: () => void;
-  endInitialFetch: () => void;
 };
 
 type RequestConfig = {
@@ -87,6 +87,7 @@ type RequestConfig = {
   fetchOnInit: boolean;
   recordsPerPage: number;
   fetchOnInputChange: boolean;
+  preventFetchOnInputChange?: (params: Partial<RequestParams>) => void; 
   [key: string]: any;
 };
 
@@ -138,17 +139,21 @@ const useQueryManager = <ResponseItemT>(
       const response = await fetchFunc(requestParams, ...args);
       if (response) {
         totalRecordsRef.current = response.totalRecords || 0;
+        isFunction(onAfterFetch) && onAfterFetch({
+          ...response,
+          params: requestParams
+        });
         return response;
       }
     },
     [fetchFunc, state.searchQuery, state.page, state.sort]
   );
   // TODO MAKE RECORDS PER PAGE OR RATHER PAGE SIZE A PART OF STATE, ALSO RENAME
-  const getIsLastPage = useCallback(() => {
+  const isLastPage = useCallback(() => {
     const totalRecords = totalRecordsRef.current;
     const { recordsPerPage } = getRequestConfig();
     if (totalRecords && recordsPerPage) {
-      return state.page * recordsPerPage < totalRecords;
+      return state.page * recordsPerPage >= totalRecords;
     }
     return false;
   }, [state.page]);
@@ -170,15 +175,20 @@ const useQueryManager = <ResponseItemT>(
     []
   );
   const setSearchQuery = useCallback(
-    (searchValue: string) =>
+    (searchValue: string) => {
+      fetchTriggeredByInput.current = true;
       dispatch({
         type: QueryManagerReducerActionTypes.SET_SEARCH_QUERY,
         payload: searchValue,
-      }),
+      })
+    },
     []
   );
   const clearSearchQuery = useCallback(
-    () => dispatch({ type: QueryManagerReducerActionTypes.CLEAR_SEARCH_QUERY }),
+    () => {
+      fetchTriggeredByInput.current = true;
+      dispatch({ type: QueryManagerReducerActionTypes.CLEAR_SEARCH_QUERY })
+    },
     []
   );
   const setSorting = useCallback(
@@ -197,8 +207,6 @@ const useQueryManager = <ResponseItemT>(
     []
   );
 
-  const isInitialFetch = isInitialFetchRef.current;
-
   const endInitialFetch = () => {
     isInitialFetchRef.current = false;
   };
@@ -212,47 +220,32 @@ const useQueryManager = <ResponseItemT>(
       resetPage,
       goToPage,
       goToNextPage,
-      endInitialFetch,
     };
   }
   useEffect(() => {
     const requestConfig = getRequestConfig();
-    if (
-      requestConfig.isDisabled ||
-      fetchTriggeredByInput.current ||
-      (isInitialFetch && !requestConfig.fetchOnInit)
-    ) {
-      return;
+    if(!(requestConfig.isDisabled || fetchTriggeredByInput.current || (isInitialFetchRef.current && !requestConfig.fetchOnInit))) {
+      (async () => {
+        await fetch();
+      })();
     }
-    (async () => {
-      const response = await fetch();
-      fetchTriggeredByInput.current = false;
-      if (isFunction(onAfterFetch) && response) {
-        onAfterFetch({ ...response, updatedParams: { page: state.page } });
-      }
-    })();
+    fetchTriggeredByInput.current = false;
   }, [state.page]);
 
   useEffect(() => {
-    const requestConfig = getRequestConfig();
+    const {isDisabled, fetchOnInputChange, preventFetchOnInputChange} = getRequestConfig();
     if (
-      requestConfig.isDisabled ||
-      !requestConfig.fetchOnInputChange ||
-      isInitialFetch
+      isDisabled ||
+      !fetchOnInputChange ||
+      isInitialFetchRef.current ||
+      (isFunction(preventFetchOnInputChange) && preventFetchOnInputChange(state))
     ) {
       return;
     }
     let timeoutId: NodeJS.Timeout | undefined;
     if (state.page === 1) {
       timeoutId = setTimeout(async () => {
-        const response = await fetch({ page: 1 });
-        fetchTriggeredByInput.current = true;
-        if (isFunction(onAfterFetch) && response) {
-          onAfterFetch({
-            ...response,
-            updatedParams: { page: 1, searchQuery: state.searchQuery },
-          });
-        }
+        await fetch({ page: 1 });
       }, 700);
     }
     if (timeoutId) {
@@ -262,13 +255,9 @@ const useQueryManager = <ResponseItemT>(
 
   useEffect(() => {
     const { isDisabled } = getRequestConfig();
-    if (isDisabled || isInitialFetch) return;
+    if (isDisabled || isInitialFetchRef.current) return;
     (async () => {
-      const response = await fetch();
-      if (isFunction(onAfterFetch) && response) {
-        //TODO MAYBE ON AFTER FETCH SHOULD RUN EVEN IF WE DONT GET THE RESPONSE?
-        onAfterFetch({ ...response, updatedParams: { sort: state.sort } });
-      }
+      await fetch();
     })();
   }, [state.sort]);
 
@@ -277,9 +266,10 @@ const useQueryManager = <ResponseItemT>(
     queryManagerApi: {
       getTotalRecords,
       getQueryManagerStateSetters,
-      getIsLastPage,
+      isLastPage,
       fetch,
       getIsInitialFetch,
+      endInitialFetch,
     },
   };
 };

@@ -19,13 +19,16 @@ export type SelectOptionProps = {
   getSelectStateSetters: () => SelectStateSetters;
   isFocused: boolean;
   focusInput: () => void;
+  handleInputClear: () => void;
   getSelectOptionsMap: () => Map<string, HTMLDivElement>;
   isCategorized: boolean;
-  closeDropdownOnOptionSelect?: boolean;
-  categoryKey?: keyof SelectOptionT;
   isSelected: boolean;
   removeSelectedOptionsFromList: boolean;
+  closeDropdownOnOptionSelect?: boolean;
+  categoryKey?: keyof SelectOptionT;
+  isLoading?: boolean;
 };
+console.log("RENDERED")
 
 const SelectOption = memo(
   (
@@ -48,9 +51,12 @@ const SelectOption = memo(
       isSelected,
       customComponent,
       removeSelectedOptionsFromList,
+      handleInputClear,
+      isLoading
     } = props;
     const shouldDropdownStayOpenAfterClick =
       !isNil(closeDropdownOnOptionSelect) && !closeDropdownOnOptionSelect;
+
 
     const hasCategories = categoryKey && isCategorized;
     const className = clsx({
@@ -69,13 +75,14 @@ const SelectOption = memo(
     };
 
     const handleOptionClick = (option: SelectOptionT) => {
+      if(isLoading) return;
       const optionCategory = hasCategories ? option[categoryKey] : "";
       const selectStateSetters = getSelectStateSetters();
       handleFocusOnClick(option.id, optionCategory);
       !removeSelectedOptionsFromList && isSelected
         ? selectStateSetters.clearValue(option.id)
         : selectStateSetters.addValue(option);
-      !isMultiValue && selectStateSetters.clearInput();
+      !isMultiValue && handleInputClear();
       shouldDropdownStayOpenAfterClick && focusInput();
     };
 

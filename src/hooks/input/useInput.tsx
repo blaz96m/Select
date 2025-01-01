@@ -6,6 +6,7 @@ import {
   useEffect,
   useState,
   ChangeEvent,
+  useRef,
 } from "react";
 import { isAsyncFunction } from "src/utils/general";
 
@@ -24,6 +25,8 @@ const useInput = (
     | ((value: string) => void)
 ): [string, (e: ChangeEvent<HTMLInputElement>) => void] => {
   const [input, setInput] = useState<string>("");
+
+  const isInitialRef = useRef(true);
 
   const updateInputValue = isFunction(customInputSetter)
     ? customInputSetter
@@ -48,6 +51,11 @@ const useInput = (
   };
 
   useEffect(() => {
+    if(isInitialRef.current) {
+      isInitialRef.current = false;
+      return
+
+    }
     let timeoutId: number | undefined;
     const inputState = !isNil(customInputState) ? customInputState : input;
     if (!isFunction(inputEffectTriggerFunction)) {

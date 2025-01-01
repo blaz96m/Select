@@ -7,12 +7,15 @@ import {
 import { faClose } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { isEmpty, isFunction } from "lodash";
+import clsx from "clsx";
 
 export type SelectClearIndicatorProps = {
   getSelectStateSetters: () => SelectStateSetters;
   value: SelectOptionList;
   inputValue: string;
   isMultiValue: boolean;
+  clearInput: () => void;
+  isLoading?: boolean;
 };
 
 const SelectClearIndicator = ({
@@ -20,23 +23,34 @@ const SelectClearIndicator = ({
   value,
   isMultiValue,
   inputValue,
+  clearInput,
   customComponent,
+  isLoading
 }: SelectClearIndicatorProps & {
   customComponent?: CustomSelectClearIndicatorRenderer;
 }) => {
   const clearAll = () => {
+    if(isLoading) return;
     const selectStateSetters = getSelectStateSetters();
     !isEmpty(value) && selectStateSetters.clearAllValues();
-    !isEmpty(inputValue) && selectStateSetters.clearInput();
+    clearInput();
   };
+
+  const className = clsx({
+    select__indicator: true,
+    "select__indicator--clear": true,
+    disabled: isLoading
+
+  })
+
   if (isFunction(customComponent)) {
     return customComponent(
-      { getSelectStateSetters, value, inputValue, isMultiValue },
+      { getSelectStateSetters, value, inputValue, isMultiValue, clearInput },
       { onClick: clearAll }
     );
   }
   return (
-    <div onClick={clearAll} className="select__indicator--clear">
+    <div onClick={clearAll} className={className}>
       <FontAwesomeIcon icon={faClose} />
     </div>
   );

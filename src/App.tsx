@@ -43,14 +43,17 @@ function App() {
   });
   const [value, setValue] = useState<SelectOptionT[]>([]);
   const [currLabel, setCurrLabel] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const getMovieList = async ({ page = 1, searchTerm = "a" }) => {
+  const getMovieList = async ({ page = 1, searchQuery = "a" }) => {
     try {
+      setIsLoading(true);
       const reselt = await axiosClient.get(
-        `/search/movie?query=${searchTerm || "a"}&page=${page}`
+        `/search/movie?query=${searchQuery || "a"}&page=${page}`
       );
       const data = reselt.data;
       const totalRecords = data["total_results"];
+      setIsLoading(false);
       return { data: data.results as SelectOptionList, totalRecords };
     } catch (err) {
       console.log(err);
@@ -78,14 +81,12 @@ function App() {
   ) => {
     const { getSelectStateSetters, labelKey, value } = componentProps;
     const superDelete = () => {
-      console.log(value);
     };
     const del = () => {
       const stateSetters = getSelectStateSetters();
       stateSetters.clearValue(value.id);
     };
     const { onClick } = innerProps;
-    console.log(value);
     return (
       <div className="custom-multi-val">
         {`${value[labelKey]} (${value["category"]})`}
@@ -150,8 +151,6 @@ function App() {
   ) => {
     const {} = componentProps;
     const { ref, onChange } = innerProps;
-
-    console.log(ref);
     return <input {...innerProps} />;
   };
 
@@ -160,16 +159,19 @@ function App() {
       <div>Selected Value: {currLabel}</div>
       <Select
         fetchFunc={getMovieList}
-        isMultiValue={false}
+        isMultiValue={true}
         value={value}
-        labelKey="name"
-        selectOptions={options}
+        labelKey="title"
         categoryKey="category"
-        isCategorized={true}
+        isCategorized={false}
         onChange={setValue}
-        fetchOnInputChange={false}
         closeDropdownOnOptionSelect={false}
         removeSelectedOptionsFromList={false}
+        fetchOnScroll={true}
+        
+        isLoading={isLoading}
+
+        lazyInit={true}
         customComponents={
           {
             //SelectOptionElement: SelectCheckBox,

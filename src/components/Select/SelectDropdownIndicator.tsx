@@ -5,12 +5,14 @@ import {
   SelectStateSetters,
 } from "src/components/Select/types";
 import { isFunction } from "lodash";
+import clsx from "clsx";
 
 export type SelectDropdownIndicatorProps = {
   isOpen: boolean;
   getSelectStateSetters: () => SelectStateSetters;
   focusFirstOption: () => void;
   focusInput: () => void;
+  isLoading?: boolean;
 };
 
 export const SelectDropdownIndicator = ({
@@ -19,15 +21,20 @@ export const SelectDropdownIndicator = ({
   focusFirstOption,
   focusInput,
   customComponent,
+  isLoading
 }: SelectDropdownIndicatorProps & {
   customComponent?: CustomSelectDropdownIndicatorRenderer;
 }) => {
   
-  const className = "select__indicator";
+  const className = clsx({ 
+    select__indicator: true,
+    disabled: isLoading
+});
   const handleClick = (
     e: React.MouseEvent<HTMLDivElement, MouseEvent>,
-    focusInputOnClose = true
+    focusInputOnClose = true,
   ) => {
+    if(isLoading) return
     const selectStateSetters = getSelectStateSetters();
     const updatedIsOpen = !isOpen;
     if (updatedIsOpen) {

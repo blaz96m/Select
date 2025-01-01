@@ -96,6 +96,7 @@ export type SelectInputInnerProps = {
   value: string;
   ref: React.RefObject<HTMLInputElement>;
   className: string;
+  disabled?: boolean;
 };
 
 export type SelectInputComponentHandlers = {
@@ -104,6 +105,7 @@ export type SelectInputComponentHandlers = {
   inputValue: string;
   innerRef: React.RefObject<HTMLInputElement>;
   className: string;
+  isLoading?: boolean;
 };
 
 export type SelectDropdownIndicatorInnerProps = {

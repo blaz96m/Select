@@ -1,3 +1,5 @@
+import { trim } from "lodash";
+
 export enum QueryManagerReducerActionTypes {
   SET_SEARCH_QUERY = "SET_SEARCH_QUERY",
   CLEAR_SEARCH_QUERY = "CLEAR_SEARCH_QUERY",
@@ -44,7 +46,10 @@ export const queryManagerReducer = (
   const { type } = action;
   switch (type) {
     case QueryManagerReducerActionTypes.CLEAR_SEARCH_QUERY:
-      return { ...state, searchQuery: "", page: 1 };
+      {
+      const page = state.searchQuery ? 1 : state.page;
+      return { ...state, searchQuery: "", page: page };
+      }
     case QueryManagerReducerActionTypes.SET_SEARCH_QUERY:
       return { ...state, searchQuery: action.payload, page: 1 };
     case QueryManagerReducerActionTypes.GO_TO_NEXT_PAGE:

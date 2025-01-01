@@ -1,4 +1,5 @@
-import { Dispatch, SetStateAction, act } from "react";
+import { isEmpty } from "lodash";
+import { Dispatch,  } from "react";
 import {
   SelectState,
   SelectOptionList,
@@ -44,7 +45,7 @@ export type SelectInputActions =
 
 export type SelectOptionSetterAction = {
   type: SelectReducerActionTypes.SET_OPTIONS;
-  paylod: SelectOptionList;
+  payload: SelectOptionList;
 };
 
 export type AddSelectOptionsListAction = {
@@ -89,13 +90,14 @@ export const selectReducer = (
     case SelectReducerActionTypes.TOGGLE_VISIBILTY:
       return { ...state, isOpen: !state.isOpen };
     case SelectReducerActionTypes.SET_INPUT:
-      return { ...state, inputValue: action.payload };
+      console.log("CALLED INPUT")
+      return state.inputValue !== action.payload ? { ...state, inputValue: action.payload } : state;
     case SelectReducerActionTypes.CLEAR_INPUT:
       return { ...state, inputValue: "" };
     case SelectReducerActionTypes.CLEAR_VALUE:
       return { ...state, value: [] };
     case SelectReducerActionTypes.SET_OPTIONS:
-      return { ...state, selectOptions: action.paylod };
+      return isEmpty(state.selectOptions) && isEmpty(action.payload) ? state : { ...state, selectOptions: action.payload }
     case SelectReducerActionTypes.GO_TO_NEXT_PAGE:
       return { ...state, page: state.page + 1 };
 

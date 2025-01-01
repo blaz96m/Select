@@ -86,6 +86,7 @@ export type SelectProps = {
   categoryKey: keyof SelectOptionT & string;
   showClearIndicator?: boolean;
   useDataPartitioning?: boolean;
+  isLoading?: boolean;
   categorizeFunction?: (options: SelectOptionList) => CategorizedSelectOptions;
   recordsPerPage?: number;
   customComponents: SelectCustomComponents;
@@ -118,6 +119,7 @@ const Select = ({
   showClearIndicator = true,
   customComponents = {},
   categoryKey = "",
+  isLoading
 }: SelectProps) => {
   const [selectState, dispatch] = useReducer(
     selectReducer,
@@ -127,6 +129,7 @@ const Select = ({
   // The originalOptions ref is only used in case all the data for the select comes from the frontend, enabling the pagination of the options while storing the original value that never changes.
   const originalOptions = useRef<SelectOptionList>(selectState.selectOptions);
   const totalRecords = useRef<number>(0);
+
 
   const displayedOptions = useSelectComputation(
     { ...selectState, value },
@@ -143,6 +146,10 @@ const Select = ({
   );
 
   const { refs, refHelpers } = useSelectRef(selectState);
+
+  const {focusInput} = refHelpers 
+
+  const { selectListContainerRef } = refs
 
   const selectApi = useSelect(
     dispatch,
@@ -161,6 +168,7 @@ const Select = ({
       recordsPerPage,
       categoryKey,
       closeDropdownOnOptionSelect,
+      selectListContainerRef
     }
   );
 
@@ -184,11 +192,13 @@ const Select = ({
       fetchOnInputChange,
       fetchFunc,
       fetchOnScroll,
+      originalOptions,
+      focusInput,
+      selectListContainerRef: refs.selectListContainerRef
     }
   );
 
-  const { getIsLastPage, getSelectAsyncStateSetters } = selectAsyncApi;
-
+  const { isLastPage, getSelectAsyncStateSetters } = selectAsyncApi;
   const usesInputAsync = isFunction(fetchFunc) && fetchOnInputChange;
   const selectInputValue = usesInputAsync
     ? selectAsyncState.searchQuery
@@ -196,9 +206,34 @@ const Select = ({
 
   const fetchOnScrollToBottom = isFunction(fetchFunc) && fetchOnScroll;
 
+  const hasPaging = fetchOnScrollToBottom || useDataPartitioning;
+
   const currentPage = fetchOnScrollToBottom
     ? selectAsyncState.page
     : selectState.page;
+
+    const handleInputChange = useCallback((value: string) => {
+      const {setSearchQuery} = getSelectAsyncStateSetters();
+      const {setInputValue} = getSelectStateSetters();
+      usesInputAsync ? setSearchQuery(value) : setInputValue(value)
+
+}, [usesInputAsync])
+
+  const handleInputClear = useCallback(() => {
+    const selectAsyncStateSetters = getSelectAsyncStateSetters();
+    const selectStateSetters = getSelectStateSetters();
+     usesInputAsync ? selectAsyncStateSetters.clearSearchQuery() : selectStateSetters.clearInput();
+  }, [usesInputAsync]);
+
+
+
+  const handleNextPageChange = useCallback(() => {
+    const { handlePageChangeAsync } = selectAsyncApi;
+    const { handlePageChange } = selectApi;
+    fetchOnScrollToBottom ? handlePageChangeAsync() : handlePageChange()
+  }, [selectState.page, selectAsyncState.page])
+
+
 
   const renderOptionElement = useCallback(
     (option: SelectOptionT) => {
@@ -214,6 +249,7 @@ const Select = ({
           option={option}
           getSelectOptionsMap={refHelpers.getSelectOptionsMap}
           getSelectStateSetters={getSelectStateSetters}
+          handleInputClear={handleInputClear}
           handleFocusOnClick={focusOptionAfterClick}
           categoryKey={categoryKey}
           isCategorized={isCategorized}
@@ -271,7 +307,7 @@ const Select = ({
             labelKey={labelKey}
             isMultiValue={isMultiValue}
             placeHolder={placeHolder}
-            inputValue={selectState.inputValue}
+            inputValue={selectInputValue}
             value={value}
             singleValueCustomComponent={
               customComponents.SelectSingleValueElement
@@ -289,29 +325,29 @@ const Select = ({
             focusFirstOption={focusFirstOption}
             focusLastOption={focusLastOption}
             addOptionOnKeyPress={addOptionOnKeyPress}
+            handlePageChange={handleNextPageChange}
             usesInputAsync={usesInputAsync}
-            getIsLastPage={getIsLastPage}
-            getSelectAsyncStateSetters={getSelectAsyncStateSetters}
+            key="select-input"
+            isLastPage={isLastPage}
+            setInput={handleInputChange}
             onKeyPress={refHelpers.handleScrollToFocusedOption}
             filterSearchedOptions={filterSearchedOptions}
             disableInputFetchTrigger={disableInputFetchTrigger}
-            customComponent={
-              customComponents?.SelectInputElement?.customComponent
-            }
+            isLoading={isLoading}
+            customComponent="yep"
             ref={refs.inputRef}
             hasInput={hasInput}
-            renderInputContainerForCustomComponent={
-              customComponents?.SelectInputElement?.renderContainer
-            }
+            renderInputContainerForCustomComponent="nope"
           />
         </Select.ValueSection>
-        <Select.IndicatorSection isLoading={false} spinner={<Select.Spinner />}>
+        <Select.IndicatorSection isLoading={isLoading} spinner={<Select.Spinner />}>
           <Select.DropdownIndicator
             focusInput={refHelpers.focusInput}
             getSelectStateSetters={getSelectStateSetters}
             focusFirstOption={focusFirstOption}
             customComponent={customComponents.SelectDropdownIndicatorElement}
             isOpen={selectState.isOpen}
+            isLoading={isLoading}
           />
           {showClearIndicator && (
             <Select.ClearIndicator
@@ -319,8 +355,10 @@ const Select = ({
               isMultiValue={isMultiValue}
               value={value}
               inputValue={selectInputValue}
+              clearInput={handleInputClear}
               customComponent={customComponents.SelectClearIndicatorElement}
-            />
+              isLoading={isLoading}
+            /> 
           )}
         </Select.IndicatorSection>
       </Select.Top>
@@ -329,13 +367,12 @@ const Select = ({
           categoryKey={categoryKey}
           ref={refs.selectListContainerRef}
           displayedOptions={displayedOptions}
-          handlePageChange={handlePageChange}
+          handlePageChange={handleNextPageChange}
           customOnScrollToBottom={onScrollToBottom}
           onPageChange={onPageChange}
           page={currentPage}
-          fetchOnScrollToBottom={fetchOnScrollToBottom}
-          useDataPartitioning={useDataPartitioning}
-          getSelectAsyncStateSetters={getSelectAsyncStateSetters}
+          hasPaging={hasPaging}
+          isLoading={isLoading}
           renderFn={selectRenderFn}
           isCategorized={isCategorized}
         />

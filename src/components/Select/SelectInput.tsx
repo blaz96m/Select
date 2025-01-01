@@ -39,11 +39,13 @@ export type SelectInputProps = {
   focusLastOption: () => void;
   onKeyPress: (id: string) => void;
   addOptionOnKeyPress: () => void;
-  getIsLastPage: () => boolean;
-  getSelectAsyncStateSetters: () => SelectAsyncStateSetters;
+  setInput: (value: string) => void;
   usesInputAsync: boolean;
   hasInput: boolean;
   disableInputFetchTrigger: boolean;
+  handlePageChange: () => void;
+  isLoading?:boolean;
+  hasPaging?: boolean;
   renderInputContainerForCustomComponent?: boolean;
 };
 
@@ -65,13 +67,15 @@ const SelectInput = memo(
       onKeyPress,
       hasInput,
       addOptionOnKeyPress,
-      getSelectAsyncStateSetters,
-      getIsLastPage,
       customComponent,
+      setInput,
+      handlePageChange,
+      hasPaging,
+      isLoading,
       renderInputContainerForCustomComponent = true,
     } = props;
-
     const innerRef = useRef<HTMLInputElement>(null);
+    console.log()
 
     const shouldPreventInputChange = useCallback(
       (updatedValue: string) =>
@@ -88,43 +92,36 @@ const SelectInput = memo(
 
     const onInputUpdate = useCallback(
       (input: string) => {
-        const selectStateSetters = getSelectStateSetters();
-        selectStateSetters.openDropdown();
-        if (!isMultiValue) {
-          selectStateSetters.clearAllValues();
-        }
-        if (isFunction(customOnChange)) {
-          customOnChange(input);
-        }
+        const { openDropdown, clearAllValues } = getSelectStateSetters();
+        openDropdown();
+        !isMultiValue && clearAllValues();
+        isFunction(customOnChange) && customOnChange(input);
       },
       [isMultiValue]
     );
 
     function filterSearchedValues(inputValue: string) {
       if (usesInputAsync) return;
-      if (!inputValue && isFunction(filterSearchedOptions)) {
+      if(isFunction(filterSearchedOptions)) {
+      if (!inputValue) {
         // TODO Check if this is a potential problem for the use effect
         return filterSearchedOptions();
       }
       const timeoutId = setTimeout(() => {
         filterSearchedOptions();
       }, 1000);
-
       return timeoutId;
+      }
     }
 
-    const setInputValue = useCallback((value: string) => {
-      usesInputAsync
-        ? getSelectAsyncStateSetters().setSearchQuery(value)
-        : getSelectStateSetters().setInputValue(value);
-    }, []);
+
 
     const [_, handleInputChange] = useInput(
       onInputUpdate,
       shouldPreventInputChange,
       filterSearchedValues,
       inputValue,
-      setInputValue
+      setInput
     );
 
     const onArrowKeyUp = () => {
@@ -142,7 +139,6 @@ const SelectInput = memo(
     };
 
     const onArrowKeyDown = () => {
-      const isLastPage = getIsLastPage();
       const selectStateSetters = getSelectStateSetters();
       const focusDetails = getFocusValues("down");
       if (!isEmpty(focusDetails)) {
@@ -152,8 +148,8 @@ const SelectInput = memo(
         );
         return focusDetails.focusedOptionId;
       }
-      if (!isLastPage) {
-        return selectStateSetters.loadNextPage();
+      if (hasPaging) {
+        return handlePageChange()
       }
       const optionId = focusFirstOption();
       return optionId;
@@ -185,7 +181,7 @@ const SelectInput = memo(
     if (isFunction(customComponent)) {
       const inputInnerProps = generateComponentInnerProps(
         SelectComponents.INPUT,
-        { handleInputChange, className, inputValue, innerRef, handleKeyPress }
+        { handleInputChange, className, inputValue, innerRef, handleKeyPress, isLoading }
       );
       return renderInputContainerForCustomComponent ? (
         <div className="select__input__wrapper">
@@ -199,9 +195,11 @@ const SelectInput = memo(
     return (
       <div className="select__input__wrapper">
         <input
+          key="select-input"
           className={className}
           onChange={handleInputChange}
           value={inputValue}
+          disabled={isLoading}
           onKeyDown={handleKeyPress}
           ref={innerRef}
         />

@@ -1,4 +1,4 @@
-import { isArray, isFunction, isObject, update } from "lodash";
+import { isArray, isEmpty, isFunction, isObject, trim, update } from "lodash";
 import { useCallback, useEffect, useRef } from "react";
 import {
   SelectFetchFunc,
@@ -20,34 +20,53 @@ export type SelectAsyncStateSetters = Pick<
   "clearSearchQuery" | "goToNextPage" | "setSearchQuery"
 >;
 
+export type SelectAsyncState = Pick<QueryManagerState, "searchQuery" | "page">
+
 export type SelectAsyncApi = {
   getSelectAsyncStateSetters: () => SelectAsyncStateSetters;
-  getIsLastPage: () => boolean;
+  isLastPage: () => boolean;
+  handlePageChangeAsync: () => void;
 };
 
 const useSelectAsync = (
   state: SelectState,
   selectApi: SelectApi,
-  requestConfig: {
+  props: {
     fetchOnScroll: boolean;
-    isLazyInit?: boolean;
     recordsPerPage?: number;
     fetchOnInputChange?: boolean;
+    originalOptions: React.MutableRefObject<SelectOptionList | []>
+    focusInput: () => void;
+    selectListContainerRef: React.RefObject<HTMLDivElement>;
+    isLazyInit?: boolean;
     fetchFunc?: SelectFetchFunc;
   }
-): { selectAsyncApi: SelectAsyncApi; selectAsyncState: QueryManagerState } => {
+): { selectAsyncApi: SelectAsyncApi; selectAsyncState: SelectAsyncState } => {
   const { getSelectStateSetters } = selectApi;
-  const { isLazyInit, recordsPerPage } = requestConfig;
-  const { fetchFunc, fetchOnInputChange } = requestConfig;
+  const { fetchFunc, fetchOnInputChange, isLazyInit, recordsPerPage, originalOptions,  selectListContainerRef } = props;
+
+  const shouldPreventInputFetch = (params: SelectAsyncState) => {
+    const { searchQuery }= params;
+    return !trim(searchQuery) && !isEmpty(state.value)
+
+  }
 
   const updateSelectOptions = useCallback(
     (response: ResponseDetails<SelectOptionT>) => {
       const selectStateSetters = getSelectStateSetters();
-      const { data, updatedParams } = response;
-      if (updatedParams && updatedParams.page !== 1) {
-        return selectStateSetters.addOptions(data);
+      console.log(selectListContainerRef)
+      const { data, params } = response;
+      if (params && params.page !== 1) {
+         selectStateSetters.addOptions(data);
+      }else {
+      if(originalOptions?.current && isEmpty(originalOptions.current)) {
+        originalOptions.current = data;
       }
-      selectStateSetters.setOptions(data);
+      if(selectListContainerRef.current && selectListContainerRef.current.scrollTop) {
+        selectListContainerRef.current.scroll({top: 0})
+      }
+      selectStateSetters.setOptions(data)
+    }
     },
     []
   );
@@ -59,28 +78,38 @@ const useSelectAsync = (
       fetchOnInit: !isLazyInit,
       recordsPerPage,
       fetchOnInputChange,
+      shouldPreventInputFetch
     }
   );
   const {
     getQueryManagerStateSetters,
-    getIsLastPage,
+    isLastPage,
     fetch,
     getIsInitialFetch,
+    endInitialFetch,
+    
   } = queryManagerApi;
+
+  const handlePageChangeAsync = useCallback(() => {
+    const {goToNextPage} = getQueryManagerStateSetters();
+    !isLastPage() && goToNextPage();
+  }, [isLastPage])
 
   useEffect(() => {
     const isInitialFetch = getIsInitialFetch();
-    if (isInitialFetch && isLazyInit && isFunction(fetchFunc)) {
+    if (isInitialFetch && isLazyInit && isFunction(fetchFunc) && state.isOpen) {
       (async () => {
-        const result = await fetch();
-        result && updateSelectOptions(result);
+        await fetch();
+        endInitialFetch();
       })();
+      
     }
   }, [state.isOpen]);
 
   const selectAsyncApi = {
     getSelectAsyncStateSetters: getQueryManagerStateSetters,
-    getIsLastPage,
+    isLastPage,
+    handlePageChangeAsync
   };
 
   return { selectAsyncApi, selectAsyncState: queryManagerState };

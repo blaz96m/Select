@@ -52,7 +52,7 @@ const useSelectComputation = (
     ) {
       return slice(options, 0, state.page * recordsPerPage);
     }
-    return null;
+    return options;
   }, [state.selectOptions, state.page]);
 
   const categorizedOptions = useMemo((): CategorizedSelectOptions => {
@@ -90,6 +90,7 @@ const useSelectComputation = (
     }
     return null;
   }, [filteredOptions, sorterFn]);
+
 
   return sortedOptions || filteredOptions;
 };

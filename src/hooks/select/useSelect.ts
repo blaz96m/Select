@@ -79,6 +79,7 @@ const useSelect = (
     categoryKey: keyof SelectOptionT & string;
     recordsPerPage: number | null;
     closeDropdownOnOptionSelect?: boolean;
+    selectListContainerRef: React.RefObject<HTMLDivElement>
   }
 ): SelectApi => {
   const { setValue } = customStateUpdaters;
@@ -94,7 +95,6 @@ const useSelect = (
     option: SelectOptionT,
     dispatch: SelectReducerDispatch
   ) => {
-    console.log("CALLED");
     const closeDropdown = shouldCloseDropdownOnSelect();
     setValue((prevState) =>
       selectProps.isMultiValue ? [...prevState, option] : [option]
@@ -136,11 +136,11 @@ const useSelect = (
       addValue: (option) => onAddValue(option, dispatch),
       clearValue: (optionId) => onClearValue(optionId),
       clearAllValues: () => onClearAllValues(),
-      setOptions: (options) =>
+      setOptions: (options) => {
         dispatch({
           type: SelectReducerActionTypes.SET_OPTIONS,
-          paylod: options,
-        }),
+          payload: options,
+        })},
       addOptions: (options) =>
         dispatch({
           type: SelectReducerActionTypes.ADD_OPTION_LISTS,
@@ -225,9 +225,7 @@ const useSelect = (
         return;
       }
       const selectStateSetters = getSelectStateSetters();
-      console.log(optionId, optionCategory);
       const nextElement = getFocusValues("down", optionId, optionCategory);
-      console.log(nextElement);
       if (!isEmpty(nextElement)) {
         return selectStateSetters.setFocusDetails(
           nextElement.focusedOptionId,
@@ -271,6 +269,7 @@ const useSelect = (
       selectProps.labelKey,
       selectState.inputValue
     );
+    console.count("CALLED FROM SEARCH")
     selectStateSetters.setOptions(filteredOptions);
   }, [selectState.selectOptions, selectState.inputValue]);
 
@@ -293,6 +292,11 @@ const useSelect = (
     selectStateSetters.setFocusDetails(firstOption.id);
     return firstOption.id;
   }, [selectState.displayedOptions]);
+
+  useEffect(() => {
+    selectRefHelpers.focusInput()
+  }, [selectState.selectOptions])
+  
 
   return {
     getSelectStateSetters,

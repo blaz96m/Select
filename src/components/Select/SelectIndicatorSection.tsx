@@ -2,8 +2,8 @@ import { ReactNode } from "react";
 
 type IndicatorSectionProps = {
   children: ReactNode;
-  isLoading: boolean;
   spinner: JSX.Element;
+    isLoading?: boolean;
 };
 
 const SelectIndicatorSection = ({
@@ -14,7 +14,9 @@ const SelectIndicatorSection = ({
   return (
     <div className="select__top__indicator-section">
       {children}
+      <div className="select__loader">
       {isLoading && spinner}
+      </div>
     </div>
   );
 };

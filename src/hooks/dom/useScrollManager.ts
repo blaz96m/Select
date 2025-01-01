@@ -63,7 +63,7 @@ const useScrollManager = <T extends HTMLElement>(
   );
 
   useEffect(() => {
-    if (!captureEnabled || !targetRef.current) return noop;
+    if (!captureEnabled || !targetRef.current) return;
     const target = targetRef.current;
 
     target.addEventListener("wheel", throttledScrollHandler);

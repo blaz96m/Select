@@ -150,7 +150,8 @@ const getFocusedOptionIdx = (
   focusedOptionId: string
 ) => {
   return findIndex(options, (option) => {
-    return option.id === focusedOptionId;
+    console.log(option.id, focusedOptionId)
+    return option.id == focusedOptionId;
   });
 };
 
@@ -338,12 +339,13 @@ const generateSelectOptionInnerProps = (
 const generateSelectInputInnerProps = (
   props: SelectInputComponentHandlers
 ): SelectInputInnerProps => {
-  const { handleInputChange, handleKeyPress, inputValue, innerRef, className } =
+  const { handleInputChange, handleKeyPress, inputValue, innerRef, className,isLoading } =
     props;
   return {
     onChange: handleInputChange,
     onKeyDown: handleKeyPress,
     value: inputValue,
+    disabled: isLoading,
     ref: innerRef,
     className,
   };

@@ -38,7 +38,6 @@
 
     &__indicator-section {
       display: flex;
-      gap: 10px;
       align-items: center;
     }
   }
@@ -198,14 +197,19 @@
   &__indicator {
     height: 100%;
     width: 100%;
-    padding: 0.2rem 0.5rem;
+    padding: 0.2rem 0.3rem;
+    color: rgb(151, 151, 151);
+
+    &.disabled {
+      opacity: 0.6;
+    }
 
     &--clear {
       color: rgb(151, 151, 151);
 
-      &--disabled {
-        opacity: 0.6;
-      }
     }
+
+    
   }
 }
+

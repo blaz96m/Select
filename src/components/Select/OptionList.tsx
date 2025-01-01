@@ -25,15 +25,14 @@ export type OptionListProps = {
   handlePageChange: () => void;
   isCategorized: boolean;
   categoryKey: string;
-  getSelectAsyncStateSetters: () => SelectAsyncStateSetters;
   page: number;
+  isLoading?: boolean;
+  hasPaging?: boolean;
   customOnScrollToBottom?: (
     page: number,
     options: SelectOptionList | CategorizedSelectOptions
   ) => void;
   onPageChange?: (page: number) => void;
-  useDataPartitioning?: boolean;
-  fetchOnScrollToBottom?: boolean;
 };
 
 const OptionList = memo(
@@ -45,12 +44,11 @@ const OptionList = memo(
         handlePageChange,
         isCategorized,
         categoryKey,
-        fetchOnScrollToBottom,
-        useDataPartitioning,
+        hasPaging,
         page,
-        getSelectAsyncStateSetters,
         customOnScrollToBottom,
         onPageChange,
+        isLoading
       },
       ref
     ) => {
@@ -59,13 +57,9 @@ const OptionList = memo(
         if (isFunction(customOnScrollToBottom))
           return customOnScrollToBottom(page, displayedOptions);
 
-        const selectAsyncStateSetters = getSelectAsyncStateSetters();
-
-        if (fetchOnScrollToBottom || useDataPartitioning) {
+        if (hasPaging) {
           const nextPage = page++;
-          fetchOnScrollToBottom
-            ? selectAsyncStateSetters.goToNextPage()
-            : handlePageChange();
+          handlePageChange();
           isFunction(onPageChange) && onPageChange(nextPage);
         }
       };
@@ -74,7 +68,7 @@ const OptionList = memo(
       const innerRef = useRef<HTMLDivElement>(null);
       // TODO - Check if imperative handles are required across the proj.
       useImperativeHandle(ref, () => innerRef.current!);
-      useScrollManager<HTMLDivElement>(innerRef, bottomScrollActions, {}, true);
+      useScrollManager<HTMLDivElement>(innerRef, bottomScrollActions, {}, !isLoading);
 
       return (
         <div className="select__options__wrapper" ref={innerRef}>
