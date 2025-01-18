@@ -5,6 +5,7 @@ import { SelectValueProps } from "../SelectValue";
 import { SelectMultiValueProps } from "src/components/Select/SelectMultiValueElement";
 import { SelectInputProps } from "src/components/Select/SelectInput";
 import { SelectCategoryProps } from "src/components/SelectCategory";
+import { SelectAsyncStateSetters } from "src/hooks/select/useSelectAsync";
 
 export type SelectOptionT = {
   id: string;
@@ -165,10 +166,9 @@ export type SelectCategoryCustomComponentProps = Omit<
   "renderOption"
 >;
 
-export type SelectSingleValueProps = Pick<
-  SelectValueProps,
-  "getSelectStateSetters" | "labelKey"
-> & { value: SelectOptionT };
+export type SelectSingleValueProps = Pick<SelectValueProps, "labelKey"> & {
+  value: SelectOptionT;
+};
 
 export type SelectMultiValueCustomComponentProps = {
   valueLabel: string;
@@ -184,8 +184,16 @@ type CustomSelectComponentRenderer<
   ComponentPropsT extends SelectCustomComponentProps,
   InnerPropsT extends SelectComponentInnerProps = null
 > = InnerPropsT extends null
-  ? (componentProps: ComponentPropsT) => JSX.Element
-  : (componentProps: ComponentPropsT, innerProps: InnerPropsT) => JSX.Element;
+  ? (componentProps: CustomComponentProps<ComponentPropsT>) => JSX.Element
+  : (
+      componentProps: CustomComponentProps<ComponentPropsT>,
+      innerProps: InnerPropsT
+    ) => JSX.Element;
+
+type CustomComponentProps<T> = T & {
+  getSelectStateSetters: () => SelectStateSetters;
+  getSelectAsyncStateSetters: () => SelectAsyncStateSetters;
+};
 
 export type CustomSelectOptionRenderer = CustomSelectComponentRenderer<
   SelectOptionProps,
@@ -232,6 +240,20 @@ export type SelectCustomComponents = {
     customComponent: CustomSelectInputRenderer;
     renderContainer?: boolean;
   };
+};
+
+export type CustomClass = { className: string; override?: boolean };
+
+export type CustomClasses = {
+  selectTopContainer?: CustomClass;
+  selectClearIndicator?: CustomClass;
+  selectOptionListContainer?: CustomClass;
+  selectOptionList?: CustomClass;
+  selectOption?: CustomClass;
+  selectInput?: CustomClass;
+  selectSingleValue?: CustomClass;
+  selectMultiValue?: CustomClass;
+  selectCategory?: CustomClass;
 };
 
 export enum SelectComponents {

@@ -8,44 +8,63 @@ import { faClose } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { isEmpty, isFunction } from "lodash";
 import clsx from "clsx";
+import { useSelectContext } from "src/stores/providers/SelectProvider";
 
 export type SelectClearIndicatorProps = {
-  getSelectStateSetters: () => SelectStateSetters;
   value: SelectOptionList;
   inputValue: string;
   isMultiValue: boolean;
-  clearInput: () => void;
+  usesInputAsync?: boolean;
   isLoading?: boolean;
 };
 
 const SelectClearIndicator = ({
-  getSelectStateSetters,
   value,
   isMultiValue,
   inputValue,
-  clearInput,
-  customComponent,
-  isLoading
-}: SelectClearIndicatorProps & {
-  customComponent?: CustomSelectClearIndicatorRenderer;
-}) => {
-  const clearAll = () => {
-    if(isLoading) return;
+  usesInputAsync,
+  isLoading,
+}: SelectClearIndicatorProps) => {
+  const clearInput = () => {
+    const selectAsyncStateSetters = getSelectAsyncStateSetters();
     const selectStateSetters = getSelectStateSetters();
-    !isEmpty(value) && selectStateSetters.clearAllValues();
-    clearInput();
+    usesInputAsync
+      ? selectAsyncStateSetters.clearSearchQuery()
+      : selectStateSetters.clearInput();
   };
+
+  const clearAll = () => {
+    if (isLoading) return;
+    const { clearAllValues } = getSelectStateSetters();
+    !isEmpty(value) && clearAllValues();
+    inputValue && clearInput();
+  };
+
+  const context = useSelectContext();
+  const {
+    components: { SelectClearIndicatorElement },
+    getSelectStateSetters,
+    getSelectAsyncStateSetters,
+  } = context;
+
+  const customComponent = context.components.SelectClearIndicatorElement;
 
   const className = clsx({
     select__indicator: true,
     "select__indicator--clear": true,
-    disabled: isLoading
-
-  })
+    disabled: isLoading,
+  });
 
   if (isFunction(customComponent)) {
     return customComponent(
-      { getSelectStateSetters, value, inputValue, isMultiValue, clearInput },
+      {
+        getSelectStateSetters,
+        usesInputAsync,
+        value,
+        inputValue,
+        isMultiValue,
+        getSelectAsyncStateSetters,
+      },
       { onClick: clearAll }
     );
   }

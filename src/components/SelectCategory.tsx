@@ -5,6 +5,7 @@ import {
   SelectOptionList,
   SelectOptionT,
 } from "./Select/types";
+import { useSelectContext } from "src/stores/providers/SelectProvider";
 
 export type SelectCategoryProps = {
   categoryOptions: SelectOptionList;
@@ -13,14 +14,9 @@ export type SelectCategoryProps = {
 };
 
 const SelectCategory = memo(
-  ({
-    categoryOptions,
-    categoryName,
-    renderOption,
-    customComponent,
-  }: SelectCategoryProps & {
-    customComponent?: CustomSelectCategoryRenderer;
-  }) => {
+  ({ categoryOptions, categoryName, renderOption }: SelectCategoryProps) => {
+    const context = useSelectContext();
+    const customComponent = context.components.SelectCategoryElement;
     return (
       <div>
         {isFunction(customComponent) ? (

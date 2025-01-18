@@ -16,13 +16,13 @@ import {
 
 type SelectComputationProps = {
   labelKey: keyof SelectOptionT;
-  isCategorized: boolean;
   removeSelectedOptionsFromList: boolean;
   categorizeFunction?: (options: SelectOptionList) => CategorizedSelectOptions;
   sorterFn?: SelectSorterFunction;
   fetchFunc?: SelectFetchFunc;
   categoryKey?: keyof SelectOptionT;
   recordsPerPage?: number;
+  isCategorized?: boolean;
 };
 
 const useSelectComputation = (
@@ -90,7 +90,6 @@ const useSelectComputation = (
     }
     return null;
   }, [filteredOptions, sorterFn]);
-
 
   return sortedOptions || filteredOptions;
 };

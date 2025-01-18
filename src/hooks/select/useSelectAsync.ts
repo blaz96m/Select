@@ -20,7 +20,7 @@ export type SelectAsyncStateSetters = Pick<
   "clearSearchQuery" | "goToNextPage" | "setSearchQuery"
 >;
 
-export type SelectAsyncState = Pick<QueryManagerState, "searchQuery" | "page">
+export type SelectAsyncState = Pick<QueryManagerState, "searchQuery" | "page">;
 
 export type SelectAsyncApi = {
   getSelectAsyncStateSetters: () => SelectAsyncStateSetters;
@@ -32,41 +32,49 @@ const useSelectAsync = (
   state: SelectState,
   selectApi: SelectApi,
   props: {
-    fetchOnScroll: boolean;
     recordsPerPage?: number;
     fetchOnInputChange?: boolean;
-    originalOptions: React.MutableRefObject<SelectOptionList | []>
+    originalOptions: React.MutableRefObject<SelectOptionList | []>;
     focusInput: () => void;
     selectListContainerRef: React.RefObject<HTMLDivElement>;
     isLazyInit?: boolean;
+    fetchOnScroll?: boolean;
     fetchFunc?: SelectFetchFunc;
   }
 ): { selectAsyncApi: SelectAsyncApi; selectAsyncState: SelectAsyncState } => {
   const { getSelectStateSetters } = selectApi;
-  const { fetchFunc, fetchOnInputChange, isLazyInit, recordsPerPage, originalOptions,  selectListContainerRef } = props;
+  const {
+    fetchFunc,
+    fetchOnInputChange,
+    isLazyInit,
+    recordsPerPage,
+    originalOptions,
+    selectListContainerRef,
+  } = props;
 
   const shouldPreventInputFetch = (params: SelectAsyncState) => {
-    const { searchQuery }= params;
-    return !trim(searchQuery) && !isEmpty(state.value)
-
-  }
+    const { searchQuery } = params;
+    return !trim(searchQuery) && !isEmpty(state.value);
+  };
 
   const updateSelectOptions = useCallback(
     (response: ResponseDetails<SelectOptionT>) => {
       const selectStateSetters = getSelectStateSetters();
-      console.log(selectListContainerRef)
       const { data, params } = response;
       if (params && params.page !== 1) {
-         selectStateSetters.addOptions(data);
-      }else {
-      if(originalOptions?.current && isEmpty(originalOptions.current)) {
-        originalOptions.current = data;
+        selectStateSetters.addOptions(data);
+      } else {
+        if (originalOptions?.current && isEmpty(originalOptions.current)) {
+          originalOptions.current = data;
+        }
+        if (
+          selectListContainerRef.current &&
+          selectListContainerRef.current.scrollTop
+        ) {
+          selectListContainerRef.current.scroll({ top: 0 });
+        }
+        selectStateSetters.setOptions(data);
       }
-      if(selectListContainerRef.current && selectListContainerRef.current.scrollTop) {
-        selectListContainerRef.current.scroll({top: 0})
-      }
-      selectStateSetters.setOptions(data)
-    }
     },
     []
   );
@@ -78,7 +86,7 @@ const useSelectAsync = (
       fetchOnInit: !isLazyInit,
       recordsPerPage,
       fetchOnInputChange,
-      shouldPreventInputFetch
+      shouldPreventInputFetch,
     }
   );
   const {
@@ -87,13 +95,12 @@ const useSelectAsync = (
     fetch,
     getIsInitialFetch,
     endInitialFetch,
-    
   } = queryManagerApi;
 
   const handlePageChangeAsync = useCallback(() => {
-    const {goToNextPage} = getQueryManagerStateSetters();
+    const { goToNextPage } = getQueryManagerStateSetters();
     !isLastPage() && goToNextPage();
-  }, [isLastPage])
+  }, [isLastPage]);
 
   useEffect(() => {
     const isInitialFetch = getIsInitialFetch();
@@ -102,14 +109,13 @@ const useSelectAsync = (
         await fetch();
         endInitialFetch();
       })();
-      
     }
   }, [state.isOpen]);
 
   const selectAsyncApi = {
     getSelectAsyncStateSetters: getQueryManagerStateSetters,
     isLastPage,
-    handlePageChangeAsync
+    handlePageChangeAsync,
   };
 
   return { selectAsyncApi, selectAsyncState: queryManagerState };

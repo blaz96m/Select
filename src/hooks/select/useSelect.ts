@@ -36,7 +36,7 @@ import {
   getLastOptionAndCategory,
   getOptionFocusDetailsOnNavigation,
 } from "src/utils/select";
-import { SelectRefHelpers } from "./useSelectRef";
+import { SelectDomHelpers } from "./useSelectDomHelper";
 import { getObjectKeys } from "src/utils/data-types/objects/helpers";
 
 type StateSetter<T> = Dispatch<SetStateAction<T>>;
@@ -71,15 +71,15 @@ const useSelect = (
     originalOptions: SelectOptionList;
     totalRecords: number;
   },
-  selectRefHelpers: SelectRefHelpers,
+  selectDomHelpers: SelectDomHelpers,
   selectProps: {
     isMultiValue: boolean;
     labelKey: keyof SelectOptionT;
-    isCategorized: boolean;
     categoryKey: keyof SelectOptionT & string;
-    recordsPerPage: number | null;
-    closeDropdownOnOptionSelect?: boolean;
-    selectListContainerRef: React.RefObject<HTMLDivElement>
+    recordsPerPage?: number;
+    closeDropdownOnSelect?: boolean;
+    selectListContainerRef: React.RefObject<HTMLDivElement>;
+    isCategorized?: boolean;
   }
 ): SelectApi => {
   const { setValue } = customStateUpdaters;
@@ -115,12 +115,12 @@ const useSelect = (
   };
 
   const shouldCloseDropdownOnSelect = () => {
-    const { closeDropdownOnOptionSelect, isMultiValue } = selectProps;
+    const { closeDropdownOnSelect, isMultiValue } = selectProps;
     //DEFAULT behaviour if the closeDropdownOnOptionSelect prop is not specified
-    if (isNil(closeDropdownOnOptionSelect)) {
+    if (isNil(closeDropdownOnSelect)) {
       return isMultiValue ? false : true;
     }
-    return closeDropdownOnOptionSelect;
+    return closeDropdownOnSelect;
   };
 
   if (!selectStateSettersRef.current) {
@@ -140,7 +140,8 @@ const useSelect = (
         dispatch({
           type: SelectReducerActionTypes.SET_OPTIONS,
           payload: options,
-        })},
+        });
+      },
       addOptions: (options) =>
         dispatch({
           type: SelectReducerActionTypes.ADD_OPTION_LISTS,
@@ -269,7 +270,7 @@ const useSelect = (
       selectProps.labelKey,
       selectState.inputValue
     );
-    console.count("CALLED FROM SEARCH")
+    console.count("CALLED FROM SEARCH");
     selectStateSetters.setOptions(filteredOptions);
   }, [selectState.selectOptions, selectState.inputValue]);
 
@@ -294,9 +295,8 @@ const useSelect = (
   }, [selectState.displayedOptions]);
 
   useEffect(() => {
-    selectRefHelpers.focusInput()
-  }, [selectState.selectOptions])
-  
+    selectDomHelpers.focusInput();
+  }, [selectState.selectOptions]);
 
   return {
     getSelectStateSetters,

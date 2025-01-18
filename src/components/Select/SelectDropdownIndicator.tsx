@@ -1,51 +1,64 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronDown, faChevronUp } from "@fortawesome/free-solid-svg-icons";
-import {
-  CustomSelectDropdownIndicatorRenderer,
-  SelectStateSetters,
-} from "src/components/Select/types";
 import { isFunction } from "lodash";
 import clsx from "clsx";
+import { useSelectContext } from "src/stores/providers/SelectProvider";
+import { calculateSpaceAndDisplayOptionList } from "src/utils/select";
+import { flushSync } from "react-dom";
 
 export type SelectDropdownIndicatorProps = {
   isOpen: boolean;
-  getSelectStateSetters: () => SelectStateSetters;
   focusFirstOption: () => void;
+  selectOptionListRef: React.RefObject<HTMLDivElement>;
   focusInput: () => void;
   isLoading?: boolean;
 };
 
 export const SelectDropdownIndicator = ({
   isOpen,
-  getSelectStateSetters,
   focusFirstOption,
   focusInput,
-  customComponent,
-  isLoading
-}: SelectDropdownIndicatorProps & {
-  customComponent?: CustomSelectDropdownIndicatorRenderer;
-}) => {
-  
-  const className = clsx({ 
+  selectOptionListRef,
+  isLoading,
+}: SelectDropdownIndicatorProps) => {
+  const context = useSelectContext();
+  const {
+    components: { SelectDropdownIndicatorElement: customComponent },
+    getSelectStateSetters,
+    getSelectAsyncStateSetters,
+  } = context;
+
+  const className = clsx({
     select__indicator: true,
-    disabled: isLoading
-});
+    disabled: isLoading,
+  });
   const handleClick = (
     e: React.MouseEvent<HTMLDivElement, MouseEvent>,
-    focusInputOnClose = true,
+    focusInputOnClose = true
   ) => {
-    if(isLoading) return
+    debugger;
+    if (isLoading) return;
     const selectStateSetters = getSelectStateSetters();
     const updatedIsOpen = !isOpen;
     if (updatedIsOpen) {
       focusFirstOption();
       focusInputOnClose && focusInput();
     }
-    selectStateSetters.toggleDropdown();
+    flushSync(() => selectStateSetters.toggleDropdown());
+
+    !isLoading &&
+      calculateSpaceAndDisplayOptionList(selectOptionListRef, updatedIsOpen);
   };
   if (isFunction(customComponent)) {
     return customComponent(
-      { isOpen, getSelectStateSetters, focusFirstOption, focusInput },
+      {
+        isOpen,
+        getSelectStateSetters,
+        getSelectAsyncStateSetters,
+        focusFirstOption,
+        selectOptionListRef,
+        focusInput,
+      },
       { onClick: handleClick, className }
     );
   }

@@ -24,6 +24,7 @@ import {
 } from "src/utils/select";
 import clsx from "clsx";
 import { SelectAsyncStateSetters } from "src/hooks/select/useSelectAsync";
+import { useSelectContext } from "src/stores/providers/SelectProvider";
 
 export type SelectInputProps = {
   isMultiValue: boolean;
@@ -31,7 +32,6 @@ export type SelectInputProps = {
   inputValue: string;
   labelKey: keyof SelectOptionT;
   filterSearchedOptions: () => void;
-  getSelectStateSetters: () => SelectStateSetters;
   getFocusValues: (
     direction: SelectKeyboardNavigationDirection
   ) => SelectFocusDetails | null;
@@ -39,26 +39,21 @@ export type SelectInputProps = {
   focusLastOption: () => void;
   onKeyPress: (id: string) => void;
   addOptionOnKeyPress: () => void;
-  setInput: (value: string) => void;
   usesInputAsync: boolean;
   hasInput: boolean;
   disableInputFetchTrigger: boolean;
   handlePageChange: () => void;
-  isLoading?:boolean;
+  isLoading?: boolean;
   hasPaging?: boolean;
   renderInputContainerForCustomComponent?: boolean;
 };
 
 const SelectInput = memo(
-  forwardRef<
-    HTMLInputElement,
-    SelectInputProps & { customComponent?: CustomSelectInputRenderer }
-  >((props, ref) => {
+  forwardRef<HTMLInputElement, SelectInputProps>((props, ref) => {
     const {
       isMultiValue,
       customOnChange,
       inputValue,
-      getSelectStateSetters,
       getFocusValues,
       focusLastOption,
       focusFirstOption,
@@ -67,15 +62,25 @@ const SelectInput = memo(
       onKeyPress,
       hasInput,
       addOptionOnKeyPress,
-      customComponent,
-      setInput,
       handlePageChange,
       hasPaging,
       isLoading,
-      renderInputContainerForCustomComponent = true,
     } = props;
     const innerRef = useRef<HTMLInputElement>(null);
-    console.log()
+
+    const selectContext = useSelectContext();
+    const {
+      components: { SelectInputElement: customComponentProperties },
+      getSelectAsyncStateSetters,
+      getSelectStateSetters,
+    } = selectContext;
+
+    const setInput = (value: string) => {
+      debugger;
+      const { setSearchQuery } = getSelectAsyncStateSetters();
+      const { setInputValue } = getSelectStateSetters();
+      usesInputAsync ? setSearchQuery(value) : setInputValue(value);
+    };
 
     const shouldPreventInputChange = useCallback(
       (updatedValue: string) =>
@@ -102,19 +107,17 @@ const SelectInput = memo(
 
     function filterSearchedValues(inputValue: string) {
       if (usesInputAsync) return;
-      if(isFunction(filterSearchedOptions)) {
-      if (!inputValue) {
-        // TODO Check if this is a potential problem for the use effect
-        return filterSearchedOptions();
-      }
-      const timeoutId = setTimeout(() => {
-        filterSearchedOptions();
-      }, 1000);
-      return timeoutId;
+      if (isFunction(filterSearchedOptions)) {
+        if (!inputValue) {
+          // TODO Check if this is a potential problem for the use effect
+          return filterSearchedOptions();
+        }
+        const timeoutId = setTimeout(() => {
+          filterSearchedOptions();
+        }, 1000);
+        return timeoutId;
       }
     }
-
-
 
     const [_, handleInputChange] = useInput(
       onInputUpdate,
@@ -125,10 +128,10 @@ const SelectInput = memo(
     );
 
     const onArrowKeyUp = () => {
-      const selectStateSetters = getSelectStateSetters();
+      const { setFocusDetails } = getSelectStateSetters();
       const focusDetails = getFocusValues("up");
       if (!isEmpty(focusDetails)) {
-        selectStateSetters.setFocusDetails(
+        setFocusDetails(
           focusDetails.focusedOptionId,
           focusDetails.focusedCategory
         );
@@ -139,17 +142,17 @@ const SelectInput = memo(
     };
 
     const onArrowKeyDown = () => {
-      const selectStateSetters = getSelectStateSetters();
+      const { setFocusDetails } = getSelectStateSetters();
       const focusDetails = getFocusValues("down");
       if (!isEmpty(focusDetails)) {
-        selectStateSetters.setFocusDetails(
+        setFocusDetails(
           focusDetails.focusedOptionId,
           focusDetails.focusedCategory
         );
         return focusDetails.focusedOptionId;
       }
       if (hasPaging) {
-        return handlePageChange()
+        return handlePageChange();
       }
       const optionId = focusFirstOption();
       return optionId;
@@ -178,17 +181,30 @@ const SelectInput = memo(
       }
     };
 
-    if (isFunction(customComponent)) {
+    if (isFunction(customComponentProperties?.customComponent)) {
       const inputInnerProps = generateComponentInnerProps(
         SelectComponents.INPUT,
-        { handleInputChange, className, inputValue, innerRef, handleKeyPress, isLoading }
+        {
+          handleInputChange,
+          className,
+          inputValue,
+          innerRef,
+          handleKeyPress,
+          isLoading,
+        }
       );
-      return renderInputContainerForCustomComponent ? (
+      return customComponentProperties.renderContainer ? (
         <div className="select__input__wrapper">
-          {customComponent(props, inputInnerProps as SelectInputInnerProps)}
+          {customComponentProperties.customComponent(
+            { ...props, getSelectStateSetters, getSelectAsyncStateSetters },
+            inputInnerProps as SelectInputInnerProps
+          )}
         </div>
       ) : (
-        customComponent(props, inputInnerProps as SelectInputInnerProps)
+        customComponentProperties.customComponent(
+          { ...props, getSelectStateSetters, getSelectAsyncStateSetters },
+          inputInnerProps as SelectInputInnerProps
+        )
       );
     }
 

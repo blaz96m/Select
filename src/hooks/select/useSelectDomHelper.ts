@@ -1,19 +1,30 @@
 import { useCallback, useMemo, useRef } from "react";
+import { SelectState } from "src/components/Select/types";
 
 import { isFocusedOptionInViewport, scrollToTarget } from "src/utils/select";
 
-export type SelectRefHelpers = {
+export type SelectDomHelpers = {
   handleScrollToFocusedOption: (optionId: string) => void;
+  getSelectOptionsMap: () => Map<string, HTMLDivElement>;
   focusInput: () => void;
 };
 
-const useSelectRef = (state: any) => {
+export type SelectDomRefs = {
+  selectListContainerRef: React.RefObject<HTMLDivElement>;
+  selectOptionRef: React.RefObject<HTMLDivElement>;
+  inputRef: React.RefObject<HTMLInputElement>;
+  selectOptionsRef: React.MutableRefObject<Map<string, HTMLDivElement> | null>;
+};
+
+const useSelectDomHelper = (
+  state: SelectState
+): { domHelpers: SelectDomHelpers; domRefs: SelectDomRefs } => {
   const selectListContainerRef = useRef<HTMLDivElement>(null);
   const selectOptionRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const selectOptionsRef = useRef<Map<string, HTMLDivElement> | null>(null);
 
-  const refs = useMemo(
+  const domRefs = useMemo(
     () => ({
       selectListContainerRef,
       selectOptionRef,
@@ -50,8 +61,8 @@ const useSelectRef = (state: any) => {
   }, []);
 
   return {
-    refs,
-    refHelpers: {
+    domRefs,
+    domHelpers: {
       handleScrollToFocusedOption,
       focusInput,
       getSelectOptionsMap,
@@ -59,4 +70,4 @@ const useSelectRef = (state: any) => {
   };
 };
 
-export default useSelectRef;
+export default useSelectDomHelper;

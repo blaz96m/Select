@@ -24,6 +24,7 @@ import {
   SelectInputComponentHandlers,
   SelectInputInnerProps,
   SelectComponentHandlers,
+  CustomClass,
 } from "src/components/Select/types";
 import { getObjectKeys } from "../data-types/objects/helpers";
 import { INITIAL_STATE } from "./constants";
@@ -150,7 +151,6 @@ const getFocusedOptionIdx = (
   focusedOptionId: string
 ) => {
   return findIndex(options, (option) => {
-    console.log(option.id, focusedOptionId)
     return option.id == focusedOptionId;
   });
 };
@@ -339,8 +339,14 @@ const generateSelectOptionInnerProps = (
 const generateSelectInputInnerProps = (
   props: SelectInputComponentHandlers
 ): SelectInputInnerProps => {
-  const { handleInputChange, handleKeyPress, inputValue, innerRef, className,isLoading } =
-    props;
+  const {
+    handleInputChange,
+    handleKeyPress,
+    inputValue,
+    innerRef,
+    className,
+    isLoading,
+  } = props;
   return {
     onChange: handleInputChange,
     onKeyDown: handleKeyPress,
@@ -349,4 +355,25 @@ const generateSelectInputInnerProps = (
     ref: innerRef,
     className,
   };
+};
+
+export const applyCustomClass = (
+  defaultClass: string,
+  customClass: CustomClass
+) => {
+  const { className, override } = customClass;
+  return override ? className : `${defaultClass} ${className}`;
+};
+
+export const calculateSpaceAndDisplayOptionList = (
+  selectOptionListRef: React.RefObject<HTMLDivElement>,
+  isOpen: boolean
+) => {
+  debugger;
+  if (selectOptionListRef.current && isOpen) {
+    const optionListElement = selectOptionListRef.current;
+    const optionListElementHeight = optionListElement.scrollHeight;
+    const optionListRect = optionListElement.getBoundingClientRect();
+    console.log(optionListRect, optionListElementHeight);
+  }
 };

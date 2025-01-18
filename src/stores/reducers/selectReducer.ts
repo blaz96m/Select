@@ -1,5 +1,5 @@
 import { isEmpty } from "lodash";
-import { Dispatch,  } from "react";
+import { Dispatch } from "react";
 import {
   SelectState,
   SelectOptionList,
@@ -90,14 +90,17 @@ export const selectReducer = (
     case SelectReducerActionTypes.TOGGLE_VISIBILTY:
       return { ...state, isOpen: !state.isOpen };
     case SelectReducerActionTypes.SET_INPUT:
-      console.log("CALLED INPUT")
-      return state.inputValue !== action.payload ? { ...state, inputValue: action.payload } : state;
+      return state.inputValue !== action.payload
+        ? { ...state, inputValue: action.payload }
+        : state;
     case SelectReducerActionTypes.CLEAR_INPUT:
       return { ...state, inputValue: "" };
     case SelectReducerActionTypes.CLEAR_VALUE:
       return { ...state, value: [] };
     case SelectReducerActionTypes.SET_OPTIONS:
-      return isEmpty(state.selectOptions) && isEmpty(action.payload) ? state : { ...state, selectOptions: action.payload }
+      return isEmpty(state.selectOptions) && isEmpty(action.payload)
+        ? state
+        : { ...state, selectOptions: action.payload };
     case SelectReducerActionTypes.GO_TO_NEXT_PAGE:
       return { ...state, page: state.page + 1 };
 

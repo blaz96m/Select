@@ -23,9 +23,9 @@ export type OptionListProps = {
   displayedOptions: SelectOptionList | CategorizedSelectOptions;
   renderFn: selectRendererOverload;
   handlePageChange: () => void;
-  isCategorized: boolean;
   categoryKey: string;
   page: number;
+  isCategorized?: boolean;
   isLoading?: boolean;
   hasPaging?: boolean;
   customOnScrollToBottom?: (
@@ -48,7 +48,7 @@ const OptionList = memo(
         page,
         customOnScrollToBottom,
         onPageChange,
-        isLoading
+        isLoading,
       },
       ref
     ) => {
@@ -68,7 +68,12 @@ const OptionList = memo(
       const innerRef = useRef<HTMLDivElement>(null);
       // TODO - Check if imperative handles are required across the proj.
       useImperativeHandle(ref, () => innerRef.current!);
-      useScrollManager<HTMLDivElement>(innerRef, bottomScrollActions, {}, !isLoading);
+      useScrollManager<HTMLDivElement>(
+        innerRef,
+        bottomScrollActions,
+        {},
+        !isLoading
+      );
 
       return (
         <div className="select__options__wrapper" ref={innerRef}>

@@ -1,4 +1,4 @@
-import { useState, memo } from "react";
+import { useState, memo, useCallback } from "react";
 import Select from "./components/Select/Select";
 import {
   SelectOptionT,
@@ -28,6 +28,7 @@ import { SelectClearIndicatorProps } from "./components/Select/SelectClearIndica
 import { SelectCategoryProps } from "./components/SelectCategory";
 
 import axiosClient from "./api/axios/axiosClient";
+import { SelectProvider } from "./stores/providers/SelectProvider";
 
 function App() {
   let currCategoryCount = 1;
@@ -44,8 +45,14 @@ function App() {
   const [value, setValue] = useState<SelectOptionT[]>([]);
   const [currLabel, setCurrLabel] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [count, setCount] = useState(0);
+  const [message, setMessage] = useState("");
 
-  const getMovieList = async ({ page = 1, searchQuery = "a" }) => {
+  const onOptionClick = useCallback((option: any) => {
+    setMessage(option.title);
+  }, []);
+
+  const getMovieList = useCallback(async ({ page = 1, searchQuery = "a" }) => {
     try {
       setIsLoading(true);
       const reselt = await axiosClient.get(
@@ -58,7 +65,7 @@ function App() {
     } catch (err) {
       console.log(err);
     }
-  };
+  }, []);
 
   const SelectCheckBox = (
     componentProps: SelectOptionProps,
@@ -80,8 +87,7 @@ function App() {
     innerProps: SelectMultiValueInnerProps
   ) => {
     const { getSelectStateSetters, labelKey, value } = componentProps;
-    const superDelete = () => {
-    };
+    const superDelete = () => {};
     const del = () => {
       const stateSetters = getSelectStateSetters();
       stateSetters.clearValue(value.id);
@@ -156,8 +162,12 @@ function App() {
 
   return (
     <>
+      <button onClick={() => setCount((count) => count + 1)}>Next</button>
+      <button onClick={() => setCount((count) => count - 1)}>Prev</button>
+      {message && <div>Selected Item: {message}</div>}
+      <div>Count: {count}</div>
       <div>Selected Value: {currLabel}</div>
-      <Select
+      <SelectProvider
         fetchFunc={getMovieList}
         isMultiValue={true}
         value={value}
@@ -167,24 +177,22 @@ function App() {
         onChange={setValue}
         closeDropdownOnOptionSelect={false}
         removeSelectedOptionsFromList={false}
+        onOptionSelect={onOptionClick}
         fetchOnScroll={true}
-        
         isLoading={isLoading}
-
         lazyInit={true}
-        customComponents={
-          {
-            //SelectOptionElement: SelectCheckBox,
-            //SelectMultiValueElement: CustomMultiVal,
-            //SelectSingleValueElement: CustomSingleVal,
-            //SelectDropdownIndicatorElement: CustomDropdownIndicator,
-            //SelectClearIndicatorElement: ClearIndikator,
-            /*SelectInputElement: {
+        /*
+        customComponents={{
+          SelectOptionElement: SelectCheckBox,
+          //SelectMultiValueElement: CustomMultiVal,
+          //SelectSingleValueElement: CustomSingleVal,
+          //SelectDropdownIndicatorElement: CustomDropdownIndicator,
+          //SelectClearIndicatorElement: ClearIndikator,
+          /*SelectInputElement: {
             customComponent: CustomInputComponent,
             renderContainer: true,
-          },*/
-          }
-        }
+          },
+        }}*/
       />
     </>
   );

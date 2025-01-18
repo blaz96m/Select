@@ -8,12 +8,12 @@ import {
   CustomSelectSingleValueRenderer,
 } from "./types/selectTypes";
 import SelectMultiValueElement from "./SelectMultiValueElement";
-import { memo } from "react";
+import { memo, useContext } from "react";
+import { useSelectContext } from "src/stores/providers/SelectProvider";
 
 export type SelectValueProps = {
   labelKey: keyof SelectOptionT;
   value: SelectOptionList;
-  getSelectStateSetters: () => SelectStateSetters;
 };
 
 type SelectValueContainerPropTypes = SelectValueProps & {
@@ -30,9 +30,6 @@ const SelectValue = memo(
     isMultiValue,
     placeHolder,
     inputValue,
-    getSelectStateSetters,
-    singleValueCustomComponent,
-    multiValueCustomComponent,
     value,
   }: SelectValueContainerPropTypes) => {
     const showPlaceholder = isEmpty(value) && isEmpty(inputValue);
@@ -43,19 +40,9 @@ const SelectValue = memo(
             <span className="select__placeholder">{placeHolder}</span>
           )}
           {isMultiValue ? (
-            <MultiValue
-              value={value}
-              labelKey={labelKey}
-              getSelectStateSetters={getSelectStateSetters}
-              customComponent={multiValueCustomComponent}
-            />
+            <MultiValue value={value} labelKey={labelKey} />
           ) : (
-            <SingleValue
-              value={value[0]}
-              labelKey={labelKey}
-              getSelectStateSetters={getSelectStateSetters}
-              customComponent={singleValueCustomComponent}
-            />
+            <SingleValue value={value[0]} labelKey={labelKey} />
           )}
         </div>
       </>
@@ -63,19 +50,21 @@ const SelectValue = memo(
   }
 );
 
-const SingleValue = ({
-  value,
-  labelKey,
-  customComponent,
-  getSelectStateSetters,
-}: SelectSingleValueProps & {
-  customComponent?: (props: SelectSingleValueProps) => JSX.Element;
-}) => {
+const SingleValue = ({ value, labelKey }: SelectSingleValueProps) => {
   const valueLabel = !isEmpty(value) ? value[labelKey] : "";
+  const context = useSelectContext();
+
+  const {
+    components: { SelectSingleValueElement: customComponent },
+    getSelectStateSetters,
+    getSelectAsyncStateSetters,
+  } = context;
+
   if (!isEmpty(value)) {
     if (isFunction(customComponent)) {
       return customComponent({
         getSelectStateSetters,
+        getSelectAsyncStateSetters,
         value: value || {},
         labelKey,
       });
@@ -84,14 +73,7 @@ const SingleValue = ({
   }
 };
 
-const MultiValue = ({
-  value,
-  labelKey,
-  getSelectStateSetters,
-  customComponent,
-}: SelectValueProps & {
-  customComponent?: CustomSelectMultiValueRenderer;
-}) => {
+const MultiValue = ({ value, labelKey }: SelectValueProps) => {
   if (isEmpty(value)) {
     return;
   }
@@ -103,8 +85,6 @@ const MultiValue = ({
           key={val.id}
           value={val}
           labelKey={labelKey}
-          getSelectStateSetters={getSelectStateSetters}
-          customComponent={customComponent}
         />
       ))}
     </ul>
