@@ -270,7 +270,6 @@ const useSelect = (
       selectProps.labelKey,
       selectState.inputValue
     );
-    console.count("CALLED FROM SEARCH");
     selectStateSetters.setOptions(filteredOptions);
   }, [selectState.selectOptions, selectState.inputValue]);
 

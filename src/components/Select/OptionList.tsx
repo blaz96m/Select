@@ -7,7 +7,7 @@ import {
   useImperativeHandle,
   useRef,
 } from "react";
-import { isEmpty, isFunction, isNull, isNumber, map } from "lodash";
+import { isEmpty, isFunction, isNull, isNumber, map, each } from "lodash";
 import {
   CategorizedSelectOptions,
   SelectOptionList,
@@ -52,7 +52,12 @@ const OptionList = memo(
       },
       ref
     ) => {
+      /*
+      each(displayedOptions, (option) => {
+        console.log(option.title);
+      });*/
       const hasCategories = categoryKey && isCategorized;
+
       const onScrollToBottom = () => {
         if (isFunction(customOnScrollToBottom))
           return customOnScrollToBottom(page, displayedOptions);
@@ -86,12 +91,15 @@ const OptionList = memo(
             {!isEmpty(displayedOptions) ? (
               map(displayedOptions, (value, key) => {
                 if (hasCategories) {
-                  return renderFn({
-                    categoryName: key,
-                    categoryOptions: value as SelectOptionList,
-                  });
+                  return renderFn(
+                    {
+                      categoryName: key,
+                      categoryOptions: value as SelectOptionList,
+                    },
+                    key
+                  );
                 }
-                return renderFn(value as SelectOptionT);
+                return renderFn(value as SelectOptionT, key);
               })
             ) : (
               <div>{OPTIONS_EMPTY_TEXT}</div>

@@ -369,11 +369,9 @@ export const calculateSpaceAndDisplayOptionList = (
   selectOptionListRef: React.RefObject<HTMLDivElement>,
   isOpen: boolean
 ) => {
-  debugger;
   if (selectOptionListRef.current && isOpen) {
     const optionListElement = selectOptionListRef.current;
     const optionListElementHeight = optionListElement.scrollHeight;
     const optionListRect = optionListElement.getBoundingClientRect();
-    console.log(optionListRect, optionListElementHeight);
   }
 };

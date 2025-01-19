@@ -34,7 +34,10 @@ const SelectMultiValueElement = ({
     getSelectStateSetters,
   } = context;
 
-  const onClearValueClick = () => {
+  const onClearValueClick = (
+    e: React.MouseEvent<HTMLDivElement, MouseEvent>
+  ) => {
+    e.stopPropagation();
     const { clearValue } = getSelectStateSetters();
     clearValue(value.id);
   };

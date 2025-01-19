@@ -1,4 +1,11 @@
-import { Dispatch, SetStateAction, forwardRef, memo } from "react";
+import {
+  Dispatch,
+  SetStateAction,
+  forwardRef,
+  memo,
+  useEffect,
+  useState,
+} from "react";
 import clsx from "clsx";
 
 import {
@@ -15,13 +22,16 @@ export type SelectOptionProps = {
   labelKey: keyof SelectOptionT;
   option: SelectOptionT;
   isMultiValue: boolean;
+  index: number;
   handleFocusOnClick: (optionId: string, optionCategory: string) => void;
-  isFocused: boolean;
   focusInput: () => void;
   getSelectOptionsMap: () => Map<string, HTMLDivElement>;
   isCategorized: boolean;
+  isFocused: boolean;
+  selectListContainerRef: React.RefObject<HTMLDivElement>;
   isSelected: boolean;
   removeSelectedOptionsFromList: boolean;
+  isDisabled: boolean;
   onOptionSelect?: (option: SelectOptionT) => void;
   closeDropdownOnOptionSelect?: boolean;
   usesInputAsync?: boolean;
@@ -33,20 +43,41 @@ const SelectOption = memo((props: SelectOptionProps) => {
   const {
     labelKey,
     option,
+    index,
     isMultiValue,
-    isFocused,
     closeDropdownOnOptionSelect,
     handleFocusOnClick,
     getSelectOptionsMap,
+    selectListContainerRef,
     categoryKey,
     focusInput,
     isCategorized,
     isSelected,
+    isDisabled,
     removeSelectedOptionsFromList,
     onOptionSelect,
     usesInputAsync,
+    isFocused,
     isLoading,
   } = props;
+
+  const onMouseLeave = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    const optionElement = e.currentTarget;
+    const previousOption = optionElement.previousElementSibling;
+    const nextOption = optionElement.nextElementSibling;
+
+    const optionElementRect = e.currentTarget.getBoundingClientRect();
+    const optionElementHeight = optionElementRect.height;
+    const optionElementTopDistance = optionElementRect.top;
+    const optionElementBottomDistance = optionElementRect.bottom;
+    const isHoveringToPreviousOption = e.clientY - optionElementTopDistance < 1;
+    const isHoveringToNextOption = optionElementBottomDistance - e.clientY < 1;
+    if (
+      (isHoveringToPreviousOption && previousOption) ||
+      (isHoveringToNextOption && nextOption)
+    ) {
+    }
+  };
 
   const shouldDropdownStayOpenAfterClick =
     !isNil(closeDropdownOnOptionSelect) && !closeDropdownOnOptionSelect;
@@ -63,6 +94,7 @@ const SelectOption = memo((props: SelectOptionProps) => {
 
   const className = clsx({
     select__option: true,
+    "select__option--disabled": isDisabled,
     "select__option--selected": isSelected,
     "select__option--focused": isFocused,
   });

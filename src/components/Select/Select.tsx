@@ -82,6 +82,7 @@ export type SelectComponentProps = Pick<
   | "isLoading"
   | "fetchOnScroll"
   | "onOptionSelect"
+  | "isOptionDisabled"
 > & {
   usesInputAsync: boolean;
   isLastPage: () => boolean;
@@ -111,6 +112,7 @@ export type SelectProps = {
   isCategorized?: boolean;
   selectOptions?: SelectOptionT[] | [];
   fetchOnScroll?: boolean;
+  isOptionDisabled?: (option: SelectOptionT) => boolean;
   lazyInit?: boolean;
   hasInput?: boolean;
   placeHolder?: string;
@@ -148,6 +150,7 @@ const Select = ({
   usesInputAsync,
   handlePageChange,
   onOptionSelect,
+  isOptionDisabled,
   closeDropdownOnSelect = false,
   disableInputFetchTrigger = false,
   hasInput = true,
@@ -178,6 +181,8 @@ const Select = ({
         !removeSelectedOptionsFromList &&
         some(value, (val) => val.id == option.id);
       const isFocused = focusedOptionId == option.id;
+      const isDisabled =
+        isFunction(isOptionDisabled) && isOptionDisabled(option);
       return (
         <SelectOption
           isMultiValue={isMultiValue}
@@ -194,6 +199,7 @@ const Select = ({
           focusInput={focusInput}
           isFocused={isFocused}
           isSelected={isSelected}
+          isDisabled={isDisabled}
           removeSelectedOptionsFromList={removeSelectedOptionsFromList}
         />
       );
@@ -206,6 +212,7 @@ const Select = ({
       focusedOptionId,
       value,
       displayedOptions,
+      isOptionDisabled,
     ]
   );
 
@@ -230,7 +237,13 @@ const Select = ({
 
   return (
     <Select.Container>
-      <Select.Top focusInput={focusInput}>
+      <Select.Top
+        focusInput={focusInput}
+        focusFirstOption={focusFirstOption}
+        selectOptionListRef={selectDomRefs.selectListContainerRef}
+        isOpen={isOpen}
+        isLoading={isLoading}
+      >
         <Select.ValueSection isMultiValue={isMultiValue}>
           <Select.Value
             labelKey={labelKey}
@@ -264,16 +277,11 @@ const Select = ({
           isLoading={isLoading}
           spinner={<Select.Spinner />}
         >
-          <Select.DropdownIndicator
-            focusInput={focusInput}
-            focusFirstOption={focusFirstOption}
-            selectOptionListRef={selectDomRefs.selectListContainerRef}
-            isOpen={isOpen}
-            isLoading={isLoading}
-          />
+          <Select.DropdownIndicator isOpen={isOpen} isLoading={isLoading} />
           {showClearIndicator && (
             <Select.ClearIndicator
               isMultiValue={isMultiValue}
+              focusInput={focusInput}
               value={value}
               inputValue={inputValue}
               isLoading={isLoading}

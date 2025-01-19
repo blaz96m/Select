@@ -13,6 +13,7 @@ import { useSelectContext } from "src/stores/providers/SelectProvider";
 export type SelectClearIndicatorProps = {
   value: SelectOptionList;
   inputValue: string;
+  focusInput: () => void;
   isMultiValue: boolean;
   usesInputAsync?: boolean;
   isLoading?: boolean;
@@ -23,6 +24,7 @@ const SelectClearIndicator = ({
   isMultiValue,
   inputValue,
   usesInputAsync,
+  focusInput,
   isLoading,
 }: SelectClearIndicatorProps) => {
   const clearInput = () => {
@@ -33,11 +35,13 @@ const SelectClearIndicator = ({
       : selectStateSetters.clearInput();
   };
 
-  const clearAll = () => {
+  const clearAll = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     if (isLoading) return;
+    event.stopPropagation();
     const { clearAllValues } = getSelectStateSetters();
     !isEmpty(value) && clearAllValues();
     inputValue && clearInput();
+    focusInput();
   };
 
   const context = useSelectContext();
@@ -47,7 +51,7 @@ const SelectClearIndicator = ({
     getSelectAsyncStateSetters,
   } = context;
 
-  const customComponent = context.components.SelectClearIndicatorElement;
+  const customComponent = SelectClearIndicatorElement;
 
   const className = clsx({
     select__indicator: true,
@@ -62,6 +66,7 @@ const SelectClearIndicator = ({
         usesInputAsync,
         value,
         inputValue,
+        focusInput,
         isMultiValue,
         getSelectAsyncStateSetters,
       },

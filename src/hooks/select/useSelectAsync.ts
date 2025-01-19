@@ -1,5 +1,5 @@
-import { isArray, isEmpty, isFunction, isObject, trim, update } from "lodash";
-import { useCallback, useEffect, useRef } from "react";
+import { filter, find, isEmpty, isFunction, trim } from "lodash";
+import { useCallback, useEffect } from "react";
 import {
   SelectFetchFunc,
   SelectState,
@@ -62,7 +62,11 @@ const useSelectAsync = (
       const selectStateSetters = getSelectStateSetters();
       const { data, params } = response;
       if (params && params.page !== 1) {
-        selectStateSetters.addOptions(data);
+        const klinData = filter(
+          data,
+          (d) => !find(state.selectOptions, (option) => option.id === d.id)
+        );
+        selectStateSetters.addOptions(klinData);
       } else {
         if (originalOptions?.current && isEmpty(originalOptions.current)) {
           originalOptions.current = data;
@@ -76,7 +80,7 @@ const useSelectAsync = (
         selectStateSetters.setOptions(data);
       }
     },
-    []
+    [state.selectOptions]
   );
 
   const { queryManagerState, queryManagerApi } = useQueryManager<SelectOptionT>(

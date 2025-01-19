@@ -190,6 +190,10 @@
       color: white;
     }
 
+    &--disabled {
+      opacity: 0.6;
+    }
+
     &:first-child {
       padding-top: 0.5rem;
     }
@@ -206,10 +210,6 @@
 
     &--clear {
       color: rgb(151, 151, 151);
-
     }
-
-    
   }
 }
-

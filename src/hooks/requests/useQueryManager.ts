@@ -87,7 +87,7 @@ type RequestConfig = {
   fetchOnInit: boolean;
   recordsPerPage: number;
   fetchOnInputChange: boolean;
-  preventFetchOnInputChange?: (params: Partial<RequestParams>) => void; 
+  preventFetchOnInputChange?: (params: Partial<RequestParams>) => boolean;
   [key: string]: any;
 };
 
@@ -139,10 +139,11 @@ const useQueryManager = <ResponseItemT>(
       const response = await fetchFunc(requestParams, ...args);
       if (response) {
         totalRecordsRef.current = response.totalRecords || 0;
-        isFunction(onAfterFetch) && onAfterFetch({
-          ...response,
-          params: requestParams
-        });
+        isFunction(onAfterFetch) &&
+          onAfterFetch({
+            ...response,
+            params: requestParams,
+          });
         return response;
       }
     },
@@ -174,23 +175,17 @@ const useQueryManager = <ResponseItemT>(
     () => dispatch({ type: QueryManagerReducerActionTypes.RESET_PAGE }),
     []
   );
-  const setSearchQuery = useCallback(
-    (searchValue: string) => {
-      fetchTriggeredByInput.current = true;
-      dispatch({
-        type: QueryManagerReducerActionTypes.SET_SEARCH_QUERY,
-        payload: searchValue,
-      })
-    },
-    []
-  );
-  const clearSearchQuery = useCallback(
-    () => {
-      fetchTriggeredByInput.current = true;
-      dispatch({ type: QueryManagerReducerActionTypes.CLEAR_SEARCH_QUERY })
-    },
-    []
-  );
+  const setSearchQuery = useCallback((searchValue: string) => {
+    fetchTriggeredByInput.current = true;
+    dispatch({
+      type: QueryManagerReducerActionTypes.SET_SEARCH_QUERY,
+      payload: searchValue,
+    });
+  }, []);
+  const clearSearchQuery = useCallback(() => {
+    fetchTriggeredByInput.current = true;
+    dispatch({ type: QueryManagerReducerActionTypes.CLEAR_SEARCH_QUERY });
+  }, []);
   const setSorting = useCallback(
     (sortProperty: string) =>
       dispatch({
@@ -224,7 +219,13 @@ const useQueryManager = <ResponseItemT>(
   }
   useEffect(() => {
     const requestConfig = getRequestConfig();
-    if(!(requestConfig.isDisabled || fetchTriggeredByInput.current || (isInitialFetchRef.current && !requestConfig.fetchOnInit))) {
+    if (
+      !(
+        requestConfig.isDisabled ||
+        fetchTriggeredByInput.current ||
+        (isInitialFetchRef.current && !requestConfig.fetchOnInit)
+      )
+    ) {
       (async () => {
         await fetch();
       })();
@@ -233,12 +234,14 @@ const useQueryManager = <ResponseItemT>(
   }, [state.page]);
 
   useEffect(() => {
-    const {isDisabled, fetchOnInputChange, preventFetchOnInputChange} = getRequestConfig();
+    const { isDisabled, fetchOnInputChange, preventFetchOnInputChange } =
+      getRequestConfig();
     if (
       isDisabled ||
       !fetchOnInputChange ||
       isInitialFetchRef.current ||
-      (isFunction(preventFetchOnInputChange) && preventFetchOnInputChange(state))
+      (isFunction(preventFetchOnInputChange) &&
+        preventFetchOnInputChange(state))
     ) {
       return;
     }

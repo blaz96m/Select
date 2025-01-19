@@ -76,7 +76,6 @@ const SelectInput = memo(
     } = selectContext;
 
     const setInput = (value: string) => {
-      debugger;
       const { setSearchQuery } = getSelectAsyncStateSetters();
       const { setInputValue } = getSelectStateSetters();
       usesInputAsync ? setSearchQuery(value) : setInputValue(value);

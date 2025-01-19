@@ -59,6 +59,7 @@ function App() {
         `/search/movie?query=${searchQuery || "a"}&page=${page}`
       );
       const data = reselt.data;
+      console.log("DEJTA", data);
       const totalRecords = data["total_results"];
       setIsLoading(false);
       return { data: data.results as SelectOptionList, totalRecords };
@@ -160,6 +161,8 @@ function App() {
     return <input {...innerProps} />;
   };
 
+  const isDisabled = useCallback((option: SelectOptionT) => {}, [value]);
+
   return (
     <>
       <button onClick={() => setCount((count) => count + 1)}>Next</button>
@@ -172,8 +175,8 @@ function App() {
         isMultiValue={true}
         value={value}
         labelKey="title"
-        categoryKey="category"
-        isCategorized={false}
+        //categoryKey="original_language"
+        //isCategorized={true}
         onChange={setValue}
         closeDropdownOnOptionSelect={false}
         removeSelectedOptionsFromList={false}

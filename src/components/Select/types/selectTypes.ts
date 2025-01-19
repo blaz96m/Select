@@ -70,11 +70,14 @@ export type SelectFocusDetails = {
 };
 
 export type selectRendererOverload = {
-  (value: SelectOptionT): React.JSX.Element;
-  (value: {
-    categoryName: string;
-    categoryOptions: SelectOptionList;
-  }): React.JSX.Element;
+  (value: SelectOptionT, key: any): React.JSX.Element;
+  (
+    value: {
+      categoryName: string;
+      categoryOptions: SelectOptionList;
+    },
+    key: any
+  ): React.JSX.Element;
 };
 
 export type SelectFetchFunc = (params: {
@@ -110,15 +113,11 @@ export type SelectInputComponentHandlers = {
 };
 
 export type SelectDropdownIndicatorInnerProps = {
-  onClick: (
-    e: React.MouseEvent<HTMLDivElement, MouseEvent>,
-    focusInputOnClose?: boolean
-  ) => void;
   className: string;
 };
 
 export type SelectClearIndicatorInnerProps = {
-  onClick: () => void;
+  onClick: (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => void;
 };
 
 export type BasicComponentInnerProps = {
@@ -176,7 +175,7 @@ export type SelectMultiValueCustomComponentProps = {
 } & Omit<SelectValueProps, "value">;
 
 export type SelectMultiValueInnerProps = {
-  onClick: () => void;
+  onClick: (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => void;
   className: string;
 };
 

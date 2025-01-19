@@ -92,6 +92,7 @@ export const SelectProvider = memo(
       useDataPartitioning,
       fetchOnInputChange = true,
       selectOptions = [],
+      isOptionDisabled,
     } = props;
 
     const [selectState, dispatch] = useReducer(
@@ -230,6 +231,7 @@ export const SelectProvider = memo(
           hasInput={props.hasInput}
           isCategorized={isCategorized}
           isLoading={props.isLoading}
+          isOptionDisabled={isOptionDisabled}
           onInputChange={props.onInputChange}
           onPageChange={props.onPageChange}
           onScrollToBottom={props.onScrollToBottom}
