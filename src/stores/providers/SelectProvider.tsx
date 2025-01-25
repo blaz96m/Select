@@ -83,6 +83,7 @@ export const SelectProvider = memo(
       recordsPerPage,
       removeSelectedOptionsFromList,
       value,
+      onDropdownExpand,
       onChange,
       isMultiValue,
       closeDropdownOnSelect,
@@ -134,15 +135,15 @@ export const SelectProvider = memo(
       {
         isMultiValue,
         labelKey,
+        onDropdownExpand,
         isCategorized,
         recordsPerPage,
+        focusInput: domHelpers.focusInput,
         categoryKey,
         closeDropdownOnSelect,
         selectListContainerRef: domRefs.selectListContainerRef,
       }
     );
-
-    const { getSelectStateSetters } = selectApi;
 
     const { selectAsyncApi, selectAsyncState } = useSelectAsync(
       selectState,
@@ -151,6 +152,7 @@ export const SelectProvider = memo(
         isLazyInit: lazyInit,
         recordsPerPage,
         fetchOnInputChange,
+        onDropdownExpand: selectApi.onDropdownExpand,
         fetchFunc,
         fetchOnScroll,
         originalOptions,
@@ -159,7 +161,11 @@ export const SelectProvider = memo(
       }
     );
 
-    const { isLastPage, getSelectAsyncStateSetters } = selectAsyncApi;
+    const { isLastPage, getIsInitialFetch } = selectAsyncApi;
+
+    const isInitialFetch = getIsInitialFetch();
+
+    const isLazyInitFetchComplete = lazyInit && isInitialFetch;
 
     const usesInputAsync = isFunction(fetchFunc) && fetchOnInputChange;
     const inputValue = usesInputAsync
@@ -174,22 +180,7 @@ export const SelectProvider = memo(
       ? selectAsyncState.page
       : selectState.page;
 
-    const handleInputChange = useCallback(
-      (value: string) => {
-        const { setSearchQuery } = getSelectAsyncStateSetters();
-        const { setInputValue } = getSelectStateSetters();
-        usesInputAsync ? setSearchQuery(value) : setInputValue(value);
-      },
-      [usesInputAsync]
-    );
-
-    const handleInputClear = useCallback(() => {
-      const selectAsyncStateSetters = getSelectAsyncStateSetters();
-      const selectStateSetters = getSelectStateSetters();
-      usesInputAsync
-        ? selectAsyncStateSetters.clearSearchQuery()
-        : selectStateSetters.clearInput();
-    }, [usesInputAsync]);
+    const resolvedSelectState = { ...selectState, inputValue, page };
 
     const handleNextPageChange = useCallback(() => {
       const { handlePageChangeAsync } = selectAsyncApi;
@@ -209,36 +200,18 @@ export const SelectProvider = memo(
     return (
       <SelectContext.Provider value={data}>
         <Select
-          hasPaging={hasPaging}
-          usesInputAsync={usesInputAsync}
+          {...props}
+          selectState={resolvedSelectState}
           selectApi={selectApi}
-          inputValue={inputValue}
-          categoryKey={categoryKey}
-          disableInputFetchTrigger={props.disableInputFetchTrigger}
-          displayedOptions={displayedOptions}
-          focusedOptionId={selectState.focusedOptionId}
-          value={value}
-          isLastPage={isLastPage}
-          isMultiValue={isMultiValue}
-          isOpen={selectState.isOpen}
-          labelKey={labelKey}
-          onOptionSelect={onOptionSelect}
-          page={page}
-          removeSelectedOptionsFromList={removeSelectedOptionsFromList}
           selectDomHelpers={domHelpers}
           selectDomRefs={domRefs}
-          closeDropdownOnSelect={closeDropdownOnSelect}
-          hasInput={props.hasInput}
-          isCategorized={isCategorized}
-          isLoading={props.isLoading}
-          isOptionDisabled={isOptionDisabled}
-          onInputChange={props.onInputChange}
-          onPageChange={props.onPageChange}
-          onScrollToBottom={props.onScrollToBottom}
-          placeHolder={props.placeHolder}
+          onDropdownExpand={onDropdownExpand}
+          usesInputAsync={usesInputAsync}
+          isLazyInitFetchComplete={isLazyInitFetchComplete}
+          isLastPage={isLastPage}
+          displayedOptions={displayedOptions}
+          hasPaging={hasPaging}
           handlePageChange={handleNextPageChange}
-          fetchOnScroll={fetchOnScrollToBottom}
-          showClearIndicator={props.showClearIndicator}
         />
       </SelectContext.Provider>
     );

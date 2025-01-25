@@ -54,6 +54,7 @@ export type SelectApi = {
   focusLastOption: () => void;
   focusFirstOption: () => void;
   hasMoreData: () => boolean;
+  onDropdownExpand: () => void;
   handlePageChange: () => void;
   focusOptionAfterClick: (
     optionId: string,
@@ -78,12 +79,28 @@ const useSelect = (
     categoryKey: keyof SelectOptionT & string;
     recordsPerPage?: number;
     closeDropdownOnSelect?: boolean;
+    focusInput: () => void;
+    onDropdownExpand?: () => void;
     selectListContainerRef: React.RefObject<HTMLDivElement>;
     isCategorized?: boolean;
   }
 ): SelectApi => {
   const { setValue } = customStateUpdaters;
   const { isCategorized, recordsPerPage, categoryKey } = selectProps;
+  const {
+    isCategorized,
+    recordsPerPage,
+    categoryKey,
+    getSelectOptionsMap,
+    selectFocusedOptionClassName,
+    selectCategoryClassName,
+    selectOptionClassName,
+    selectListContainerRef,
+    isMultiValue,
+    labelKey,
+    onDropdownExpand: customOnDropdownExpand,
+    focusInput,
+  } = selectProps;
 
   const totalRecords =
     selectState.totalRecords || selectState.originalOptions.length;
@@ -96,9 +113,7 @@ const useSelect = (
     dispatch: SelectReducerDispatch
   ) => {
     const closeDropdown = shouldCloseDropdownOnSelect();
-    setValue((prevState) =>
-      selectProps.isMultiValue ? [...prevState, option] : [option]
-    );
+    setValue((prevState) => (isMultiValue ? [...prevState, option] : [option]));
     if (closeDropdown) {
       dispatch({ type: SelectReducerActionTypes.CLOSE });
     }
@@ -307,6 +322,7 @@ const useSelect = (
     focusOptionAfterClick,
     hasMoreData,
     addOptionOnKeyPress,
+    onDropdownExpand,
   };
 };
 

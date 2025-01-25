@@ -63,39 +63,20 @@ import {
   SelectDomRefs,
 } from "src/hooks/select/useSelectDomHelper";
 
-export type SelectComponentProps = Pick<
-  SelectProps,
-  | "labelKey"
-  | "isCategorized"
-  | "selectOptions"
-  | "hasInput"
-  | "isMultiValue"
-  | "closeDropdownOnSelect"
-  | "placeHolder"
-  | "onInputChange"
-  | "onScrollToBottom"
-  | "removeSelectedOptionsFromList"
-  | "disableInputFetchTrigger"
-  | "onPageChange"
-  | "categoryKey"
-  | "showClearIndicator"
-  | "isLoading"
-  | "fetchOnScroll"
-  | "onOptionSelect"
-  | "isOptionDisabled"
-> & {
+export type SelectComponentProps = SelectProps & {
   usesInputAsync: boolean;
   isLastPage: () => boolean;
   displayedOptions: SelectOptionList | CategorizedSelectOptions;
-  hasPaging?: boolean;
   handlePageChange: () => void;
-} & Omit<SelectState, "selectOptions" | "focusedCategory"> & {
-    selectApi: SelectApi;
-  } & {
-    selectDomHelpers: SelectDomHelpers;
-  } & {
-    selectDomRefs: SelectDomRefs;
-  };
+  hasPaging?: boolean;
+  isLazyInitFetchComplete?: boolean;
+} & { selectState: SelectState } & {
+  selectApi: SelectApi;
+} & {
+  selectDomHelpers: SelectDomHelpers;
+} & {
+  selectDomRefs: SelectDomRefs;
+};
 
 export type SelectProps = {
   value: SelectOptionT[] | [];
@@ -127,6 +108,8 @@ export type SelectProps = {
   showClearIndicator?: boolean;
   useDataPartitioning?: boolean;
   isLoading?: boolean;
+  onDropdownExpand?: () => void;
+  onDropdownCollapse?: () => void;
   categorizeFunction?: (options: SelectOptionList) => CategorizedSelectOptions;
   recordsPerPage?: number;
 };
@@ -139,18 +122,17 @@ const Select = ({
   onScrollToBottom,
   onPageChange,
   selectApi,
-  inputValue,
-  isOpen,
+  selectState,
   hasPaging,
   displayedOptions,
-  focusedOptionId,
-  page,
   selectDomHelpers,
   selectDomRefs,
   usesInputAsync,
   handlePageChange,
   onOptionSelect,
   isOptionDisabled,
+  onDropdownCollapse,
+  isLazyInitFetchComplete,
   closeDropdownOnSelect = false,
   disableInputFetchTrigger = false,
   hasInput = true,
@@ -173,7 +155,9 @@ const Select = ({
     filterSearchedOptions,
   } = selectApi;
 
-  const { inputRef, selectListContainerRef, selectOptionRef } = selectDomRefs;
+  const { inputRef, selectListContainerRef } = selectDomRefs;
+
+  const { isOpen, inputValue, page } = selectState;
 
   const renderOptionElement = useCallback(
     (option: SelectOptionT) => {
@@ -238,10 +222,10 @@ const Select = ({
   return (
     <Select.Container>
       <Select.Top
-        focusInput={focusInput}
-        focusFirstOption={focusFirstOption}
-        selectOptionListRef={selectDomRefs.selectListContainerRef}
+        onDropdownExpand={onDropdownExpand}
+        onDropdownCollapse={onDropdownCollapse}
         isOpen={isOpen}
+        isLazyInitFetchComplete={isLazyInitFetchComplete}
         isLoading={isLoading}
       >
         <Select.ValueSection isMultiValue={isMultiValue}>

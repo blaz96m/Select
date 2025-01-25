@@ -43,7 +43,6 @@ const useSelectComputation = (
     isCategorized && (!isEmpty(categoryKey) || isFunction(categorizeFunction));
 
   const partitionedOptions = useMemo((): SelectOptionList | null => {
-    console.log("CALLED PARTICIJA");
     const options = state.selectOptions;
     if (
       // TODO DECIDE WETHER THIS SHOULD BE DECIDED ON FETCH FUNC ALONE (PROBLY NOT)
@@ -57,7 +56,6 @@ const useSelectComputation = (
   }, [state.selectOptions, state.page]);
 
   const categorizedOptions = useMemo((): CategorizedSelectOptions => {
-    console.log("CALLED CATEGORY");
     const options = partitionedOptions || state.selectOptions;
     return hasCategories
       ? isFunction(categorizeFunction)
@@ -69,7 +67,6 @@ const useSelectComputation = (
   const filteredOptions = useMemo(():
     | SelectOptionList
     | CategorizedSelectOptions => {
-    console.log("CALLED FILTER");
     const options = isCategorized
       ? cloneDeep(categorizedOptions)
       : partitionedOptions || state.selectOptions;
@@ -85,7 +82,6 @@ const useSelectComputation = (
     | SelectOptionList
     | CategorizedSelectOptions
     | null => {
-    console.log("CALLED SORTER");
     const options = isCategorized
       ? cloneDeep(filteredOptions)
       : (filteredOptions as SelectOptionList);

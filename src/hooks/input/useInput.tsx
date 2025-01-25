@@ -37,7 +37,7 @@ const useInput = (
   const shouldCancelInputUpdate = useCallback(
     (newValue: string) =>
       isFunction(cancelInputUpdate) && cancelInputUpdate(newValue, inputValue),
-    [customInputState, input]
+    [customInputState, input, cancelInputUpdate]
   );
 
   const onInputChange = (e: ChangeEvent<HTMLInputElement>) => {

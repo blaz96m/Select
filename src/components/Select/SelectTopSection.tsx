@@ -1,43 +1,46 @@
+import { isFunction } from "lodash";
 import { ReactNode, memo } from "react";
 import { flushSync } from "react-dom";
 import { useSelectContext } from "src/stores/providers/SelectProvider";
 import { calculateSpaceAndDisplayOptionList } from "src/utils/select";
+import { SelectFetchFunc } from "./types";
 
 type SelectTopSectionProps = {
   children: ReactNode;
-  focusInput: () => void;
   isOpen: boolean;
-  focusFirstOption: () => void;
-  selectOptionListRef: React.RefObject<HTMLDivElement>;
+  onDropdownExpand: () => void;
+  isLazyInitFetchComplete?: boolean;
+  fetchFunction?: SelectFetchFunc;
+  onDropdownCollapse?: () => void;
   isLoading?: boolean;
 };
 
 const SelectTopContainer = memo(
   ({
     children,
-    focusInput,
     isLoading,
     isOpen,
-    selectOptionListRef,
-    focusFirstOption,
+    fetchFunction,
+    onDropdownExpand,
+    isLazyInitFetchComplete,
+    onDropdownCollapse,
   }: SelectTopSectionProps) => {
     const context = useSelectContext();
     const { getSelectStateSetters } = context;
-    const handleClick = (
-      e: React.MouseEvent<HTMLDivElement, MouseEvent>,
-      focusInputOnClose = true
-    ) => {
-      if (isLoading) return;
-      const selectStateSetters = getSelectStateSetters();
-      const updatedIsOpen = !isOpen;
-      if (updatedIsOpen) {
-        focusFirstOption();
-        focusInputOnClose && focusInput();
-      }
-      flushSync(() => selectStateSetters.toggleDropdown());
 
-      !isLoading &&
-        calculateSpaceAndDisplayOptionList(selectOptionListRef, updatedIsOpen);
+    const handleClick = () => {
+      if (isLoading) return;
+      const { toggleDropdown } = getSelectStateSetters();
+      const isFetchingData =
+        isFunction(fetchFunction) && !isLazyInitFetchComplete;
+      const updatedIsOpen = !isOpen;
+      !isFetchingData && updatedIsOpen
+        ? flushSync(() => toggleDropdown())
+        : toggleDropdown();
+      if (updatedIsOpen) {
+        return onDropdownExpand();
+      }
+      isFunction(onDropdownCollapse) && onDropdownCollapse();
     };
 
     return (

@@ -14,6 +14,7 @@ import {
   QueryStateSetters,
 } from "../requests/useQueryManager";
 import { QueryManagerState } from "src/stores/reducers/queryManagerReducer";
+import { flushSync } from "react-dom";
 
 export type SelectAsyncStateSetters = Pick<
   QueryStateSetters,
@@ -25,6 +26,7 @@ export type SelectAsyncState = Pick<QueryManagerState, "searchQuery" | "page">;
 export type SelectAsyncApi = {
   getSelectAsyncStateSetters: () => SelectAsyncStateSetters;
   isLastPage: () => boolean;
+  getIsInitialFetch: () => boolean | undefined;
   handlePageChangeAsync: () => void;
 };
 
@@ -36,6 +38,7 @@ const useSelectAsync = (
     fetchOnInputChange?: boolean;
     originalOptions: React.MutableRefObject<SelectOptionList | []>;
     focusInput: () => void;
+    onDropdownExpand: () => void;
     selectListContainerRef: React.RefObject<HTMLDivElement>;
     isLazyInit?: boolean;
     fetchOnScroll?: boolean;
@@ -50,6 +53,7 @@ const useSelectAsync = (
     recordsPerPage,
     originalOptions,
     selectListContainerRef,
+    onDropdownExpand,
   } = props;
 
   const shouldPreventInputFetch = (params: SelectAsyncState) => {
@@ -61,6 +65,7 @@ const useSelectAsync = (
     (response: ResponseDetails<SelectOptionT>) => {
       const selectStateSetters = getSelectStateSetters();
       const { data, params } = response;
+      // TODO - REMOVE
       if (params && params.page !== 1) {
         const klinData = filter(
           data,
@@ -68,6 +73,11 @@ const useSelectAsync = (
         );
         selectStateSetters.addOptions(klinData);
       } else {
+        const isInitialFetch = getIsInitialFetch();
+        // End the initial fetch in the case when lazy init is triggered and the response is empty (due to the select option useEffect that ends the initial fetch not being triggered)
+        if (isLazyInit && isInitialFetch && isEmpty(response.data)) {
+          endInitialFetch();
+        }
         if (originalOptions?.current && isEmpty(originalOptions.current)) {
           originalOptions.current = data;
         }
@@ -111,14 +121,22 @@ const useSelectAsync = (
     if (isInitialFetch && isLazyInit && isFunction(fetchFunc) && state.isOpen) {
       (async () => {
         await fetch();
-        endInitialFetch();
       })();
     }
   }, [state.isOpen]);
 
-  const selectAsyncApi = {
+  useEffect(() => {
+    const isInitialFetch = getIsInitialFetch();
+    if (isLazyInit && isInitialFetch && state.isOpen) {
+      onDropdownExpand();
+      endInitialFetch();
+    }
+  }, [state.selectOptions]);
+
+  const selectAsyncApi: SelectAsyncApi = {
     getSelectAsyncStateSetters: getQueryManagerStateSetters,
     isLastPage,
+    getIsInitialFetch,
     handlePageChangeAsync,
   };
 

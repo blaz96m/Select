@@ -273,17 +273,17 @@ export const isFocusedOptionInViewport = (
   listContainer: HTMLDivElement,
   focusedOption: HTMLDivElement
 ): boolean => {
-  const { clientHeight: listClientHeight, scrollTop: listScrollTop } =
-    listContainer;
-  const {
-    offsetTop: focusedOptionOffsetTop,
-    clientHeight: focusedOptionClientHeight,
-  } = focusedOption;
+  const { clientHeight: listClientHeight } = listContainer;
 
-  const currViewporthHeight = listClientHeight + listScrollTop;
+  const focusedOptionRect = focusedOption.getBoundingClientRect();
+  const listContainerRect = listContainer.getBoundingClientRect();
+
+  const optionOfsetTop = focusedOptionRect.top - listContainerRect.top;
   return (
-    focusedOptionOffsetTop - focusedOptionClientHeight > listScrollTop &&
-    focusedOptionOffsetTop + focusedOptionClientHeight < currViewporthHeight
+    // prettier-ignore
+    (listClientHeight - optionOfsetTop >
+      focusedOptionRect.height) &&
+    (optionOfsetTop > 0)
   );
 };
 
@@ -366,11 +366,10 @@ export const applyCustomClass = (
 };
 
 export const calculateSpaceAndDisplayOptionList = (
-  selectOptionListRef: React.RefObject<HTMLDivElement>,
-  isOpen: boolean
+  selectOptionListRef: HTMLDivElement
 ) => {
-  if (selectOptionListRef.current && isOpen) {
-    const optionListElement = selectOptionListRef.current;
+  if (selectOptionListRef) {
+    const optionListElement = selectOptionListRef;
     const optionListElementHeight = optionListElement.scrollHeight;
     const optionListRect = optionListElement.getBoundingClientRect();
   }
