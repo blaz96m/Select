@@ -1,5 +1,5 @@
 import React, { memo } from "react";
-import { isFunction, map } from "lodash";
+import { isElement, isEmpty, isFunction, isNumber, map, some } from "lodash";
 import {
   CustomSelectCategoryRenderer,
   SelectOptionList,
@@ -10,11 +10,24 @@ import { useSelectContext } from "src/stores/providers/SelectProvider";
 export type SelectCategoryProps = {
   categoryOptions: SelectOptionList;
   categoryName: keyof SelectOptionT;
-  renderOption: (option: SelectOptionT, key: any) => React.JSX.Element;
+  selectedOptions: SelectOptionList | null;
+  focusedOptionIdx: number | null;
+  renderOption: (
+    option: SelectOptionT,
+    index: number,
+    focusedOptionIdx: number | null,
+    selectedOptions: SelectOptionList | null
+  ) => JSX.Element;
 };
 
 const SelectCategory = memo(
-  ({ categoryOptions, categoryName, renderOption }: SelectCategoryProps) => {
+  ({
+    categoryOptions,
+    categoryName,
+    selectedOptions,
+    renderOption,
+    focusedOptionIdx,
+  }: SelectCategoryProps) => {
     const context = useSelectContext();
 
     const {
@@ -22,6 +35,9 @@ const SelectCategory = memo(
       getSelectAsyncStateSetters,
       getSelectStateSetters,
     } = context;
+
+    if (isEmpty(categoryOptions)) return;
+
     return (
       <div>
         {isFunction(customComponent) ? (
@@ -29,6 +45,8 @@ const SelectCategory = memo(
             {
               categoryName,
               categoryOptions,
+              selectedOptions,
+              focusedOptionIdx,
               getSelectAsyncStateSetters,
               getSelectStateSetters,
             },
@@ -38,7 +56,14 @@ const SelectCategory = memo(
           <p className="select__category__name">{categoryName}</p>
         )}
         <ul className="select__category__options-list">
-          {map(categoryOptions, (option, key) => renderOption(option, key))}
+          {map(categoryOptions, (option, index) => {
+            return renderOption(
+              option,
+              index,
+              focusedOptionIdx,
+              selectedOptions
+            );
+          })}
         </ul>
       </div>
     );

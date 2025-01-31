@@ -24,6 +24,7 @@ const SelectMultiValueElement = ({
   labelKey,
   valueList,
 }: SelectMultiValueProps) => {
+  ("MULTI VAL EL RENDERO");
   const className = "select__value--multi";
   const valueLabel = value[labelKey];
 

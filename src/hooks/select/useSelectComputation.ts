@@ -68,7 +68,7 @@ const useSelectComputation = (
     | SelectOptionList
     | CategorizedSelectOptions => {
     const options = isCategorized
-      ? cloneDeep(categorizedOptions)
+      ? categorizedOptions
       : partitionedOptions || state.selectOptions;
     const categoryKeyVal = isCategorized
       ? (categoryKey as keyof SelectOptionT)
@@ -82,11 +82,10 @@ const useSelectComputation = (
     | SelectOptionList
     | CategorizedSelectOptions
     | null => {
-    const options = isCategorized
-      ? cloneDeep(filteredOptions)
-      : (filteredOptions as SelectOptionList);
     if (isFunction(sorterFn)) {
-      return sorterFn(options);
+      return sorterFn(
+        isCategorized ? cloneDeep(filteredOptions) : filteredOptions
+      );
     }
     return null;
   }, [filteredOptions, sorterFn]);

@@ -12,16 +12,16 @@ import {
   CategorizedSelectOptions,
   SelectOptionList,
   SelectOptionT,
-  selectRendererOverload,
+  SelectCategoryRenderer,
+  SelectOptionRenderer,
 } from "./types";
 import { useScrollManager } from "src/hooks/dom";
 import clsx from "clsx";
-import { SelectAsyncStateSetters } from "src/hooks/select/useSelectAsync";
 import { OPTIONS_EMPTY_TEXT } from "src/utils/select/constants";
 
 export type OptionListProps = {
   displayedOptions: SelectOptionList | CategorizedSelectOptions;
-  renderFn: selectRendererOverload;
+  renderFunction: SelectCategoryRenderer | SelectOptionRenderer;
   handlePageChange: () => void;
   categoryKey: string;
   page: number;
@@ -39,7 +39,7 @@ const OptionList = memo(
   forwardRef<HTMLDivElement, OptionListProps>(
     (
       {
-        renderFn,
+        renderFunction,
         displayedOptions,
         handlePageChange,
         isCategorized,
@@ -52,10 +52,6 @@ const OptionList = memo(
       },
       ref
     ) => {
-      /*
-      each(displayedOptions, (option) => {
-        console.log(option.title);
-      });*/
       const hasCategories = categoryKey && isCategorized;
 
       const onScrollToBottom = () => {
@@ -71,7 +67,6 @@ const OptionList = memo(
 
       const bottomScrollActions = { onArrive: onScrollToBottom };
       const innerRef = useRef<HTMLDivElement>(null);
-      // TODO - Check if imperative handles are required across the proj.
       useImperativeHandle(ref, () => innerRef.current!);
       useScrollManager<HTMLDivElement>(
         innerRef,
@@ -89,17 +84,17 @@ const OptionList = memo(
             })}
           >
             {!isEmpty(displayedOptions) ? (
-              map(displayedOptions, (value, key) => {
+              map(displayedOptions, (value, key: number | string) => {
                 if (hasCategories) {
-                  return renderFn(
-                    {
-                      categoryName: key,
-                      categoryOptions: value as SelectOptionList,
-                    },
-                    key
-                  );
+                  return (renderFunction as SelectCategoryRenderer)({
+                    categoryName: key as string,
+                    categoryOptions: value as SelectOptionList,
+                  });
                 }
-                return renderFn(value as SelectOptionT, key);
+                return (renderFunction as SelectOptionRenderer)(
+                  value as SelectOptionT,
+                  key as number
+                );
               })
             ) : (
               <div>{OPTIONS_EMPTY_TEXT}</div>

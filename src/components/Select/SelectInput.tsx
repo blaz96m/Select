@@ -11,17 +11,14 @@ import {
   SelectOptionList,
   SelectOptionT,
   SelectKeyboardNavigationDirection,
-  SelectFocusDetails,
   SelectStateSetters,
   CustomSelectInputRenderer,
   SelectComponents,
   SelectInputInnerProps,
+  SelectFocusNavigationFallbackDirection,
 } from "src/components/Select/types";
 import { useInput } from "src/hooks/input";
-import {
-  generateComponentInnerProps,
-  isDirectionBottom,
-} from "src/utils/select";
+import { generateComponentInnerProps } from "src/utils/select";
 import clsx from "clsx";
 import { SelectAsyncStateSetters } from "src/hooks/select/useSelectAsync";
 import { useSelectContext } from "src/stores/providers/SelectProvider";
@@ -32,17 +29,14 @@ export type SelectInputProps = {
   inputValue: string;
   labelKey: keyof SelectOptionT;
   filterSearchedOptions: () => void;
-  getFocusValues: (
-    direction: SelectKeyboardNavigationDirection
-  ) => SelectFocusDetails | null;
-  focusFirstOption: () => void;
-  focusLastOption: () => void;
-  onKeyPress: (id: string) => void;
+  focusNextOption: (
+    fallbackDirection?: SelectFocusNavigationFallbackDirection
+  ) => void;
+  focusPreviousOption: () => void;
   addOptionOnKeyPress: () => void;
   usesInputAsync: boolean;
   hasInput: boolean;
   disableInputFetchTrigger: boolean;
-  handlePageChange: () => void;
   isLoading?: boolean;
   hasPaging?: boolean;
   renderInputContainerForCustomComponent?: boolean;
@@ -54,15 +48,12 @@ const SelectInput = memo(
       isMultiValue,
       customOnChange,
       inputValue,
-      getFocusValues,
-      focusLastOption,
-      focusFirstOption,
       filterSearchedOptions,
+      focusNextOption,
+      focusPreviousOption,
       usesInputAsync,
-      onKeyPress,
       hasInput,
       addOptionOnKeyPress,
-      handlePageChange,
       hasPaging,
       isLoading,
     } = props;
@@ -126,53 +117,13 @@ const SelectInput = memo(
       setInput
     );
 
-    const onArrowKeyUp = () => {
-      const { setFocusDetails } = getSelectStateSetters();
-      const focusDetails = getFocusValues("up");
-      if (!isEmpty(focusDetails)) {
-        setFocusDetails(
-          focusDetails.focusedOptionId,
-          focusDetails.focusedCategory
-        );
-        return focusDetails.focusedOptionId;
-      }
-      const optionId = focusLastOption();
-      return optionId;
-    };
-
-    const onArrowKeyDown = () => {
-      const { setFocusDetails } = getSelectStateSetters();
-      const focusDetails = getFocusValues("down");
-      if (!isEmpty(focusDetails)) {
-        setFocusDetails(
-          focusDetails.focusedOptionId,
-          focusDetails.focusedCategory
-        );
-        return focusDetails.focusedOptionId;
-      }
-      if (hasPaging) {
-        return handlePageChange();
-      }
-      const optionId = focusFirstOption();
-      return optionId;
-    };
-
-    const handleArrowKeyPress = (
-      direction: SelectKeyboardNavigationDirection
-    ) => {
-      const optionId = isDirectionBottom(direction)
-        ? onArrowKeyDown()
-        : onArrowKeyUp();
-      optionId && onKeyPress(optionId);
-    };
-
     const handleKeyPress = (e: KeyboardEvent<HTMLInputElement>) => {
       switch (e.code) {
         case "ArrowUp":
-          handleArrowKeyPress("up");
+          focusPreviousOption();
           break;
         case "ArrowDown":
-          handleArrowKeyPress("down");
+          focusNextOption();
           break;
         case "Enter":
           addOptionOnKeyPress();

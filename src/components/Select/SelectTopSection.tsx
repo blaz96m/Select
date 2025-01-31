@@ -8,7 +8,7 @@ import { SelectFetchFunc } from "./types";
 type SelectTopSectionProps = {
   children: ReactNode;
   isOpen: boolean;
-  onDropdownExpand: () => void;
+  onDropdownExpand?: () => void;
   isLazyInitFetchComplete?: boolean;
   fetchFunction?: SelectFetchFunc;
   onDropdownCollapse?: () => void;
@@ -34,12 +34,15 @@ const SelectTopContainer = memo(
       const isFetchingData =
         isFunction(fetchFunction) && !isLazyInitFetchComplete;
       const updatedIsOpen = !isOpen;
+
       !isFetchingData && updatedIsOpen
         ? flushSync(() => toggleDropdown())
         : toggleDropdown();
-      if (updatedIsOpen) {
+
+      if (updatedIsOpen && isFunction(onDropdownExpand)) {
         return onDropdownExpand();
       }
+
       isFunction(onDropdownCollapse) && onDropdownCollapse();
     };
 

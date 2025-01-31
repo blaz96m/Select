@@ -41,18 +41,16 @@ const useSelectDomHelper = (
     return selectOptionsRef.current;
   }, []);
 
-  const handleScrollToFocusedOption = useCallback(
-    (optionId: string) => {
-      const listContainer = selectListContainerRef.current;
-      const selectOptionMap = getSelectOptionsMap();
-      const targetNode = selectOptionMap.get(optionId);
-      if (listContainer && targetNode) {
-        !isFocusedOptionInViewport(listContainer, targetNode) &&
-          scrollToTarget(targetNode);
+  const handleScrollToFocusedOption = useCallback((optionId: string) => {
+    const listContainer = selectListContainerRef.current;
+    const selectOptionMap = getSelectOptionsMap();
+    const selectOptionNode = selectOptionMap.get(optionId)!;
+    if (listContainer) {
+      if (!isFocusedOptionInViewport(listContainer, selectOptionNode)) {
+        scrollToTarget(selectOptionNode);
       }
-    },
-    [state.isOpen]
-  );
+    }
+  }, []);
 
   const focusInput = useCallback(() => {
     if (inputRef.current) {

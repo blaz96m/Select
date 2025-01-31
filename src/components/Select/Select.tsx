@@ -20,7 +20,9 @@ import {
   slice,
   find,
   includes,
+  join,
   some,
+  split,
 } from "lodash";
 
 import { DEFAULT_SELECT_PLACEHOLDER } from "src/utils/select/constants";
@@ -45,6 +47,7 @@ import {
 
 import {
   CategorizedSelectOptions,
+  SelectCategoryT,
   SelectCustomComponents,
   SelectFetchFunc,
   SelectOptionList,
@@ -62,6 +65,7 @@ import {
   SelectDomHelpers,
   SelectDomRefs,
 } from "src/hooks/select/useSelectDomHelper";
+import { useSelectFocus } from "src/hooks/select";
 
 export type SelectComponentProps = SelectProps & {
   usesInputAsync: boolean;
@@ -130,6 +134,7 @@ const Select = ({
   usesInputAsync,
   handlePageChange,
   onOptionSelect,
+  onDropdownExpand,
   isOptionDisabled,
   onDropdownCollapse,
   isLazyInitFetchComplete,
@@ -146,35 +151,50 @@ const Select = ({
   const { getSelectOptionsMap, focusInput, handleScrollToFocusedOption } =
     selectDomHelpers;
 
-  const {
-    focusOptionAfterClick,
-    getFocusValues,
-    focusFirstOption,
-    focusLastOption,
-    addOptionOnKeyPress,
-    filterSearchedOptions,
-  } = selectApi;
+  const { filterSearchedOptions } = selectApi;
 
   const { inputRef, selectListContainerRef } = selectDomRefs;
 
   const { isOpen, inputValue, page } = selectState;
 
-  const renderOptionElement = useCallback(
-    (option: SelectOptionT) => {
-      const isSelected =
-        !removeSelectedOptionsFromList &&
-        some(value, (val) => val.id == option.id);
-      const isFocused = focusedOptionId == option.id;
-      const isDisabled =
-        isFunction(isOptionDisabled) && isOptionDisabled(option);
+  console.log("FOKCUSED", displayedOptions);
+
+  const { selectFocusHandlers, state: focusState } = useSelectFocus({
+    displayedOptions,
+    isCategorized,
+    categoryKey,
+    handleScrollToFocusedOption,
+  });
+
+  const { focusedOptionCategory, focusedOptionIndex } = focusState;
+
+  const {
+    focusNextOption,
+    focusPreviousOption,
+    setFocusOnHover,
+    handleOptionFocusOnSelectByClick,
+    handleOptionFocusOnSelectByKeyPress,
+    isOptionFocused,
+  } = selectFocusHandlers;
+
+  const handleOptionRender = useCallback(
+    (
+      option: SelectOptionT,
+      index: number,
+      isFocused: boolean,
+      isDisabled: boolean,
+      isSelected: boolean
+    ) => {
       return (
         <SelectOption
           isMultiValue={isMultiValue}
           closeDropdownOnOptionSelect={closeDropdownOnSelect}
           key={option.id}
           option={option}
+          optionIndex={index}
           getSelectOptionsMap={getSelectOptionsMap}
-          handleFocusOnClick={focusOptionAfterClick}
+          handleFocusOnClick={handleOptionFocusOnSelectByClick}
+          handleHover={setFocusOnHover}
           categoryKey={categoryKey}
           isCategorized={isCategorized}
           onOptionSelect={onOptionSelect}
@@ -188,35 +208,91 @@ const Select = ({
         />
       );
     },
-
     [
+      handleOptionFocusOnSelectByClick,
+      onOptionSelect,
       isMultiValue,
       closeDropdownOnSelect,
       labelKey,
-      focusedOptionId,
-      value,
-      displayedOptions,
-      isOptionDisabled,
+      removeSelectedOptionsFromList,
+      isCategorized,
+      categoryKey,
+      setFocusOnHover,
     ]
   );
 
-  const selectRenderFn: selectRendererOverload = useCallback(
-    (value) => {
-      if (value.categoryOptions) {
-        const { categoryName, categoryOptions } = value;
-        return (
-          <SelectCategory
-            key={categoryName}
-            categoryName={categoryName}
-            categoryOptions={categoryOptions}
-            renderOption={renderOptionElement}
-          />
-        );
-      } else {
-        return renderOptionElement(value as SelectOptionT);
-      }
+  const renderOptionFromList = useCallback(
+    (option: SelectOptionT, index: number) => {
+      const isFocused = isOptionFocused(option, index);
+      const isDisabled =
+        isFunction(isOptionDisabled) && isOptionDisabled(option);
+      const isSelected =
+        !removeSelectedOptionsFromList &&
+        some(value, (val) => val.id == option.id);
+      return handleOptionRender(
+        option,
+        index,
+        isFocused,
+        isDisabled,
+        isSelected
+      );
     },
-    [isMultiValue, closeDropdownOnSelect, labelKey, focusedOptionId, value]
+    [handleOptionRender, isOptionFocused, isOptionDisabled, value]
+  );
+
+  const renderOptionFromCategory = useCallback(
+    (
+      option: SelectOptionT,
+      index: number,
+      focusedOptionIdx: number | null,
+      selectedOptions: SelectOptionList | null
+    ) => {
+      const isFocused = focusedOptionIdx === index;
+      const isDisabled =
+        isFunction(isOptionDisabled) && isOptionDisabled(option);
+      const isSelected = some(
+        selectedOptions,
+        (selectedOption) => selectedOption.id === option.id
+      );
+
+      return handleOptionRender(
+        option,
+        index,
+        isFocused,
+        isDisabled,
+        isSelected
+      );
+    },
+    [isOptionDisabled, handleOptionRender]
+  );
+
+  const renderCategory = useCallback(
+    (category: SelectCategoryT) => {
+      const { categoryName, categoryOptions } = category;
+      const isCategoryFocused =
+        categoryName === focusState.focusedOptionCategory;
+      const focusedOptionIdx = isCategoryFocused
+        ? focusState.focusedOptionIndex
+        : -1;
+      const focusedOptionsInCategory = filter(
+        value,
+        (val) => val[categoryKey] === categoryName
+      );
+
+      return (
+        <SelectCategory
+          key={categoryName}
+          categoryName={categoryName}
+          focusedOptionIdx={focusedOptionIdx}
+          categoryOptions={categoryOptions}
+          selectedOptions={
+            !isEmpty(focusedOptionsInCategory) ? focusedOptionsInCategory : null
+          }
+          renderOption={renderOptionFromCategory}
+        />
+      );
+    },
+    [focusedOptionCategory, focusedOptionIndex, isOptionDisabled, value]
   );
 
   return (
@@ -241,15 +317,12 @@ const Select = ({
             isMultiValue={isMultiValue}
             customOnChange={onInputChange}
             labelKey={labelKey}
-            getFocusValues={getFocusValues}
             inputValue={inputValue}
-            focusFirstOption={focusFirstOption}
-            focusLastOption={focusLastOption}
-            addOptionOnKeyPress={addOptionOnKeyPress}
+            focusNextOption={focusNextOption}
+            focusPreviousOption={focusPreviousOption}
+            addOptionOnKeyPress={handleOptionFocusOnSelectByKeyPress}
             usesInputAsync={usesInputAsync}
-            handlePageChange={handlePageChange}
             key="select-input"
-            onKeyPress={handleScrollToFocusedOption}
             filterSearchedOptions={filterSearchedOptions}
             disableInputFetchTrigger={disableInputFetchTrigger}
             isLoading={isLoading}
@@ -284,7 +357,7 @@ const Select = ({
           page={page}
           hasPaging={hasPaging}
           isLoading={isLoading}
-          renderFn={selectRenderFn}
+          renderFunction={isCategorized ? renderCategory : renderOptionFromList}
           isCategorized={isCategorized}
         />
       )}
@@ -292,14 +365,14 @@ const Select = ({
   );
 };
 
-Select.Container = memo(SelectContainer);
-Select.Top = memo(SelectTopSection);
+Select.Container = SelectContainer;
+Select.Top = SelectTopSection;
 Select.ValueSection = memo(SelectValueSection);
 Select.IndicatorSection = memo(SelectIndicatorSection);
 Select.Spinner = Spinner;
-Select.Value = SelectValue;
-Select.Input = SelectInput;
-Select.DropdownIndicator = SelectDropdownIndicator;
-Select.ClearIndicator = SelectClearIndicator;
-Select.OptionList = OptionList;
+Select.Value = memo(SelectValue);
+Select.Input = memo(SelectInput);
+Select.DropdownIndicator = memo(SelectDropdownIndicator);
+Select.ClearIndicator = memo(SelectClearIndicator);
+Select.OptionList = memo(OptionList);
 export default Select;

@@ -22,13 +22,13 @@ export type SelectOptionProps = {
   labelKey: keyof SelectOptionT;
   option: SelectOptionT;
   isMultiValue: boolean;
-  index: number;
-  handleFocusOnClick: (optionId: string, optionCategory: string) => void;
+  optionIndex: number;
+  handleFocusOnClick: (optionIdx: number, optionCategory: string) => void;
   focusInput: () => void;
   getSelectOptionsMap: () => Map<string, HTMLDivElement>;
+  handleHover: (optionIdx: number, optionCategory: string) => void;
   isCategorized: boolean;
   isFocused: boolean;
-  selectListContainerRef: React.RefObject<HTMLDivElement>;
   isSelected: boolean;
   removeSelectedOptionsFromList: boolean;
   isDisabled: boolean;
@@ -39,16 +39,29 @@ export type SelectOptionProps = {
   isLoading?: boolean;
 };
 
+const compareProps = (oldProps, newProps) => {
+  let isValid = true;
+  for (const key in oldProps) {
+    const oldProp = oldProps[key];
+    const newProp = newProps[key];
+    const isHehe = Object.is(oldProp, newProp);
+    if (!isHehe) {
+      isValid = false;
+    }
+  }
+  return isValid;
+};
+
 const SelectOption = memo((props: SelectOptionProps) => {
   const {
     labelKey,
     option,
-    index,
+    optionIndex,
     isMultiValue,
     closeDropdownOnOptionSelect,
     handleFocusOnClick,
+    handleHover,
     getSelectOptionsMap,
-    selectListContainerRef,
     categoryKey,
     focusInput,
     isCategorized,
@@ -61,25 +74,7 @@ const SelectOption = memo((props: SelectOptionProps) => {
     isLoading,
   } = props;
 
-  const onMouseLeave = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-    const optionElement = e.currentTarget;
-    const previousOption = optionElement.previousElementSibling;
-    const nextOption = optionElement.nextElementSibling;
-
-    const optionElementRect = e.currentTarget.getBoundingClientRect();
-    const optionElementHeight = optionElementRect.height;
-    const optionElementTopDistance = optionElementRect.top;
-    const optionElementBottomDistance = optionElementRect.bottom;
-    const isHoveringToPreviousOption = e.clientY - optionElementTopDistance < 1;
-    const isHoveringToNextOption = optionElementBottomDistance - e.clientY < 1;
-    if (
-      (isHoveringToPreviousOption && previousOption) ||
-      (isHoveringToNextOption && nextOption)
-    ) {
-    }
-  };
-
-  const shouldDropdownStayOpenAfterClick =
+  const keepDropdownOpenOnOptionSelect =
     !isNil(closeDropdownOnOptionSelect) && !closeDropdownOnOptionSelect;
 
   const context = useSelectContext();
@@ -90,7 +85,7 @@ const SelectOption = memo((props: SelectOptionProps) => {
     getSelectStateSetters,
   } = context;
 
-  const hasCategories = categoryKey && isCategorized;
+  const hasCategories = !!categoryKey && isCategorized;
 
   const className = clsx({
     select__option: true,
@@ -118,12 +113,12 @@ const SelectOption = memo((props: SelectOptionProps) => {
     if (isLoading) return;
     const optionCategory = hasCategories ? option[categoryKey] : "";
     const selectStateSetters = getSelectStateSetters();
-    handleFocusOnClick(option.id, optionCategory);
+    handleFocusOnClick(optionIndex, optionCategory);
     !removeSelectedOptionsFromList && isSelected
       ? selectStateSetters.clearValue(option.id)
-      : selectStateSetters.addValue(option);
+      : selectStateSetters.selectValue(option);
     !isMultiValue && handleInputClear();
-    shouldDropdownStayOpenAfterClick && focusInput();
+    keepDropdownOpenOnOptionSelect && focusInput();
     isFunction(onOptionSelect) && onOptionSelect(option);
   };
 
@@ -133,9 +128,11 @@ const SelectOption = memo((props: SelectOptionProps) => {
     if (isFocused) {
       return;
     }
-    const selectStateSetters = getSelectStateSetters();
-    const optionCategory = e.currentTarget.dataset.category;
-    selectStateSetters.setFocusDetails(e.currentTarget.id, optionCategory);
+
+    const optionCategory = hasCategories
+      ? e.currentTarget.dataset?.category
+      : "";
+    handleHover(optionIndex, optionCategory!);
   };
 
   if (isFunction(customComponent)) {
@@ -178,6 +175,6 @@ const SelectOption = memo((props: SelectOptionProps) => {
       {option[labelKey]}
     </div>
   );
-});
+}, compareProps);
 
 export default SelectOption;

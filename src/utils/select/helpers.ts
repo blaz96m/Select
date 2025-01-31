@@ -10,6 +10,11 @@ import {
   has,
   each,
   findIndex,
+  head,
+  last,
+  first,
+  isNumber,
+  cloneDeep,
 } from "lodash";
 import {
   SelectOptionList,
@@ -17,7 +22,6 @@ import {
   CategorizedSelectOptions,
   SelectOptionT,
   SelectKeyboardNavigationDirection,
-  SelectFocusDetails,
   SelectComponents,
   SelectOptionInnerProps,
   SelectOptionComponentHandlers,
@@ -25,10 +29,11 @@ import {
   SelectInputInnerProps,
   SelectComponentHandlers,
   CustomClass,
+  SelectFocusNavigationFallbackDirection,
+  SelectCategoryFocusDetails,
 } from "src/components/Select/types";
 import { getObjectKeys } from "../data-types/objects/helpers";
 import { INITIAL_STATE } from "./constants";
-import { SelectOptionProps } from "src/components/Select/SelectOption";
 
 export const initializeState = (
   selectOptions: SelectOptionList | []
@@ -36,29 +41,6 @@ export const initializeState = (
   ...INITIAL_STATE,
   selectOptions: selectOptions,
 });
-
-export const getFirstOptionAndCategory = (
-  categorizedOptions: CategorizedSelectOptions
-): SelectFocusDetails | null => {
-  const categories = getObjectKeys(categorizedOptions);
-  if (isEmpty(categories)) return null;
-  const firstCategory = categories[0];
-  const firstOption = categorizedOptions[firstCategory][0];
-  return {
-    focusedOptionId: firstOption?.id,
-    focusedCategory: firstCategory,
-  };
-};
-
-export const getLastOptionAndCategory = (
-  categorizedOptions: CategorizedSelectOptions
-): SelectFocusDetails | null => {
-  const categories = getObjectKeys(categorizedOptions);
-  if (isEmpty(categories)) return null;
-  const lastCategory = categories[categories.length - 1];
-  const lastOption = categorizedOptions[lastCategory].slice(-1)[0];
-  return { focusedOptionId: lastOption?.id, focusedCategory: lastCategory };
-};
 
 export const filterOptionListBySearchValue = (
   options: SelectOptionList,
@@ -80,13 +62,11 @@ export const filterDataBySelectedValues = (
   if (isEmpty(value)) {
     return options;
   }
-  return !isEmpty(categoryKey)
-    ? filterCategoriesBySelectedValues(
-        options as CategorizedSelectOptions,
-        value,
-        categoryKey
-      )
-    : filterListBySelectedValues(options as SelectOptionList, value);
+  if (!isEmpty(categoryKey)) {
+    const categories = cloneDeep(options as CategorizedSelectOptions);
+    return filterCategoriesBySelectedValues(categories, value, categoryKey);
+  }
+  return filterListBySelectedValues(options as SelectOptionList, value);
 };
 
 export const filterListBySelectedValues = (
@@ -96,6 +76,9 @@ export const filterListBySelectedValues = (
   const valueIds = map(value, (val) => val.id);
   return filter(options, (option) => !includes(valueIds, option.id));
 };
+
+export const isFocusedOptionIndexValid = (focusedOptionIdx: number | null) =>
+  isNumber(focusedOptionIdx) && focusedOptionIdx >= 0;
 
 export const filterCategoriesBySelectedValues = (
   categories: CategorizedSelectOptions,
@@ -146,127 +129,227 @@ export const categorizeOptions = (
   );
 };
 
-const getFocusedOptionIdx = (
-  options: SelectOptionList,
-  focusedOptionId: string
-) => {
-  return findIndex(options, (option) => {
-    return option.id == focusedOptionId;
-  });
-};
-
-const getFocusedCategorizedOptionIdx = (
-  options: CategorizedSelectOptions,
-  focusedOptionId: string,
-  focusedCategory: keyof SelectOptionT
-) => {
-  const focusedCategoryOptions = options[focusedCategory];
-  return getFocusedOptionIdx(focusedCategoryOptions, focusedOptionId);
-};
-
-const getFocusedCategoryIdx = (
-  categories: string[],
-  focusedCategory: keyof SelectOptionT
-) => findIndex(categories, (category) => category === focusedCategory);
-
-export const getNextOption = (
-  options: SelectOptionList | CategorizedSelectOptions,
-  currFocusedIdx: number,
-  focusedCategory?: keyof SelectOptionT
-) =>
-  focusedCategory
-    ? (options as CategorizedSelectOptions)[focusedCategory][currFocusedIdx + 1]
-    : (options as SelectOptionList)[currFocusedIdx + 1];
-
-export const getPreviousOption = (
-  options: SelectOptionList | CategorizedSelectOptions,
-  currFocusedIdx: number,
-  focusedCategory?: keyof SelectOptionT
-) =>
-  focusedCategory
-    ? (options as CategorizedSelectOptions)[focusedCategory][currFocusedIdx - 1]
-    : (options as SelectOptionList)[currFocusedIdx - 1];
-
-export const isDirectionBottom = (
+const getNextOptionIdxInDirection = (
+  focusedOptionIdx: number,
+  focusedOptions: SelectOptionT[],
   direction: SelectKeyboardNavigationDirection
-) => direction === "down";
+) => {
+  const nextIdxInDirection = getNextIdxInDirection(direction, focusedOptionIdx);
+  const nextOptionInDirection = focusedOptions[nextIdxInDirection];
+  return nextOptionInDirection ? nextIdxInDirection : null;
+};
 
-export const getOptionFocusDetailsOnNavigation = (
-  focusedOptionId: string,
-  options: SelectOptionList | CategorizedSelectOptions,
-  direction: SelectKeyboardNavigationDirection,
-  focusedCategory?: keyof SelectOptionT
-): SelectFocusDetails | null => {
-  const categories = focusedCategory && getObjectKeys(options);
-  const currFocusedOptionIdx = focusedCategory
-    ? getFocusedCategorizedOptionIdx(
-        options as CategorizedSelectOptions,
-        focusedOptionId,
-        focusedCategory
-      )
-    : getFocusedOptionIdx(options as SelectOptionList, focusedOptionId);
-  const currFocusedCategoryIdx = categories
-    ? getFocusedCategoryIdx(categories, focusedCategory)
-    : -1;
-  const currCategory = categories && categories[currFocusedCategoryIdx];
+const getOppositeDirectionOptionIdx = (
+  selectOptions: SelectOptionList,
+  direction: SelectKeyboardNavigationDirection
+) => (direction === "down" ? 0 : selectOptions.length - 1);
 
-  if (currFocusedOptionIdx !== -1) {
-    if (isDirectionBottom(direction)) {
-      const nextOption = getNextOption(
-        options,
-        currFocusedOptionIdx,
-        focusedCategory
-      );
-      const nextCategory = categories && categories[currFocusedCategoryIdx + 1];
+const getPreviousOptionIdx = (focusedOptionIdx: number) => focusedOptionIdx - 1;
 
-      if (nextOption) {
-        return {
-          focusedOptionId: nextOption.id,
-          focusedCategory: currCategory,
-        };
+const getNextCategoryAndOptionInDirection = (
+  categories: string[],
+  categorizedOptions: CategorizedSelectOptions,
+  focusedCategory: keyof SelectOptionT,
+  direction: SelectKeyboardNavigationDirection
+): SelectCategoryFocusDetails | null => {
+  const currCategoryIdx = findIndex(
+    categories,
+    (category) => category === focusedCategory
+  );
+  const nextCategoryIdxInDirection = getNextIdxInDirection(
+    direction,
+    currCategoryIdx
+  );
+  const nextCategoryInDirection = categories[nextCategoryIdxInDirection];
+  return nextCategoryInDirection
+    ? {
+        focusedCategory: nextCategoryInDirection,
+        focusedOptionIdx: getFocusedOptionIdxOnCategoryChange(
+          direction,
+          categorizedOptions[nextCategoryInDirection]
+        ),
       }
-      if (nextCategory) {
-        const nextCategoryOptions = (options as CategorizedSelectOptions)[
-          nextCategory
-        ];
+    : null;
+};
 
-        return {
-          focusedOptionId: nextCategoryOptions[0].id,
-          focusedCategory: nextCategory,
-        };
-      }
+const getOppositeDirectionCategoryAndOption = (
+  categories: string[],
+  categorizedOptions: CategorizedSelectOptions,
+  direction: SelectKeyboardNavigationDirection
+): SelectCategoryFocusDetails => {
+  const targetCategory =
+    direction === "down" ? first(categories) : last(categories);
+  const targetOptionIdx = getFocusedOptionIdxOnCategoryChange(
+    direction,
+    categorizedOptions[targetCategory!]
+  );
+  return {
+    focusedCategory: targetCategory!,
+    focusedOptionIdx: targetOptionIdx,
+  };
+};
 
-      return null;
-    } else {
-      const previousOption = getPreviousOption(
-        options,
-        currFocusedOptionIdx,
-        focusedCategory
-      );
-      const prevCategory = categories && categories[currFocusedCategoryIdx - 1];
-
-      if (previousOption) {
-        return {
-          focusedOptionId: previousOption.id,
-          focusedCategory: currCategory,
-        };
-      }
-      if (prevCategory) {
-        const prevCategoryOptions = (options as CategorizedSelectOptions)[
-          prevCategory
-        ];
-
-        return {
-          focusedOptionId:
-            prevCategoryOptions[prevCategoryOptions.length - 1].id,
-          focusedCategory: prevCategory,
-        };
-      }
-
-      return null;
-    }
+const getFallbackOptionIdx = (
+  fallbackDirection: SelectFocusNavigationFallbackDirection,
+  focusedOptionIdx: number,
+  selectOptions: SelectOptionList,
+  direction: SelectKeyboardNavigationDirection
+) => {
+  switch (fallbackDirection) {
+    case "opposite":
+      return getOppositeDirectionOptionIdx(selectOptions, direction);
+    case "previous":
+      return getPreviousOptionIdx(focusedOptionIdx);
   }
-  return null;
+};
+
+const getFallbackCategory = (
+  fallbackDirection: SelectFocusNavigationFallbackDirection,
+  categories: string[],
+  categorizedOptions: CategorizedSelectOptions,
+  focusedCategory: keyof SelectOptionT,
+  direction: SelectKeyboardNavigationDirection
+) => {
+  switch (fallbackDirection) {
+    case "opposite":
+      return getOppositeDirectionCategoryAndOption(
+        categories,
+        categorizedOptions,
+        direction
+      );
+    case "previous":
+      return getNextCategoryAndOptionInDirection(
+        categories,
+        categorizedOptions,
+        focusedCategory,
+        "up"
+      );
+  }
+};
+
+const getNextIdxInDirection = (
+  direction: SelectKeyboardNavigationDirection,
+  currItemIdx: number
+) => (direction === "down" ? currItemIdx + 1 : currItemIdx - 1);
+
+const getFocusedOptionIdxOnCategoryChange = (
+  direction: SelectKeyboardNavigationDirection,
+  categoryOptions: SelectOptionT[]
+) => (direction === "down" ? 0 : categoryOptions.length - 1);
+
+export const getCategoryFocusDetails = (
+  focusedOptionIdx: number | null,
+  focusedCategory: keyof SelectOptionT,
+  categorizedOptions: CategorizedSelectOptions,
+  direction: SelectKeyboardNavigationDirection,
+  fallbackDirection: SelectFocusNavigationFallbackDirection
+): SelectCategoryFocusDetails | null => {
+  const currentFocusExists =
+    isFocusedOptionIndexValid(focusedOptionIdx) && focusedCategory;
+  return currentFocusExists
+    ? getNextCategoryFocusDetailsInDirection(
+        focusedOptionIdx!,
+        focusedCategory,
+        categorizedOptions,
+        direction,
+        fallbackDirection
+      )
+    : getFirstOptionAndCategory(categorizedOptions);
+};
+
+export const getFocusedOptionIdx = (
+  focusedOptionIndex: number | null,
+  selectOptions: SelectOptionList,
+  direction: SelectKeyboardNavigationDirection,
+  fallbackDirection: SelectFocusNavigationFallbackDirection
+) => {
+  return isFocusedOptionIndexValid(focusedOptionIndex)
+    ? getNextFocusedOptionIdxInDirection(
+        focusedOptionIndex!,
+        selectOptions,
+        direction,
+        fallbackDirection
+      )
+    : 0;
+};
+
+export const getNextCategoryFocusDetailsInDirection = (
+  focusedOptionIdx: number,
+  focusedCategory: keyof SelectOptionT,
+  categorizedOptions: CategorizedSelectOptions,
+  direction: SelectKeyboardNavigationDirection,
+  fallbackDirection: SelectFocusNavigationFallbackDirection
+): SelectCategoryFocusDetails | null => {
+  // 1. Try to get the next option in a category
+  const focusedCategoryOptions = categorizedOptions[focusedCategory];
+  const categories = getObjectKeys(categorizedOptions);
+
+  const nextCategoryOptionIdxInDirection = getNextOptionIdxInDirection(
+    focusedOptionIdx,
+    focusedCategoryOptions,
+    direction
+  );
+  if (isFocusedOptionIndexValid(nextCategoryOptionIdxInDirection)) {
+    return {
+      focusedCategory,
+      focusedOptionIdx: nextCategoryOptionIdxInDirection!,
+    };
+  }
+  // 2. Try to get the next category
+  const nextCategoryFocusDetailsInDirection =
+    getNextCategoryAndOptionInDirection(
+      categories,
+      categorizedOptions,
+      focusedCategory,
+      direction
+    );
+
+  if (nextCategoryFocusDetailsInDirection)
+    return nextCategoryFocusDetailsInDirection;
+  // 3. Get the fallback option and category
+  const fallbackCategoryFocusDetails = getFallbackCategory(
+    fallbackDirection,
+    categories,
+    categorizedOptions,
+    focusedCategory,
+    direction
+  );
+
+  return fallbackCategoryFocusDetails;
+};
+
+export const getNextFocusedOptionIdxInDirection = (
+  focusedOptionIdx: number,
+  selectOptions: SelectOptionList,
+  direction: SelectKeyboardNavigationDirection,
+  fallbackDirection: SelectFocusNavigationFallbackDirection
+) => {
+  const nextOptionIdxInDirection = getNextOptionIdxInDirection(
+    focusedOptionIdx,
+    selectOptions,
+    direction
+  );
+  if (isFocusedOptionIndexValid(nextOptionIdxInDirection)) {
+    return nextOptionIdxInDirection;
+  }
+  const fallbackOptionIdx = getFallbackOptionIdx(
+    fallbackDirection,
+    focusedOptionIdx,
+    selectOptions,
+    direction
+  );
+
+  return fallbackOptionIdx;
+};
+
+export const getFirstOptionAndCategory = (
+  categorizedSelectOptions: CategorizedSelectOptions
+) => {
+  const categories = getObjectKeys(categorizedSelectOptions);
+  return {
+    focusedCategory: categories[0],
+    focusedOptionIdx: 0,
+  };
 };
 
 export const isFocusedOptionInViewport = (
@@ -274,16 +357,14 @@ export const isFocusedOptionInViewport = (
   focusedOption: HTMLDivElement
 ): boolean => {
   const { clientHeight: listClientHeight } = listContainer;
-
   const focusedOptionRect = focusedOption.getBoundingClientRect();
+
   const listContainerRect = listContainer.getBoundingClientRect();
 
   const optionOfsetTop = focusedOptionRect.top - listContainerRect.top;
   return (
-    // prettier-ignore
-    (listClientHeight - optionOfsetTop >
-      focusedOptionRect.height) &&
-    (optionOfsetTop > 0)
+    listClientHeight - optionOfsetTop > focusedOptionRect.height &&
+    optionOfsetTop > 0
   );
 };
 

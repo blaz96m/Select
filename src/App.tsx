@@ -59,14 +59,35 @@ function App() {
         `/search/movie?query=${searchQuery || "a"}&page=${page}`
       );
       const data = reselt.data;
-      console.log("DEJTA", data);
       const totalRecords = data["total_results"];
       setIsLoading(false);
       return { data: data.results as SelectOptionList, totalRecords };
     } catch (err) {
-      console.log(err);
+      err;
     }
   }, []);
+  let categoryCount = 1;
+  const items = Array.from({ length: 100 }, (_, i) => {
+    let category = `Category-${categoryCount}`;
+    if (i % 3 === 0) {
+      categoryCount++;
+    }
+    return {
+      id: i,
+      name: `Option-${i}`,
+      details: `A movie about ${i}`,
+      category,
+      test: { 1: [1, 2, 3], 2: [2, 3, 4] },
+      xy: {
+        a: { a: "a", b: "b", c: "c" },
+        b: { a: "a", b: "b", c: "c" },
+        c: { a: "a", b: "b", c: "c" },
+      },
+      languages: ["en", "fr", "de", "sp"],
+    };
+  });
+
+  items;
 
   const SelectCheckBox = (
     componentProps: SelectOptionProps,
@@ -171,14 +192,14 @@ function App() {
       <div>Count: {count}</div>
       <div>Selected Value: {currLabel}</div>
       <SelectProvider
-        fetchFunc={getMovieList}
+        selectOptions={items}
         isMultiValue={true}
         value={value}
-        labelKey="title"
-        //categoryKey="original_language"
-        //isCategorized={true}
+        labelKey="name"
+        categoryKey="category"
+        isCategorized={true}
         onChange={setValue}
-        closeDropdownOnOptionSelect={false}
+        closeDropdownOnSelect={false}
         removeSelectedOptionsFromList={false}
         onOptionSelect={onOptionClick}
         fetchOnScroll={true}

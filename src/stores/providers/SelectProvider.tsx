@@ -49,7 +49,7 @@ const SelectContext = createContext<SelectContext>({
   components: {},
   getSelectStateSetters: () => ({
     addOptions: noop,
-    addValue: noop,
+    selectValue: noop,
     clearAllValues: noop,
     clearInput: noop,
     clearValue: noop,

@@ -2,7 +2,6 @@ import { map, isEmpty, isFunction } from "lodash";
 import {
   SelectOptionList,
   SelectOptionT,
-  SelectStateSetters,
   SelectSingleValueProps,
   CustomSelectMultiValueRenderer,
   CustomSelectSingleValueRenderer,
@@ -35,16 +34,14 @@ const SelectValue = memo(
     const showPlaceholder = isEmpty(value) && isEmpty(inputValue);
     return (
       <>
-        <div className="select__value">
-          {showPlaceholder && (
-            <span className="select__placeholder">{placeHolder}</span>
-          )}
-          {isMultiValue ? (
-            <MultiValue value={value} labelKey={labelKey} />
-          ) : (
-            <SingleValue value={value[0]} labelKey={labelKey} />
-          )}
-        </div>
+        {showPlaceholder && (
+          <span className="select__placeholder">{placeHolder}</span>
+        )}
+        {isMultiValue ? (
+          <MultiValue value={value} labelKey={labelKey} />
+        ) : (
+          <SingleValue value={value[0]} labelKey={labelKey} />
+        )}
       </>
     );
   }
@@ -78,7 +75,7 @@ const MultiValue = ({ value, labelKey }: SelectValueProps) => {
     return;
   }
   return (
-    <ul className="select__value__list">
+    <>
       {map(value, (val) => (
         <SelectMultiValueElement
           valueList={value}
@@ -87,7 +84,7 @@ const MultiValue = ({ value, labelKey }: SelectValueProps) => {
           labelKey={labelKey}
         />
       ))}
-    </ul>
+    </>
   );
 };
 

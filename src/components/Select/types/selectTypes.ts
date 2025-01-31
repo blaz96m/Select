@@ -34,7 +34,7 @@ export type SelectStateSetters = {
   clearInput: () => void;
   setOptions: (options: SelectOptionList) => void;
   addOptions: (options: SelectOptionList) => void;
-  addValue: (option: SelectOptionT) => void;
+  selectValue: (option: SelectOptionT) => void;
   clearValue: (optionId: string) => void;
   clearAllValues: () => void;
   loadNextPage: () => void;
@@ -43,6 +43,32 @@ export type SelectStateSetters = {
     focusedoptionId: string,
     focusedCategory?: keyof SelectOptionT
   ) => void;
+};
+
+export type SelectFocusNavigationFallbackDirection = "opposite" | "previous";
+
+export type SelectFocusState = {
+  focusedOptionIndex: number | null;
+  focusedOptionCategory: keyof SelectOptionT;
+};
+
+export type SelectFocusManager = {
+  state: SelectFocusState;
+  selectFocusHandlers: {
+    focusNextOption: (
+      fallbackDirection?: SelectFocusNavigationFallbackDirection
+    ) => void;
+    focusPreviousOption: () => void;
+    handleOptionFocusOnSelectByClick: (
+      focusedOptionIdx: number,
+      focusedCategory: string
+    ) => void;
+    handleOptionFocusOnSelectByKeyPress: () => void;
+    setFocusOnHover: (optionIdx: number, optionCategory: string) => void;
+    isOptionFocused: (option: SelectOptionT, optionIdx: number) => boolean;
+    getFocusedOption: () => SelectOptionT | void;
+    resetFocus: () => void;
+  };
 };
 
 export type SelectSorterFunction = (
@@ -64,13 +90,25 @@ export type SelectFetchFunction = (
 
 export type SelectKeyboardNavigationDirection = "down" | "up";
 
-export type SelectFocusDetails = {
-  focusedOptionId: string;
-  focusedCategory?: keyof SelectOptionT;
+export type SelectCategoryFocusDetails = {
+  focusedCategory: keyof SelectOptionT;
+  focusedOptionIdx: number;
 };
 
+export type SelectCategoryT = {
+  categoryName: string;
+  categoryOptions: SelectOptionList;
+};
+
+export type SelectCategoryRenderer = (category: SelectCategoryT) => JSX.Element;
+
+export type SelectOptionRenderer = (
+  option: SelectOptionT,
+  index: number
+) => JSX.Element;
+
 export type selectRendererOverload = {
-  (value: SelectOptionT, key: any): React.JSX.Element;
+  (value: SelectOptionT, index: number): React.JSX.Element;
   (
     value: {
       categoryName: string;
