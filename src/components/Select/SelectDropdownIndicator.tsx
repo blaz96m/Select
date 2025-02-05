@@ -17,7 +17,6 @@ export const SelectDropdownIndicator = ({
   const {
     components: { SelectDropdownIndicatorElement: customComponent },
     getSelectStateSetters,
-    getSelectAsyncStateSetters,
   } = context;
 
   const className = clsx({
@@ -30,7 +29,6 @@ export const SelectDropdownIndicator = ({
       {
         isOpen,
         getSelectStateSetters,
-        getSelectAsyncStateSetters,
       },
       { className }
     );

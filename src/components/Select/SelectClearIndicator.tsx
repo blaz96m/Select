@@ -15,7 +15,7 @@ export type SelectClearIndicatorProps = {
   inputValue: string;
   focusInput: () => void;
   isMultiValue: boolean;
-  usesInputAsync?: boolean;
+  useInputAsync?: boolean;
   isLoading?: boolean;
 };
 
@@ -23,16 +23,13 @@ const SelectClearIndicator = ({
   value,
   isMultiValue,
   inputValue,
-  usesInputAsync,
+  useInputAsync,
   focusInput,
   isLoading,
 }: SelectClearIndicatorProps) => {
   const clearInput = () => {
-    const selectAsyncStateSetters = getSelectAsyncStateSetters();
     const selectStateSetters = getSelectStateSetters();
-    usesInputAsync
-      ? selectAsyncStateSetters.clearSearchQuery()
-      : selectStateSetters.clearInput();
+    selectStateSetters.clearInput();
   };
 
   const clearAll = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
@@ -48,7 +45,6 @@ const SelectClearIndicator = ({
   const {
     components: { SelectClearIndicatorElement },
     getSelectStateSetters,
-    getSelectAsyncStateSetters,
   } = context;
 
   const customComponent = SelectClearIndicatorElement;
@@ -63,12 +59,11 @@ const SelectClearIndicator = ({
     return customComponent(
       {
         getSelectStateSetters,
-        usesInputAsync,
+        useInputAsync,
         value,
         inputValue,
         focusInput,
         isMultiValue,
-        getSelectAsyncStateSetters,
       },
       { onClick: clearAll }
     );

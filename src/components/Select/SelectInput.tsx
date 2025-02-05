@@ -6,7 +6,7 @@ import {
   useRef,
   useImperativeHandle,
 } from "react";
-import { isEmpty, isFunction, trim } from "lodash";
+import { hasIn, isEmpty, isFunction, trim } from "lodash";
 import {
   SelectOptionList,
   SelectOptionT,
@@ -16,16 +16,18 @@ import {
   SelectComponents,
   SelectInputInnerProps,
   SelectFocusNavigationFallbackDirection,
+  CustomPreventInputUpdate,
+  PreventInputUpdate,
 } from "src/components/Select/types";
 import { useInput } from "src/hooks/input";
 import { generateComponentInnerProps } from "src/utils/select";
 import clsx from "clsx";
-import { SelectAsyncStateSetters } from "src/hooks/select/useSelectAsync";
+
 import { useSelectContext } from "src/stores/providers/SelectProvider";
 
 export type SelectInputProps = {
   isMultiValue: boolean;
-  customOnChange?: (inputValue?: string) => {};
+  onInputChange: (inputValue: string) => void;
   inputValue: string;
   labelKey: keyof SelectOptionT;
   filterSearchedOptions: () => void;
@@ -34,9 +36,11 @@ export type SelectInputProps = {
   ) => void;
   focusPreviousOption: () => void;
   addOptionOnKeyPress: () => void;
-  usesInputAsync: boolean;
+  useInputAsync: boolean;
   hasInput: boolean;
+  handleOptionsSearchTrigger: () => void;
   disableInputFetchTrigger: boolean;
+  preventInputUpdate: PreventInputUpdate;
   isLoading?: boolean;
   hasPaging?: boolean;
   renderInputContainerForCustomComponent?: boolean;
@@ -46,15 +50,14 @@ const SelectInput = memo(
   forwardRef<HTMLInputElement, SelectInputProps>((props, ref) => {
     const {
       isMultiValue,
-      customOnChange,
+      onInputChange,
       inputValue,
-      filterSearchedOptions,
+      handleOptionsSearchTrigger,
       focusNextOption,
       focusPreviousOption,
-      usesInputAsync,
+      preventInputUpdate,
       hasInput,
       addOptionOnKeyPress,
-      hasPaging,
       isLoading,
     } = props;
     const innerRef = useRef<HTMLInputElement>(null);
@@ -62,22 +65,13 @@ const SelectInput = memo(
     const selectContext = useSelectContext();
     const {
       components: { SelectInputElement: customComponentProperties },
-      getSelectAsyncStateSetters,
       getSelectStateSetters,
     } = selectContext;
 
     const setInput = (value: string) => {
-      const { setSearchQuery } = getSelectAsyncStateSetters();
       const { setInputValue } = getSelectStateSetters();
-      usesInputAsync ? setSearchQuery(value) : setInputValue(value);
+      setInputValue(value);
     };
-
-    const shouldPreventInputChange = useCallback(
-      (updatedValue: string) =>
-        (!trim(updatedValue) && !inputValue) || !hasInput,
-      [inputValue]
-    );
-
     const className = clsx({
       select__input: true,
       hidden: !hasInput,
@@ -89,30 +83,17 @@ const SelectInput = memo(
       (input: string) => {
         const { openDropdown, clearAllValues } = getSelectStateSetters();
         openDropdown();
+        // TODO ADD CUSTOM PROP
         !isMultiValue && clearAllValues();
-        isFunction(customOnChange) && customOnChange(input);
+        isFunction(onInputChange) && onInputChange(input);
       },
-      [isMultiValue]
+      [isMultiValue, onInputChange]
     );
-
-    function filterSearchedValues(inputValue: string) {
-      if (usesInputAsync) return;
-      if (isFunction(filterSearchedOptions)) {
-        if (!inputValue) {
-          // TODO Check if this is a potential problem for the use effect
-          return filterSearchedOptions();
-        }
-        const timeoutId = setTimeout(() => {
-          filterSearchedOptions();
-        }, 1000);
-        return timeoutId;
-      }
-    }
 
     const [_, handleInputChange] = useInput(
       onInputUpdate,
-      shouldPreventInputChange,
-      filterSearchedValues,
+      preventInputUpdate,
+      handleOptionsSearchTrigger,
       inputValue,
       setInput
     );
@@ -146,13 +127,13 @@ const SelectInput = memo(
       return customComponentProperties.renderContainer ? (
         <div className="select__input__wrapper">
           {customComponentProperties.customComponent(
-            { ...props, getSelectStateSetters, getSelectAsyncStateSetters },
+            { ...props, getSelectStateSetters },
             inputInnerProps as SelectInputInnerProps
           )}
         </div>
       ) : (
         customComponentProperties.customComponent(
-          { ...props, getSelectStateSetters, getSelectAsyncStateSetters },
+          { ...props, getSelectStateSetters },
           inputInnerProps as SelectInputInnerProps
         )
       );

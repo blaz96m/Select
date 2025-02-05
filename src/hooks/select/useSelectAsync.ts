@@ -1,5 +1,5 @@
 import { filter, find, isEmpty, isFunction, trim } from "lodash";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, Dispatch, SetStateAction } from "react";
 import {
   SelectFetchFunc,
   SelectState,
@@ -9,25 +9,16 @@ import {
 import { SelectApi } from "./useSelect";
 
 import { useQueryManager } from "src/hooks/requests";
-import {
-  ResponseDetails,
-  QueryStateSetters,
-} from "../requests/useQueryManager";
+import { ResponseDetails } from "../requests/useQueryManager";
 import { QueryManagerState } from "src/stores/reducers/queryManagerReducer";
-import { flushSync } from "react-dom";
-
-export type SelectAsyncStateSetters = Pick<
-  QueryStateSetters,
-  "clearSearchQuery" | "goToNextPage" | "setSearchQuery"
->;
 
 export type SelectAsyncState = Pick<QueryManagerState, "searchQuery" | "page">;
 
 export type SelectAsyncApi = {
-  getSelectAsyncStateSetters: () => SelectAsyncStateSetters;
   isLastPage: () => boolean;
   getIsInitialFetch: () => boolean | undefined;
   handlePageChangeAsync: () => void;
+  resetPage: () => void;
 };
 
 const useSelectAsync = (
@@ -40,6 +31,8 @@ const useSelectAsync = (
     focusInput: () => void;
     onDropdownExpand: () => void;
     selectListContainerRef: React.RefObject<HTMLDivElement>;
+    inputValue: string;
+    setInputValue: Dispatch<SetStateAction<string>> | ((value: string) => void);
     isLazyInit?: boolean;
     fetchOnScroll?: boolean;
     fetchFunc?: SelectFetchFunc;
@@ -54,12 +47,9 @@ const useSelectAsync = (
     originalOptions,
     selectListContainerRef,
     onDropdownExpand,
+    inputValue,
+    setInputValue,
   } = props;
-
-  const shouldPreventInputFetch = (params: SelectAsyncState) => {
-    const { searchQuery } = params;
-    return !trim(searchQuery) && !isEmpty(state.value);
-  };
 
   const updateSelectOptions = useCallback(
     (response: ResponseDetails<SelectOptionT>) => {
@@ -96,23 +86,24 @@ const useSelectAsync = (
   const { queryManagerState, queryManagerApi } = useQueryManager<SelectOptionT>(
     fetchFunc,
     updateSelectOptions,
+    { searchQuery: inputValue, setSearchQuery: setInputValue },
     {
       fetchOnInit: !isLazyInit,
       recordsPerPage,
       fetchOnInputChange,
-      shouldPreventInputFetch,
     }
   );
+
   const {
-    getQueryManagerStateSetters,
+    goToNextPage,
     isLastPage,
     fetch,
     getIsInitialFetch,
     endInitialFetch,
+    resetPage,
   } = queryManagerApi;
 
   const handlePageChangeAsync = useCallback(() => {
-    const { goToNextPage } = getQueryManagerStateSetters();
     !isLastPage() && goToNextPage();
   }, [isLastPage]);
 
@@ -134,10 +125,10 @@ const useSelectAsync = (
   }, [state.selectOptions]);
 
   const selectAsyncApi: SelectAsyncApi = {
-    getSelectAsyncStateSetters: getQueryManagerStateSetters,
     isLastPage,
     getIsInitialFetch,
     handlePageChangeAsync,
+    resetPage,
   };
 
   return { selectAsyncApi, selectAsyncState: queryManagerState };

@@ -31,7 +31,6 @@ const SelectMultiValueElement = ({
   const context = useSelectContext();
   const {
     components: { SelectMultiValueElement: customComponent },
-    getSelectAsyncStateSetters,
     getSelectStateSetters,
   } = context;
 
@@ -45,10 +44,7 @@ const SelectMultiValueElement = ({
   if (isFunction(customComponent)) {
     const props = { value, labelKey, getSelectStateSetters, valueList };
     const innerProps = { onClick: onClearValueClick, className };
-    return customComponent(
-      { ...props, getSelectAsyncStateSetters, getSelectStateSetters },
-      innerProps
-    );
+    return customComponent({ ...props, getSelectStateSetters }, innerProps);
   }
   return (
     <div className={className}>

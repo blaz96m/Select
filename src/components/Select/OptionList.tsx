@@ -59,7 +59,7 @@ const OptionList = memo(
           return customOnScrollToBottom(page, displayedOptions);
 
         if (hasPaging) {
-          const nextPage = page++;
+          const nextPage = page + 1;
           handlePageChange();
           isFunction(onPageChange) && onPageChange(nextPage);
         }

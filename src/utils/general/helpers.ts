@@ -18,4 +18,4 @@ export const debounceAsync = <T extends any[]>(
 };
 
 export const isAsyncFunction = (fn: () => any) =>
-  isFunction(fn) && fn.prototype.name === "AsyncFunction";
+  isFunction(fn) && fn?.constructor?.name === "AsyncFunction";

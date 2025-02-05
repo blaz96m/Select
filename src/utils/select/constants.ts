@@ -13,3 +13,7 @@ export const INITIAL_STATE: SelectState = {
 };
 
 export const OPTIONS_EMPTY_TEXT = "No Options Found";
+
+export const NO_CATEGORY_KEY = "The Category Key was not provided";
+
+export const FALLBACK_CATEGORY_NAME = "Other";

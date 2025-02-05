@@ -54,14 +54,12 @@ const SingleValue = ({ value, labelKey }: SelectSingleValueProps) => {
   const {
     components: { SelectSingleValueElement: customComponent },
     getSelectStateSetters,
-    getSelectAsyncStateSetters,
   } = context;
 
   if (!isEmpty(value)) {
     if (isFunction(customComponent)) {
       return customComponent({
         getSelectStateSetters,
-        getSelectAsyncStateSetters,
         value: value || {},
         labelKey,
       });

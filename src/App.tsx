@@ -14,7 +14,7 @@ import {
 } from "./components/Select/types/selectTypes";
 import "src/style.scss";
 import { SelectOptionProps } from "./components/Select/SelectOption";
-import { isEmpty } from "lodash";
+import { filter, isEmpty, toLower } from "lodash";
 import { SelectMultiValueProps } from "./components/Select/SelectMultiValueElement";
 import { SelectValueProps } from "./components/Select/SelectValue";
 import { SelectDropdownIndicatorProps } from "./components/Select/SelectDropdownIndicator";
@@ -51,6 +51,20 @@ function App() {
   const onOptionClick = useCallback((option: any) => {
     setMessage(option.title);
   }, []);
+
+  const customFilter = useCallback(
+    (
+      displayedOptions: SelectOptionList,
+      inputValue: string
+    ): SelectOptionList => {
+      return filter(displayedOptions, (option) => {
+        let optionLel = option["name"] as string;
+        const optionForReal = optionLel.replace(" ", "").replace("-", "");
+        return toLower(optionForReal).includes(inputValue);
+      });
+    },
+    []
+  );
 
   const getMovieList = useCallback(async ({ page = 1, searchQuery = "a" }) => {
     try {
@@ -184,6 +198,10 @@ function App() {
 
   const isDisabled = useCallback((option: SelectOptionT) => {}, [value]);
 
+  const preventer = (newStr: string) => {
+    return newStr.includes("2");
+  };
+
   return (
     <>
       <button onClick={() => setCount((count) => count + 1)}>Next</button>
@@ -192,11 +210,13 @@ function App() {
       <div>Count: {count}</div>
       <div>Selected Value: {currLabel}</div>
       <SelectProvider
-        selectOptions={items}
-        isMultiValue={true}
+        fetchFunc={getMovieList}
+        isMultiValue={false}
+        preventInputUpdate={preventer}
         value={value}
-        labelKey="name"
-        categoryKey="category"
+        labelKey="title"
+        clearInputOnSelect={false}
+        categoryKey="original_language"
         isCategorized={true}
         onChange={setValue}
         closeDropdownOnSelect={false}
@@ -205,6 +225,7 @@ function App() {
         fetchOnScroll={true}
         isLoading={isLoading}
         lazyInit={true}
+        inputFilterFunction={customFilter}
         /*
         customComponents={{
           SelectOptionElement: SelectCheckBox,

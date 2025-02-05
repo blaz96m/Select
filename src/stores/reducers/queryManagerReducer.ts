@@ -5,6 +5,7 @@ export enum QueryManagerReducerActionTypes {
   CLEAR_SEARCH_QUERY = "CLEAR_SEARCH_QUERY",
   GO_TO_PAGE = "GO_TO_PAGE",
   GO_TO_NEXT_PAGE = "GO_TO_NEXT_PAGE",
+  GO_TO_PREVIOUS_PAGE = "GO_TO_PREVIOUS_PAGE",
   RESET_PAGE = "RESET_PAGE",
   SET_SORTING = "SET_SORTING",
   RESET_SORTING = "RESET_SORTING",
@@ -26,6 +27,7 @@ export type PageActions =
   | {
       type:
         | QueryManagerReducerActionTypes.GO_TO_NEXT_PAGE
+        | QueryManagerReducerActionTypes.GO_TO_PREVIOUS_PAGE
         | QueryManagerReducerActionTypes.RESET_PAGE;
     }
   | { type: QueryManagerReducerActionTypes.GO_TO_PAGE; payload: number };
@@ -37,7 +39,7 @@ export type SortingActions =
     }
   | { type: QueryManagerReducerActionTypes.RESET_SORTING };
 
-type QueryManagerActions = InputActions | PageActions | SortingActions;
+export type QueryManagerActions = InputActions | PageActions | SortingActions;
 
 export const queryManagerReducer = (
   state: QueryManagerState,
@@ -45,15 +47,16 @@ export const queryManagerReducer = (
 ): QueryManagerState => {
   const { type } = action;
   switch (type) {
-    case QueryManagerReducerActionTypes.CLEAR_SEARCH_QUERY:
-      {
+    case QueryManagerReducerActionTypes.CLEAR_SEARCH_QUERY: {
       const page = state.searchQuery ? 1 : state.page;
       return { ...state, searchQuery: "", page: page };
-      }
+    }
     case QueryManagerReducerActionTypes.SET_SEARCH_QUERY:
       return { ...state, searchQuery: action.payload, page: 1 };
     case QueryManagerReducerActionTypes.GO_TO_NEXT_PAGE:
       return { ...state, page: state.page + 1 };
+    case QueryManagerReducerActionTypes.GO_TO_PREVIOUS_PAGE:
+      return { ...state, page: state.page - 1 };
     case QueryManagerReducerActionTypes.GO_TO_PAGE:
       return { ...state, page: action.payload };
     case QueryManagerReducerActionTypes.RESET_PAGE:

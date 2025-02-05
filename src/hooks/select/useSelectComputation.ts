@@ -13,6 +13,7 @@ import {
   categorizeOptions,
   filterDataBySelectedValues,
 } from "src/utils/select";
+import { NO_CATEGORY_KEY } from "src/utils/select/constants";
 
 type SelectComputationProps = {
   labelKey: keyof SelectOptionT;
@@ -45,7 +46,6 @@ const useSelectComputation = (
   const partitionedOptions = useMemo((): SelectOptionList | null => {
     const options = state.selectOptions;
     if (
-      // TODO DECIDE WETHER THIS SHOULD BE DECIDED ON FETCH FUNC ALONE (PROBLY NOT)
       !isFunction(fetchFunc) &&
       recordsPerPage &&
       !isEmpty(state.selectOptions)
@@ -56,6 +56,7 @@ const useSelectComputation = (
   }, [state.selectOptions, state.page]);
 
   const categorizedOptions = useMemo((): CategorizedSelectOptions => {
+    if (isCategorized && !categoryKey) throw new Error(NO_CATEGORY_KEY);
     const options = partitionedOptions || state.selectOptions;
     return hasCategories
       ? isFunction(categorizeFunction)

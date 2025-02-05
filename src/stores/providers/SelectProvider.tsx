@@ -11,6 +11,7 @@ import {
   SelectCustomComponents,
   SelectOptionList,
   SelectStateSetters,
+  SelectOptionT,
 } from "src/components/Select/types/selectTypes";
 
 import Select, { SelectProps } from "src/components/Select/Select";
@@ -23,7 +24,6 @@ import {
 import { selectReducer } from "../reducers/selectReducer";
 import { initializeState } from "src/utils/select";
 import { omit, isFunction, noop, every } from "lodash";
-import { SelectAsyncStateSetters } from "src/hooks/select/useSelectAsync";
 import { getObjectKeys } from "src/utils/data-types/objects/helpers";
 
 const arePropsEqual = (
@@ -42,7 +42,6 @@ const arePropsEqual = (
 type SelectContext = {
   components: SelectCustomComponents;
   getSelectStateSetters: () => SelectStateSetters;
-  getSelectAsyncStateSetters: () => SelectAsyncStateSetters;
 };
 
 const SelectContext = createContext<SelectContext>({
@@ -60,11 +59,6 @@ const SelectContext = createContext<SelectContext>({
     setInputValue: noop,
     setOptions: noop,
     toggleDropdown: noop,
-  }),
-  getSelectAsyncStateSetters: () => ({
-    clearSearchQuery: noop,
-    goToNextPage: noop,
-    setSearchQuery: noop,
   }),
 });
 
@@ -85,15 +79,22 @@ export const SelectProvider = memo(
       value,
       onDropdownExpand,
       onChange,
+      onInputChange: customOnInputChange,
       isMultiValue,
       closeDropdownOnSelect,
       lazyInit,
-      onOptionSelect,
       fetchOnScroll,
       useDataPartitioning,
+      preventInputUpdate,
+      inputFilterFunction,
+      inputUpdateDebounceDuration,
+      disableInputUpdate = false,
+      hasInput = true,
       fetchOnInputChange = true,
+      clearInputOnSelect: customClearInputOnSelect,
+      onOptionSelect,
+      isLoading,
       selectOptions = [],
-      isOptionDisabled,
     } = props;
 
     const [selectState, dispatch] = useReducer(
@@ -102,7 +103,7 @@ export const SelectProvider = memo(
       initializeState
     );
 
-    // The originalOptions ref is only used in case all the data for the select comes from the frontend, enabling the pagination of the options while storing the original value that never changes.
+    // The originalOptions ref is only used in case all the data for the select comes from the frontend, enabling the partitioning of the options while storing the original value that never changes.
     const originalOptions = useRef<SelectOptionList>(selectState.selectOptions);
     const totalRecords = useRef<number>(0);
 
@@ -122,6 +123,8 @@ export const SelectProvider = memo(
 
     const { domRefs, domHelpers } = useSelectDomHelper(selectState);
 
+    const useInputAsync = isFunction(fetchFunc) && fetchOnInputChange;
+
     const selectApi = useSelect(
       dispatch,
       { setValue: onChange },
@@ -138,12 +141,31 @@ export const SelectProvider = memo(
         onDropdownExpand,
         isCategorized,
         recordsPerPage,
+        hasInput,
+        useInputAsync,
+        fetchFunction: fetchFunc,
+        preventInputUpdate,
+        disableInputUpdate,
+        clearInputOnSelect: customClearInputOnSelect,
+        onOptionSelect,
+        inputUpdateDebounceDuration,
         focusInput: domHelpers.focusInput,
+        removeSelectedOptionsFromList,
         categoryKey,
+        isLoading,
         closeDropdownOnSelect,
         selectListContainerRef: domRefs.selectListContainerRef,
+        inputFilterFunction,
       }
     );
+
+    const {
+      setInputValue,
+      handleInputUpdatePrevention,
+      handleOptionsSearchTrigger,
+      onOptionClick,
+      clearInputOnSelect,
+    } = selectApi;
 
     const { selectAsyncApi, selectAsyncState } = useSelectAsync(
       selectState,
@@ -158,19 +180,16 @@ export const SelectProvider = memo(
         originalOptions,
         focusInput: domHelpers.focusInput,
         selectListContainerRef: domRefs.selectListContainerRef,
+        inputValue: selectState.inputValue,
+        setInputValue,
       }
     );
 
-    const { isLastPage, getIsInitialFetch } = selectAsyncApi;
+    const { isLastPage, getIsInitialFetch, resetPage } = selectAsyncApi;
 
     const isInitialFetch = getIsInitialFetch();
 
     const isLazyInitFetchComplete = lazyInit && isInitialFetch;
-
-    const usesInputAsync = isFunction(fetchFunc) && fetchOnInputChange;
-    const inputValue = usesInputAsync
-      ? selectAsyncState.searchQuery
-      : selectState.inputValue;
 
     const fetchOnScrollToBottom = isFunction(fetchFunc) && fetchOnScroll;
 
@@ -180,7 +199,7 @@ export const SelectProvider = memo(
       ? selectAsyncState.page
       : selectState.page;
 
-    const resolvedSelectState = { ...selectState, inputValue, page };
+    const resolvedSelectState = { ...selectState, page };
 
     const handleNextPageChange = useCallback(() => {
       const { handlePageChangeAsync } = selectAsyncApi;
@@ -188,11 +207,40 @@ export const SelectProvider = memo(
       fetchOnScrollToBottom ? handlePageChangeAsync() : handlePageChange();
     }, [selectState.page, selectAsyncState.page]);
 
+    const onInputChange = useCallback(
+      (inputValue: string) => {
+        if (useInputAsync) {
+          resetPage();
+        }
+        isFunction(customOnInputChange) && customOnInputChange(inputValue);
+      },
+      [resetPage, selectState.inputValue]
+    );
+
+    const handleOptionClick = (
+      option: SelectOptionT,
+      optionIndex: number,
+      isSelected: boolean,
+      handleOptionFocusAfterClick: (
+        optionIndex: number,
+        optionCategory: string
+      ) => void
+    ) => {
+      onOptionClick(
+        option,
+        optionIndex,
+        isSelected,
+        handleOptionFocusAfterClick
+      );
+      if (clearInputOnSelect && useInputAsync) {
+        resetPage();
+      }
+    };
+
     const data = useMemo(
       () => ({
         components: { ...customComponents },
         getSelectStateSetters: selectApi.getSelectStateSetters,
-        getSelectAsyncStateSetters: selectAsyncApi.getSelectAsyncStateSetters,
       }),
       []
     );
@@ -206,7 +254,12 @@ export const SelectProvider = memo(
           selectDomHelpers={domHelpers}
           selectDomRefs={domRefs}
           onDropdownExpand={onDropdownExpand}
-          usesInputAsync={usesInputAsync}
+          preventInputUpdate={handleInputUpdatePrevention}
+          handleOptionsSearchTrigger={handleOptionsSearchTrigger}
+          useInputAsync={useInputAsync}
+          handleOptionClick={handleOptionClick}
+          resetPage={resetPage}
+          onInputChange={onInputChange}
           isLazyInitFetchComplete={isLazyInitFetchComplete}
           isLastPage={isLastPage}
           displayedOptions={displayedOptions}

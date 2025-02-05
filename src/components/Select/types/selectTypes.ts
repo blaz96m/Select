@@ -5,7 +5,6 @@ import { SelectValueProps } from "../SelectValue";
 import { SelectMultiValueProps } from "src/components/Select/SelectMultiValueElement";
 import { SelectInputProps } from "src/components/Select/SelectInput";
 import { SelectCategoryProps } from "src/components/SelectCategory";
-import { SelectAsyncStateSetters } from "src/hooks/select/useSelectAsync";
 
 export type SelectOptionT = {
   id: string;
@@ -229,7 +228,6 @@ type CustomSelectComponentRenderer<
 
 type CustomComponentProps<T> = T & {
   getSelectStateSetters: () => SelectStateSetters;
-  getSelectAsyncStateSetters: () => SelectAsyncStateSetters;
 };
 
 export type CustomSelectOptionRenderer = CustomSelectComponentRenderer<
@@ -279,7 +277,24 @@ export type SelectCustomComponents = {
   };
 };
 
+export type OptionClickHandler = (
+  option: SelectOptionT,
+  optionIndex: number,
+  isSelected: boolean,
+  handleOptionFocusAfterClick: (
+    optionIndex: number,
+    optionCategory: string
+  ) => void
+) => void;
+
 export type CustomClass = { className: string; override?: boolean };
+
+export type CustomPreventInputUpdate = (
+  newInputValue: string,
+  currInputValue: string
+) => boolean;
+
+export type PreventInputUpdate = (newInputValue: string) => boolean;
 
 export type CustomClasses = {
   selectTopContainer?: CustomClass;

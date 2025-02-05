@@ -9,6 +9,7 @@ import {
 import clsx from "clsx";
 
 import {
+  OptionClickHandler,
   SelectComponents,
   SelectOptionInnerProps,
   SelectOptionT,
@@ -17,6 +18,7 @@ import {
 import { isFunction, isNil } from "lodash";
 import { generateComponentInnerProps } from "src/utils/select";
 import { useSelectContext } from "src/stores/providers/SelectProvider";
+import { FALLBACK_CATEGORY_NAME } from "src/utils/select/constants";
 
 export type SelectOptionProps = {
   labelKey: keyof SelectOptionT;
@@ -32,24 +34,13 @@ export type SelectOptionProps = {
   isSelected: boolean;
   removeSelectedOptionsFromList: boolean;
   isDisabled: boolean;
+  resetPage: () => void;
+  onSelect: OptionClickHandler;
   onOptionSelect?: (option: SelectOptionT) => void;
   closeDropdownOnOptionSelect?: boolean;
-  usesInputAsync?: boolean;
+  useInputAsync?: boolean;
   categoryKey?: keyof SelectOptionT;
   isLoading?: boolean;
-};
-
-const compareProps = (oldProps, newProps) => {
-  let isValid = true;
-  for (const key in oldProps) {
-    const oldProp = oldProps[key];
-    const newProp = newProps[key];
-    const isHehe = Object.is(oldProp, newProp);
-    if (!isHehe) {
-      isValid = false;
-    }
-  }
-  return isValid;
 };
 
 const SelectOption = memo((props: SelectOptionProps) => {
@@ -67,9 +58,10 @@ const SelectOption = memo((props: SelectOptionProps) => {
     isCategorized,
     isSelected,
     isDisabled,
+    onSelect,
     removeSelectedOptionsFromList,
     onOptionSelect,
-    usesInputAsync,
+    useInputAsync,
     isFocused,
     isLoading,
   } = props;
@@ -81,7 +73,6 @@ const SelectOption = memo((props: SelectOptionProps) => {
 
   const {
     components: { SelectOptionElement: customComponent },
-    getSelectAsyncStateSetters,
     getSelectStateSetters,
   } = context;
 
@@ -104,22 +95,8 @@ const SelectOption = memo((props: SelectOptionProps) => {
     }
   };
   const handleInputClear = () => {
-    const { clearSearchQuery } = getSelectAsyncStateSetters();
     const { clearInput } = getSelectStateSetters();
-    usesInputAsync ? clearSearchQuery() : clearInput();
-  };
-
-  const handleOptionClick = (option: SelectOptionT) => {
-    if (isLoading) return;
-    const optionCategory = hasCategories ? option[categoryKey] : "";
-    const selectStateSetters = getSelectStateSetters();
-    handleFocusOnClick(optionIndex, optionCategory);
-    !removeSelectedOptionsFromList && isSelected
-      ? selectStateSetters.clearValue(option.id)
-      : selectStateSetters.selectValue(option);
-    !isMultiValue && handleInputClear();
-    keepDropdownOpenOnOptionSelect && focusInput();
-    isFunction(onOptionSelect) && onOptionSelect(option);
+    clearInput();
   };
 
   const handleMouseHover = (
@@ -128,7 +105,6 @@ const SelectOption = memo((props: SelectOptionProps) => {
     if (isFocused) {
       return;
     }
-
     const optionCategory = hasCategories
       ? e.currentTarget.dataset?.category
       : "";
@@ -140,7 +116,8 @@ const SelectOption = memo((props: SelectOptionProps) => {
       SelectComponents.SELECT_OPTION,
       {
         option,
-        handleOptionClick: () => handleOptionClick(option),
+        handleOptionClick: () =>
+          onSelect(option, optionIndex, isSelected, handleFocusOnClick),
         handleMouseHover: (e: React.MouseEvent<HTMLDivElement, MouseEvent>) =>
           handleMouseHover(e),
         refCallback,
@@ -150,7 +127,7 @@ const SelectOption = memo((props: SelectOptionProps) => {
       }
     );
     return customComponent(
-      { ...props, getSelectAsyncStateSetters, getSelectStateSetters },
+      { ...props, getSelectStateSetters },
       innerProps as SelectOptionInnerProps
     );
   }
@@ -159,7 +136,9 @@ const SelectOption = memo((props: SelectOptionProps) => {
     <div
       onMouseMove={handleMouseHover}
       key={option.id}
-      data-category={hasCategories ? option[categoryKey] : ""}
+      data-category={
+        hasCategories ? option[categoryKey] || FALLBACK_CATEGORY_NAME : ""
+      }
       ref={(node) => {
         const selectOptionsMap = getSelectOptionsMap();
         if (node) {
@@ -170,11 +149,13 @@ const SelectOption = memo((props: SelectOptionProps) => {
       }}
       id={option.id}
       className={className}
-      onClick={() => handleOptionClick(option)}
+      onClick={() =>
+        onSelect(option, optionIndex, isSelected, handleFocusOnClick)
+      }
     >
       {option[labelKey]}
     </div>
   );
-}, compareProps);
+});
 
 export default SelectOption;

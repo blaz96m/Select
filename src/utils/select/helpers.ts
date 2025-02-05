@@ -33,7 +33,7 @@ import {
   SelectCategoryFocusDetails,
 } from "src/components/Select/types";
 import { getObjectKeys } from "../data-types/objects/helpers";
-import { INITIAL_STATE } from "./constants";
+import { FALLBACK_CATEGORY_NAME, INITIAL_STATE } from "./constants";
 
 export const initializeState = (
   selectOptions: SelectOptionList | []
@@ -116,7 +116,7 @@ export const categorizeOptions = (
   return reduce(
     options,
     (acc: CategorizedSelectOptions, nextValue: SelectOptionT) => {
-      const categoryName = nextValue[categoryKey];
+      const categoryName = nextValue[categoryKey] || FALLBACK_CATEGORY_NAME;
       if (has(acc, categoryName)) {
         acc[categoryName].push(nextValue);
       } else {

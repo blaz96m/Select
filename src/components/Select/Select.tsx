@@ -47,6 +47,9 @@ import {
 
 import {
   CategorizedSelectOptions,
+  CustomPreventInputUpdate,
+  OptionClickHandler,
+  PreventInputUpdate,
   SelectCategoryT,
   SelectCustomComponents,
   SelectFetchFunc,
@@ -68,10 +71,13 @@ import {
 import { useSelectFocus } from "src/hooks/select";
 
 export type SelectComponentProps = SelectProps & {
-  usesInputAsync: boolean;
+  useInputAsync: boolean;
   isLastPage: () => boolean;
   displayedOptions: SelectOptionList | CategorizedSelectOptions;
+  preventInputUpdate: PreventInputUpdate;
   handlePageChange: () => void;
+  handleOptionClick: OptionClickHandler;
+  resetPage: () => void;
   hasPaging?: boolean;
   isLazyInitFetchComplete?: boolean;
 } & { selectState: SelectState } & {
@@ -91,19 +97,31 @@ export type SelectProps = {
   fetchOnInputChange: boolean;
   removeSelectedOptionsFromList: boolean;
   disableInputFetchTrigger: boolean;
+  disableInputUpdate: boolean;
   handlePageChange: () => void;
+  clearInputOnSelect?: boolean;
   categoryKey: keyof SelectOptionT & string;
   onOptionSelect?: (option: SelectOptionT) => void;
   isCategorized?: boolean;
   selectOptions?: SelectOptionT[] | [];
   fetchOnScroll?: boolean;
   isOptionDisabled?: (option: SelectOptionT) => boolean;
+  inputFilterFunction: (
+    selectOptions: SelectOptionList,
+    inputValue: string
+  ) => SelectOptionList;
+
   lazyInit?: boolean;
-  hasInput?: boolean;
+  hasInput: boolean;
+  handlePageReset: () => void;
+  useInputUpdateTriggerEffect: boolean;
+  inputUpdateDebounceDuration?: number;
+  handleOptionsSearchTrigger: () => void;
   placeHolder?: string;
+  preventInputUpdate: CustomPreventInputUpdate;
   fetchFunc?: SelectFetchFunc;
   sorterFn?: SelectSorterFunction;
-  onInputChange?: (inputValue?: string) => {};
+  onInputChange: (inputValue: string) => void;
   onScrollToBottom?: (
     page: number,
     options: SelectOptionList | CategorizedSelectOptions
@@ -131,13 +149,19 @@ const Select = ({
   displayedOptions,
   selectDomHelpers,
   selectDomRefs,
-  usesInputAsync,
+  useInputAsync,
   handlePageChange,
   onOptionSelect,
   onDropdownExpand,
   isOptionDisabled,
   onDropdownCollapse,
+  preventInputUpdate,
+  handleOptionClick,
+  disableInputUpdate = false,
+  handlePageReset,
+  handleOptionsSearchTrigger,
   isLazyInitFetchComplete,
+  resetPage,
   closeDropdownOnSelect = false,
   disableInputFetchTrigger = false,
   hasInput = true,
@@ -156,8 +180,6 @@ const Select = ({
   const { inputRef, selectListContainerRef } = selectDomRefs;
 
   const { isOpen, inputValue, page } = selectState;
-
-  console.log("FOKCUSED", displayedOptions);
 
   const { selectFocusHandlers, state: focusState } = useSelectFocus({
     displayedOptions,
@@ -194,12 +216,14 @@ const Select = ({
           optionIndex={index}
           getSelectOptionsMap={getSelectOptionsMap}
           handleFocusOnClick={handleOptionFocusOnSelectByClick}
+          onSelect={handleOptionClick}
           handleHover={setFocusOnHover}
           categoryKey={categoryKey}
           isCategorized={isCategorized}
           onOptionSelect={onOptionSelect}
+          resetPage={resetPage}
           labelKey={labelKey}
-          usesInputAsync={usesInputAsync}
+          useInputAsync={useInputAsync}
           focusInput={focusInput}
           isFocused={isFocused}
           isSelected={isSelected}
@@ -215,6 +239,7 @@ const Select = ({
       closeDropdownOnSelect,
       labelKey,
       removeSelectedOptionsFromList,
+      resetPage,
       isCategorized,
       categoryKey,
       setFocusOnHover,
@@ -315,13 +340,15 @@ const Select = ({
 
           <Select.Input
             isMultiValue={isMultiValue}
-            customOnChange={onInputChange}
+            onInputChange={onInputChange}
             labelKey={labelKey}
             inputValue={inputValue}
             focusNextOption={focusNextOption}
             focusPreviousOption={focusPreviousOption}
             addOptionOnKeyPress={handleOptionFocusOnSelectByKeyPress}
-            usesInputAsync={usesInputAsync}
+            useInputAsync={useInputAsync}
+            handleOptionsSearchTrigger={handleOptionsSearchTrigger}
+            preventInputUpdate={preventInputUpdate}
             key="select-input"
             filterSearchedOptions={filterSearchedOptions}
             disableInputFetchTrigger={disableInputFetchTrigger}

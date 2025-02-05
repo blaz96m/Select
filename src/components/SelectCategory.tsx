@@ -32,7 +32,6 @@ const SelectCategory = memo(
 
     const {
       components: { SelectCategoryElement: customComponent },
-      getSelectAsyncStateSetters,
       getSelectStateSetters,
     } = context;
 
@@ -47,7 +46,6 @@ const SelectCategory = memo(
               categoryOptions,
               selectedOptions,
               focusedOptionIdx,
-              getSelectAsyncStateSetters,
               getSelectStateSetters,
             },
             { className: "select__category__name" }

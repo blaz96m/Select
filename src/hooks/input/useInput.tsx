@@ -32,6 +32,7 @@ const useInput = (
     ? customInputSetter
     : setInput;
 
+  // TODO ADD STATE RESOLVER
   const inputValue = !isNil(customInputState) ? customInputState : input;
 
   const shouldCancelInputUpdate = useCallback(
@@ -51,12 +52,12 @@ const useInput = (
   };
 
   useEffect(() => {
-    if(isInitialRef.current) {
+    if (isInitialRef.current) {
       isInitialRef.current = false;
-      return
-
+      return;
     }
     let timeoutId: number | undefined;
+    // TODO ADD STATE RESOLVER
     const inputState = !isNil(customInputState) ? customInputState : input;
     if (!isFunction(inputEffectTriggerFunction)) {
       return;
