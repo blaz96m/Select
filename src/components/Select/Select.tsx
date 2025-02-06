@@ -48,6 +48,8 @@ import {
 import {
   CategorizedSelectOptions,
   CustomPreventInputUpdate,
+  HandleClearIndicatorClick,
+  HandleValueClear,
   OptionClickHandler,
   PreventInputUpdate,
   SelectCategoryT,
@@ -76,7 +78,12 @@ export type SelectComponentProps = SelectProps & {
   displayedOptions: SelectOptionList | CategorizedSelectOptions;
   preventInputUpdate: PreventInputUpdate;
   handlePageChange: () => void;
+  handleValueClear: HandleValueClear;
+  setInputValue: (inputValue: string) => void;
   handleOptionClick: OptionClickHandler;
+  handleClearIndicatorClick: HandleClearIndicatorClick;
+  handleDropdownClick: () => void;
+  handleInputChange: (inputValue: string) => void;
   resetPage: () => void;
   hasPaging?: boolean;
   isLazyInitFetchComplete?: boolean;
@@ -98,6 +105,7 @@ export type SelectProps = {
   removeSelectedOptionsFromList: boolean;
   disableInputFetchTrigger: boolean;
   disableInputUpdate: boolean;
+  onValueClear: HandleValueClear;
   handlePageChange: () => void;
   clearInputOnSelect?: boolean;
   categoryKey: keyof SelectOptionT & string;
@@ -139,7 +147,6 @@ export type SelectProps = {
 const Select = ({
   value,
   isMultiValue,
-  onInputChange,
   isLoading,
   onScrollToBottom,
   onPageChange,
@@ -149,19 +156,17 @@ const Select = ({
   displayedOptions,
   selectDomHelpers,
   selectDomRefs,
-  useInputAsync,
   handlePageChange,
-  onOptionSelect,
-  onDropdownExpand,
   isOptionDisabled,
-  onDropdownCollapse,
   preventInputUpdate,
   handleOptionClick,
-  disableInputUpdate = false,
-  handlePageReset,
+  handleInputChange,
   handleOptionsSearchTrigger,
-  isLazyInitFetchComplete,
+  setInputValue,
+  handleValueClear,
   resetPage,
+  handleDropdownClick,
+  handleClearIndicatorClick,
   closeDropdownOnSelect = false,
   disableInputFetchTrigger = false,
   hasInput = true,
@@ -197,6 +202,7 @@ const Select = ({
     handleOptionFocusOnSelectByClick,
     handleOptionFocusOnSelectByKeyPress,
     isOptionFocused,
+    handleOptionHover,
   } = selectFocusHandlers;
 
   const handleOptionRender = useCallback(
@@ -209,22 +215,17 @@ const Select = ({
     ) => {
       return (
         <SelectOption
-          isMultiValue={isMultiValue}
-          closeDropdownOnOptionSelect={closeDropdownOnSelect}
           key={option.id}
           option={option}
           optionIndex={index}
           getSelectOptionsMap={getSelectOptionsMap}
           handleFocusOnClick={handleOptionFocusOnSelectByClick}
           onSelect={handleOptionClick}
-          handleHover={setFocusOnHover}
+          handleHover={handleOptionHover}
           categoryKey={categoryKey}
           isCategorized={isCategorized}
-          onOptionSelect={onOptionSelect}
           resetPage={resetPage}
           labelKey={labelKey}
-          useInputAsync={useInputAsync}
-          focusInput={focusInput}
           isFocused={isFocused}
           isSelected={isSelected}
           isDisabled={isDisabled}
@@ -234,7 +235,6 @@ const Select = ({
     },
     [
       handleOptionFocusOnSelectByClick,
-      onOptionSelect,
       isMultiValue,
       closeDropdownOnSelect,
       labelKey,
@@ -299,7 +299,7 @@ const Select = ({
       const focusedOptionIdx = isCategoryFocused
         ? focusState.focusedOptionIndex
         : -1;
-      const focusedOptionsInCategory = filter(
+      const selectedOptionsInCategory = filter(
         value,
         (val) => val[categoryKey] === categoryName
       );
@@ -311,7 +311,9 @@ const Select = ({
           focusedOptionIdx={focusedOptionIdx}
           categoryOptions={categoryOptions}
           selectedOptions={
-            !isEmpty(focusedOptionsInCategory) ? focusedOptionsInCategory : null
+            !isEmpty(selectedOptionsInCategory)
+              ? selectedOptionsInCategory
+              : null
           }
           renderOption={renderOptionFromCategory}
         />
@@ -322,35 +324,27 @@ const Select = ({
 
   return (
     <Select.Container>
-      <Select.Top
-        onDropdownExpand={onDropdownExpand}
-        onDropdownCollapse={onDropdownCollapse}
-        isOpen={isOpen}
-        isLazyInitFetchComplete={isLazyInitFetchComplete}
-        isLoading={isLoading}
-      >
+      <Select.Top handleDropdownClick={handleDropdownClick}>
         <Select.ValueSection isMultiValue={isMultiValue}>
           <Select.Value
             labelKey={labelKey}
             isMultiValue={isMultiValue}
             placeHolder={placeHolder}
             inputValue={inputValue}
+            handleValueClear={handleValueClear}
             value={value}
           />
 
           <Select.Input
-            isMultiValue={isMultiValue}
-            onInputChange={onInputChange}
-            labelKey={labelKey}
+            onInputChange={handleInputChange}
             inputValue={inputValue}
             focusNextOption={focusNextOption}
             focusPreviousOption={focusPreviousOption}
             addOptionOnKeyPress={handleOptionFocusOnSelectByKeyPress}
-            useInputAsync={useInputAsync}
+            setInput={setInputValue}
             handleOptionsSearchTrigger={handleOptionsSearchTrigger}
             preventInputUpdate={preventInputUpdate}
             key="select-input"
-            filterSearchedOptions={filterSearchedOptions}
             disableInputFetchTrigger={disableInputFetchTrigger}
             isLoading={isLoading}
             ref={inputRef}
@@ -364,10 +358,7 @@ const Select = ({
           <Select.DropdownIndicator isOpen={isOpen} isLoading={isLoading} />
           {showClearIndicator && (
             <Select.ClearIndicator
-              isMultiValue={isMultiValue}
-              focusInput={focusInput}
-              value={value}
-              inputValue={inputValue}
+              handleClearIndicatorClick={handleClearIndicatorClick}
               isLoading={isLoading}
             />
           )}

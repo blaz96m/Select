@@ -7,47 +7,13 @@ import { SelectFetchFunc } from "./types";
 
 type SelectTopSectionProps = {
   children: ReactNode;
-  isOpen: boolean;
-  onDropdownExpand?: () => void;
-  isLazyInitFetchComplete?: boolean;
-  fetchFunction?: SelectFetchFunc;
-  onDropdownCollapse?: () => void;
-  isLoading?: boolean;
+  handleDropdownClick: () => void;
 };
 
 const SelectTopContainer = memo(
-  ({
-    children,
-    isLoading,
-    isOpen,
-    fetchFunction,
-    onDropdownExpand,
-    isLazyInitFetchComplete,
-    onDropdownCollapse,
-  }: SelectTopSectionProps) => {
-    const context = useSelectContext();
-    const { getSelectStateSetters } = context;
-
-    const handleClick = () => {
-      if (isLoading) return;
-      const { toggleDropdown } = getSelectStateSetters();
-      const isFetchingData =
-        isFunction(fetchFunction) && !isLazyInitFetchComplete;
-      const updatedIsOpen = !isOpen;
-
-      !isFetchingData && updatedIsOpen
-        ? flushSync(() => toggleDropdown())
-        : toggleDropdown();
-
-      if (updatedIsOpen && isFunction(onDropdownExpand)) {
-        return onDropdownExpand();
-      }
-
-      isFunction(onDropdownCollapse) && onDropdownCollapse();
-    };
-
+  ({ children, handleDropdownClick }: SelectTopSectionProps) => {
     return (
-      <div className="select__top__container" onClick={handleClick}>
+      <div className="select__top__container" onClick={handleDropdownClick}>
         {children}
       </div>
     );

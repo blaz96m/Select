@@ -1,6 +1,7 @@
 import React from "react";
 import {
   CustomSelectClearIndicatorRenderer,
+  HandleClearIndicatorClick,
   SelectOptionList,
   SelectStateSetters,
 } from "src/components/Select/types";
@@ -11,36 +12,14 @@ import clsx from "clsx";
 import { useSelectContext } from "src/stores/providers/SelectProvider";
 
 export type SelectClearIndicatorProps = {
-  value: SelectOptionList;
-  inputValue: string;
-  focusInput: () => void;
-  isMultiValue: boolean;
-  useInputAsync?: boolean;
-  isLoading?: boolean;
+  handleClearIndicatorClick: HandleClearIndicatorClick;
+  isLoading: boolean | undefined;
 };
 
 const SelectClearIndicator = ({
-  value,
-  isMultiValue,
-  inputValue,
-  useInputAsync,
-  focusInput,
+  handleClearIndicatorClick,
   isLoading,
 }: SelectClearIndicatorProps) => {
-  const clearInput = () => {
-    const selectStateSetters = getSelectStateSetters();
-    selectStateSetters.clearInput();
-  };
-
-  const clearAll = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-    if (isLoading) return;
-    event.stopPropagation();
-    const { clearAllValues } = getSelectStateSetters();
-    !isEmpty(value) && clearAllValues();
-    inputValue && clearInput();
-    focusInput();
-  };
-
   const context = useSelectContext();
   const {
     components: { SelectClearIndicatorElement },
@@ -59,17 +38,14 @@ const SelectClearIndicator = ({
     return customComponent(
       {
         getSelectStateSetters,
-        useInputAsync,
-        value,
-        inputValue,
-        focusInput,
-        isMultiValue,
+        isLoading,
+        handleClearIndicatorClick,
       },
-      { onClick: clearAll }
+      { onClick: handleClearIndicatorClick }
     );
   }
   return (
-    <div onClick={clearAll} className={className}>
+    <div onClick={handleClearIndicatorClick} className={className}>
       <FontAwesomeIcon icon={faClose} />
     </div>
   );

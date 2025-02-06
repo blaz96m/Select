@@ -25,6 +25,7 @@ import { selectReducer } from "../reducers/selectReducer";
 import { initializeState } from "src/utils/select";
 import { omit, isFunction, noop, every } from "lodash";
 import { getObjectKeys } from "src/utils/data-types/objects/helpers";
+import { flushSync } from "react-dom";
 
 const arePropsEqual = (
   oldProps: SelectProps & { customComponents: SelectCustomComponents },
@@ -87,11 +88,13 @@ export const SelectProvider = memo(
       useDataPartitioning,
       preventInputUpdate,
       inputFilterFunction,
+      onDropdownCollapse,
       inputUpdateDebounceDuration,
       disableInputUpdate = false,
       hasInput = true,
       fetchOnInputChange = true,
       clearInputOnSelect: customClearInputOnSelect,
+      onValueClear,
       onOptionSelect,
       isLoading,
       selectOptions = [],
@@ -146,8 +149,9 @@ export const SelectProvider = memo(
         fetchFunction: fetchFunc,
         preventInputUpdate,
         disableInputUpdate,
+        onValueClear,
+        onDropdownCollapse,
         clearInputOnSelect: customClearInputOnSelect,
-        onOptionSelect,
         inputUpdateDebounceDuration,
         focusInput: domHelpers.focusInput,
         removeSelectedOptionsFromList,
@@ -164,6 +168,11 @@ export const SelectProvider = memo(
       handleInputUpdatePrevention,
       handleOptionsSearchTrigger,
       onOptionClick,
+      onInputUpdate,
+      toggleDropdown,
+      handleClearIndicatorClick,
+      onDropdownClick,
+      handleValueClear,
       clearInputOnSelect,
     } = selectApi;
 
@@ -207,8 +216,9 @@ export const SelectProvider = memo(
       fetchOnScrollToBottom ? handlePageChangeAsync() : handlePageChange();
     }, [selectState.page, selectAsyncState.page]);
 
-    const onInputChange = useCallback(
+    const handleInputChange = useCallback(
       (inputValue: string) => {
+        onInputUpdate();
         if (useInputAsync) {
           resetPage();
         }
@@ -235,7 +245,20 @@ export const SelectProvider = memo(
       if (clearInputOnSelect && useInputAsync) {
         resetPage();
       }
+      isFunction(onOptionSelect) && onOptionSelect(option);
     };
+
+    const handleDropdownClick = useCallback(() => {
+      if (isLoading) return;
+      const isFetchingData = isFunction(fetchFunc) && !isLazyInitFetchComplete;
+      const willOpen = !selectState.isOpen;
+      if (isFetchingData && willOpen) {
+        flushSync(() => toggleDropdown());
+      } else {
+        toggleDropdown();
+      }
+      onDropdownClick(willOpen);
+    }, [selectState.isOpen, fetchFunc, isLazyInitFetchComplete]);
 
     const data = useMemo(
       () => ({
@@ -258,8 +281,12 @@ export const SelectProvider = memo(
           handleOptionsSearchTrigger={handleOptionsSearchTrigger}
           useInputAsync={useInputAsync}
           handleOptionClick={handleOptionClick}
+          handleValueClear={handleValueClear}
+          handleClearIndicatorClick={handleClearIndicatorClick}
           resetPage={resetPage}
-          onInputChange={onInputChange}
+          handleInputChange={handleInputChange}
+          handleDropdownClick={handleDropdownClick}
+          setInputValue={setInputValue}
           isLazyInitFetchComplete={isLazyInitFetchComplete}
           isLastPage={isLastPage}
           displayedOptions={displayedOptions}

@@ -7,6 +7,7 @@ import {
   merge,
   isNil,
   defaults,
+  noop,
 } from "lodash";
 import {
   useCallback,
@@ -306,11 +307,12 @@ const useQueryManager = <ResponseItemT>(
       isDisabled ||
       !fetchOnInputChange ||
       isInitialFetchRef.current ||
+      previousSearchQueryValueRef.current === searchQuery ||
       // TODO HANDLE BETTER
       (isFunction(preventFetchOnInputChange) &&
         preventFetchOnInputChange(searchQuery))
     ) {
-      return;
+      return noop;
     }
     let timeoutId: NodeJS.Timeout | undefined;
     if (!searchQuery && previousSearchQueryValueRef.current) {

@@ -3,24 +3,23 @@ import {
   SelectOptionList,
   SelectOptionT,
   SelectSingleValueProps,
-  CustomSelectMultiValueRenderer,
-  CustomSelectSingleValueRenderer,
+  HandleValueClear,
 } from "./types/selectTypes";
 import SelectMultiValueElement from "./SelectMultiValueElement";
-import { memo, useContext } from "react";
+import { memo } from "react";
 import { useSelectContext } from "src/stores/providers/SelectProvider";
 
 export type SelectValueProps = {
   labelKey: keyof SelectOptionT;
   value: SelectOptionList;
+  handleValueClear: HandleValueClear;
 };
 
 type SelectValueContainerPropTypes = SelectValueProps & {
   isMultiValue: boolean;
   placeHolder: string;
   inputValue: string;
-  singleValueCustomComponent?: CustomSelectSingleValueRenderer;
-  multiValueCustomComponent?: CustomSelectMultiValueRenderer;
+  handleValueClear: HandleValueClear;
 };
 
 const SelectValue = memo(
@@ -29,6 +28,7 @@ const SelectValue = memo(
     isMultiValue,
     placeHolder,
     inputValue,
+    handleValueClear,
     value,
   }: SelectValueContainerPropTypes) => {
     const showPlaceholder = isEmpty(value) && isEmpty(inputValue);
@@ -38,7 +38,11 @@ const SelectValue = memo(
           <span className="select__placeholder">{placeHolder}</span>
         )}
         {isMultiValue ? (
-          <MultiValue value={value} labelKey={labelKey} />
+          <MultiValue
+            value={value}
+            labelKey={labelKey}
+            handleValueClear={handleValueClear}
+          />
         ) : (
           <SingleValue value={value[0]} labelKey={labelKey} />
         )}
@@ -68,7 +72,11 @@ const SingleValue = ({ value, labelKey }: SelectSingleValueProps) => {
   }
 };
 
-const MultiValue = ({ value, labelKey }: SelectValueProps) => {
+const MultiValue = ({
+  value,
+  labelKey,
+  handleValueClear,
+}: SelectValueProps) => {
   if (isEmpty(value)) {
     return;
   }
@@ -76,6 +84,7 @@ const MultiValue = ({ value, labelKey }: SelectValueProps) => {
     <>
       {map(value, (val) => (
         <SelectMultiValueElement
+          handleValueClear={handleValueClear}
           valueList={value}
           key={val.id}
           value={val}

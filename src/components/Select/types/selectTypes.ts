@@ -63,12 +63,18 @@ export type SelectFocusManager = {
       focusedCategory: string
     ) => void;
     handleOptionFocusOnSelectByKeyPress: () => void;
+    handleOptionHover: HandleOptionHover;
     setFocusOnHover: (optionIdx: number, optionCategory: string) => void;
     isOptionFocused: (option: SelectOptionT, optionIdx: number) => boolean;
     getFocusedOption: () => SelectOptionT | void;
     resetFocus: () => void;
   };
 };
+
+export type HandleValueClear = (
+  e: React.MouseEvent<HTMLDivElement, MouseEvent>,
+  optionId: string
+) => void;
 
 export type SelectSorterFunction = (
   options: SelectOptionList | CategorizedSelectOptions
@@ -202,6 +208,12 @@ export type SelectCategoryCustomComponentProps = Omit<
   "renderOption"
 >;
 
+export type HandleOptionHover = (
+  e: React.MouseEvent<HTMLDivElement, MouseEvent>,
+  isFocused: boolean,
+  optionIndex: number
+) => void;
+
 export type SelectSingleValueProps = Pick<SelectValueProps, "labelKey"> & {
   value: SelectOptionT;
 };
@@ -212,9 +224,16 @@ export type SelectMultiValueCustomComponentProps = {
 } & Omit<SelectValueProps, "value">;
 
 export type SelectMultiValueInnerProps = {
-  onClick: (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => void;
+  onClick: (
+    e: React.MouseEvent<HTMLDivElement, MouseEvent>,
+    valueId: string
+  ) => void;
   className: string;
 };
+
+export type HandleClearIndicatorClick = (
+  e: React.MouseEvent<HTMLDivElement, MouseEvent>
+) => void;
 
 type CustomSelectComponentRenderer<
   ComponentPropsT extends SelectCustomComponentProps,

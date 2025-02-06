@@ -9,6 +9,7 @@ import {
 import clsx from "clsx";
 
 import {
+  HandleOptionHover,
   OptionClickHandler,
   SelectComponents,
   SelectOptionInnerProps,
@@ -23,12 +24,10 @@ import { FALLBACK_CATEGORY_NAME } from "src/utils/select/constants";
 export type SelectOptionProps = {
   labelKey: keyof SelectOptionT;
   option: SelectOptionT;
-  isMultiValue: boolean;
   optionIndex: number;
   handleFocusOnClick: (optionIdx: number, optionCategory: string) => void;
-  focusInput: () => void;
   getSelectOptionsMap: () => Map<string, HTMLDivElement>;
-  handleHover: (optionIdx: number, optionCategory: string) => void;
+  handleHover: HandleOptionHover;
   isCategorized: boolean;
   isFocused: boolean;
   isSelected: boolean;
@@ -36,11 +35,7 @@ export type SelectOptionProps = {
   isDisabled: boolean;
   resetPage: () => void;
   onSelect: OptionClickHandler;
-  onOptionSelect?: (option: SelectOptionT) => void;
-  closeDropdownOnOptionSelect?: boolean;
-  useInputAsync?: boolean;
   categoryKey?: keyof SelectOptionT;
-  isLoading?: boolean;
 };
 
 const SelectOption = memo((props: SelectOptionProps) => {
@@ -48,26 +43,16 @@ const SelectOption = memo((props: SelectOptionProps) => {
     labelKey,
     option,
     optionIndex,
-    isMultiValue,
-    closeDropdownOnOptionSelect,
     handleFocusOnClick,
     handleHover,
     getSelectOptionsMap,
     categoryKey,
-    focusInput,
     isCategorized,
     isSelected,
     isDisabled,
     onSelect,
-    removeSelectedOptionsFromList,
-    onOptionSelect,
-    useInputAsync,
     isFocused,
-    isLoading,
   } = props;
-
-  const keepDropdownOpenOnOptionSelect =
-    !isNil(closeDropdownOnOptionSelect) && !closeDropdownOnOptionSelect;
 
   const context = useSelectContext();
 
@@ -75,8 +60,6 @@ const SelectOption = memo((props: SelectOptionProps) => {
     components: { SelectOptionElement: customComponent },
     getSelectStateSetters,
   } = context;
-
-  const hasCategories = !!categoryKey && isCategorized;
 
   const className = clsx({
     select__option: true,
@@ -94,23 +77,6 @@ const SelectOption = memo((props: SelectOptionProps) => {
       selectOptionsMap.delete(option.id);
     }
   };
-  const handleInputClear = () => {
-    const { clearInput } = getSelectStateSetters();
-    clearInput();
-  };
-
-  const handleMouseHover = (
-    e: React.MouseEvent<HTMLDivElement, MouseEvent>
-  ) => {
-    if (isFocused) {
-      return;
-    }
-    const optionCategory = hasCategories
-      ? e.currentTarget.dataset?.category
-      : "";
-    handleHover(optionIndex, optionCategory!);
-  };
-
   if (isFunction(customComponent)) {
     const innerProps = generateComponentInnerProps(
       SelectComponents.SELECT_OPTION,
@@ -119,7 +85,7 @@ const SelectOption = memo((props: SelectOptionProps) => {
         handleOptionClick: () =>
           onSelect(option, optionIndex, isSelected, handleFocusOnClick),
         handleMouseHover: (e: React.MouseEvent<HTMLDivElement, MouseEvent>) =>
-          handleMouseHover(e),
+          handleHover(e, isFocused, optionIndex),
         refCallback,
         className,
         isCategorized,
@@ -134,10 +100,12 @@ const SelectOption = memo((props: SelectOptionProps) => {
 
   return (
     <div
-      onMouseMove={handleMouseHover}
+      onMouseMove={(e: React.MouseEvent<HTMLDivElement, MouseEvent>) =>
+        handleHover(e, isFocused, optionIndex)
+      }
       key={option.id}
       data-category={
-        hasCategories ? option[categoryKey] || FALLBACK_CATEGORY_NAME : ""
+        isCategorized ? option[categoryKey!] || FALLBACK_CATEGORY_NAME : ""
       }
       ref={(node) => {
         const selectOptionsMap = getSelectOptionsMap();

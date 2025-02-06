@@ -3,7 +3,6 @@ import {
   useRef,
   useEffect,
   Dispatch,
-  useMemo,
   SetStateAction,
 } from "react";
 import {
@@ -15,32 +14,20 @@ import {
   CategorizedSelectOptions,
   SelectOptionT,
   SelectState,
-  SelectKeyboardNavigationDirection,
   SelectStateSetters,
   CustomPreventInputUpdate,
   PreventInputUpdate,
   SelectFetchFunc,
   OptionClickHandler,
+  HandleValueClear,
+  HandleClearIndicatorClick,
 } from "src/components/Select/types";
-import {
-  filter,
-  isArray,
-  isEmpty,
-  isFunction,
-  slice,
-  head,
-  isObject,
-  find,
-  isNil,
-  trim,
-} from "lodash";
+import { filter, isEmpty, isFunction, isNil, trim } from "lodash";
 import {
   calculateSpaceAndDisplayOptionList,
   filterOptionListBySearchValue,
-  getFirstOptionAndCategory,
 } from "src/utils/select";
 import { SelectDomHelpers } from "./useSelectDomHelper";
-import { getObjectKeys } from "src/utils/data-types/objects/helpers";
 
 type StateSetter<T> = Dispatch<SetStateAction<T>>;
 
@@ -55,7 +42,12 @@ export type SelectApi = {
   setInputValue: (value: string) => void;
   handleInputUpdatePrevention: PreventInputUpdate;
   handleOptionsSearchTrigger: () => void;
+  onDropdownClick: (isOpen: boolean) => void;
+  toggleDropdown: () => void;
   onDropdownExpand: () => void;
+  handleClearIndicatorClick: HandleClearIndicatorClick;
+  onInputUpdate: () => void;
+  handleValueClear: HandleValueClear;
   handlePageChange: () => void;
   filterSearchedOptions: () => void;
   clearInputOnSelect: boolean;
@@ -77,10 +69,11 @@ const useSelect = (
     categoryKey: keyof SelectOptionT & string;
     closeDropdownOnSelect: boolean | undefined;
     hasInput: boolean;
-    onOptionSelect: ((option: SelectOptionT) => void) | undefined;
     useInputAsync: boolean;
     selectListContainerRef: React.RefObject<HTMLDivElement>;
     focusInput: () => void;
+    onDropdownCollapse: (() => void) | undefined;
+    onValueClear: HandleValueClear;
     clearInputOnSelect: boolean | undefined;
     disableInputUpdate: boolean;
     removeSelectedOptionsFromList: boolean;
@@ -108,9 +101,9 @@ const useSelect = (
     fetchFunction,
     useInputAsync,
     inputFilterFunction,
-    inputUpdateDebounceDuration,
+    onDropdownCollapse,
     removeSelectedOptionsFromList,
-    onOptionSelect,
+    onValueClear: customOnClearValue,
     isLoading,
     disableInputUpdate,
     preventInputUpdate,
@@ -131,11 +124,11 @@ const useSelect = (
   const onSelectValue = (option: SelectOptionT) =>
     setValue((prevState) => (isMultiValue ? [...prevState, option] : [option]));
 
-  const onClearValue = (optionId: keyof SelectOptionT) => {
+  const onClearValue = useCallback((optionId: keyof SelectOptionT) => {
     setValue((prevState) =>
       filter(prevState, (option) => option.id !== optionId)
     );
-  };
+  }, []);
 
   const defaultInputUpdatePreventer = useCallback(
     (updatedValue: string) =>
@@ -157,8 +150,20 @@ const useSelect = (
     setValue((prevState) => (isEmpty(prevState) ? prevState : []));
   };
 
-  const setInputValue = (value: string) =>
-    dispatch({ type: SelectReducerActionTypes.SET_INPUT, payload: value });
+  const toggleDropdown = useCallback(
+    () => dispatch({ type: SelectReducerActionTypes.TOGGLE_VISIBILTY }),
+    []
+  );
+
+  const setInputValue = useCallback(
+    (value: string) =>
+      dispatch({ type: SelectReducerActionTypes.SET_INPUT, payload: value }),
+    []
+  );
+
+  const clearInput = useCallback(() => {
+    dispatch({ type: SelectReducerActionTypes.CLEAR_INPUT });
+  }, []);
 
   const closeDropdownOnSelectDefault = isMultiValue ? false : true;
 
@@ -232,6 +237,34 @@ const useSelect = (
     }
   }, [hasMoreData]);
 
+  const onInputUpdate = useCallback(() => {
+    const { openDropdown, clearAllValues } = getSelectStateSetters();
+    openDropdown();
+    if (!isMultiValue && clearInputOnSelect) {
+      clearAllValues();
+    }
+  }, [isMultiValue, clearInputOnSelect]);
+
+  const onDropdownClick = (isOpen: boolean) => {
+    if (isLoading) return;
+    if (isOpen) {
+      return onDropdownExpand();
+    }
+    isFunction(onDropdownCollapse) && onDropdownCollapse();
+  };
+
+  const handleClearIndicatorClick = useCallback(
+    (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+      if (isLoading) return;
+      e.stopPropagation();
+      const { clearAllValues } = getSelectStateSetters();
+      !isEmpty(selectState.value) && clearAllValues();
+      selectState.inputValue && clearInput();
+      focusInput();
+    },
+    [selectState.inputValue, selectState.value, isLoading]
+  );
+
   const onOptionClick = (
     option: SelectOptionT,
     optionIndex: number,
@@ -255,7 +288,15 @@ const useSelect = (
     } else {
       closeDropdown();
     }
-    isFunction(onOptionSelect) && onOptionSelect(option);
+  };
+
+  const handleValueClear = (
+    e: React.MouseEvent<HTMLDivElement, MouseEvent>,
+    optionId: string
+  ) => {
+    e.stopPropagation();
+    onClearValue(optionId);
+    isFunction(customOnClearValue) && customOnClearValue(e, optionId);
   };
 
   const filterSearchedOptions = useCallback(() => {
@@ -293,10 +334,15 @@ const useSelect = (
     handleOptionsSearchTrigger,
     handleInputUpdatePrevention,
     onOptionClick,
+    handleValueClear,
     handlePageChange,
-    hasMoreData,
-    clearInputOnSelect,
     onDropdownExpand,
+    hasMoreData,
+    handleClearIndicatorClick,
+    clearInputOnSelect,
+    onDropdownClick,
+    toggleDropdown,
+    onInputUpdate,
   };
 };
 

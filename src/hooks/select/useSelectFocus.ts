@@ -203,6 +203,23 @@ const useSelectFocus = (selectProps: SelectProps): SelectFocusManager => {
     [displayedOptions]
   );
 
+  const handleOptionHover = useCallback(
+    (
+      e: React.MouseEvent<HTMLDivElement, MouseEvent>,
+      isFocused: boolean,
+      optionIndex: number
+    ) => {
+      if (isFocused) {
+        return;
+      }
+      const optionCategory = isCategorized
+        ? e.currentTarget.dataset?.category
+        : "";
+      setFocusOnHover(optionIndex, optionCategory!);
+    },
+    [isCategorized]
+  );
+
   return {
     state: { focusedOptionCategory, focusedOptionIndex },
     selectFocusHandlers: {
@@ -213,6 +230,7 @@ const useSelectFocus = (selectProps: SelectProps): SelectFocusManager => {
       setFocusOnHover,
       resetFocus,
       isOptionFocused,
+      handleOptionHover,
       getFocusedOption,
     },
   };

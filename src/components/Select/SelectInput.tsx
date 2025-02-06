@@ -26,35 +26,30 @@ import clsx from "clsx";
 import { useSelectContext } from "src/stores/providers/SelectProvider";
 
 export type SelectInputProps = {
-  isMultiValue: boolean;
   onInputChange: (inputValue: string) => void;
   inputValue: string;
-  labelKey: keyof SelectOptionT;
-  filterSearchedOptions: () => void;
   focusNextOption: (
     fallbackDirection?: SelectFocusNavigationFallbackDirection
   ) => void;
   focusPreviousOption: () => void;
   addOptionOnKeyPress: () => void;
-  useInputAsync: boolean;
+  setInput: (inputValue: string) => void;
   hasInput: boolean;
   handleOptionsSearchTrigger: () => void;
   disableInputFetchTrigger: boolean;
   preventInputUpdate: PreventInputUpdate;
   isLoading?: boolean;
-  hasPaging?: boolean;
-  renderInputContainerForCustomComponent?: boolean;
 };
 
 const SelectInput = memo(
   forwardRef<HTMLInputElement, SelectInputProps>((props, ref) => {
     const {
-      isMultiValue,
-      onInputChange,
       inputValue,
       handleOptionsSearchTrigger,
+      onInputChange,
       focusNextOption,
       focusPreviousOption,
+      setInput,
       preventInputUpdate,
       hasInput,
       addOptionOnKeyPress,
@@ -68,10 +63,6 @@ const SelectInput = memo(
       getSelectStateSetters,
     } = selectContext;
 
-    const setInput = (value: string) => {
-      const { setInputValue } = getSelectStateSetters();
-      setInputValue(value);
-    };
     const className = clsx({
       select__input: true,
       hidden: !hasInput,
@@ -79,19 +70,8 @@ const SelectInput = memo(
 
     useImperativeHandle(ref, () => innerRef.current!, []);
 
-    const onInputUpdate = useCallback(
-      (input: string) => {
-        const { openDropdown, clearAllValues } = getSelectStateSetters();
-        openDropdown();
-        // TODO ADD CUSTOM PROP
-        !isMultiValue && clearAllValues();
-        isFunction(onInputChange) && onInputChange(input);
-      },
-      [isMultiValue, onInputChange]
-    );
-
     const [_, handleInputChange] = useInput(
-      onInputUpdate,
+      onInputChange,
       preventInputUpdate,
       handleOptionsSearchTrigger,
       inputValue,
