@@ -11,6 +11,7 @@ import {
 import { useQueryManager } from "src/hooks/requests";
 import { ResponseDetails } from "../requests/useQueryManager";
 import { QueryManagerState } from "src/stores/reducers/queryManagerReducer";
+import { SelectApi } from "./useSelect";
 
 export type SelectAsyncState = Pick<QueryManagerState, "searchQuery" | "page">;
 
@@ -22,18 +23,12 @@ export type SelectAsyncApi = {
 };
 
 const useSelectAsync = (
-  state: SelectState,
+  selectState: SelectState,
+  selectApi: SelectApi,
+  selectStateUpdaters: SelectStateUpdaters,
   props: {
     recordsPerPage?: number;
     fetchOnInputChange?: boolean;
-    getOriginalOptions: () => void;
-    setOriginalOptions: (options: SelectOptionList) => void;
-    focusInput: () => void;
-    onDropdownExpand: () => void;
-    selectStateUpdaters: SelectStateUpdaters;
-    selectListContainerRef: React.RefObject<HTMLDivElement>;
-    inputValue: string;
-    setInputValue: Dispatch<SetStateAction<string>> | ((value: string) => void);
     isLazyInit?: boolean;
     fetchOnScroll?: boolean;
     fetchFunction: SelectFetchFunc | undefined;
@@ -44,15 +39,19 @@ const useSelectAsync = (
     fetchOnInputChange,
     isLazyInit,
     recordsPerPage,
-    getOriginalOptions,
-    setOriginalOptions,
-    selectListContainerRef,
-    selectStateUpdaters,
-    onDropdownExpand,
-    inputValue,
-    setInputValue,
     fetchOnScroll,
   } = props;
+
+  const {
+    getOriginalOptions,
+    selectDomRefs,
+    setOriginalOptions,
+    onDropdownExpand,
+  } = selectApi;
+
+  const { setInputValue } = selectStateUpdaters;
+
+  const { inputValue, selectOptions, isOpen } = selectState;
 
   const updateSelectOptions = useCallback(
     (response: ResponseDetails<SelectOptionT>) => {
@@ -61,11 +60,12 @@ const useSelectAsync = (
       if (params && params.page !== 1) {
         const klinData = filter(
           data,
-          (d) => !find(state.selectOptions, (option) => option.id === d.id)
+          (d) => !find(selectOptions, (option) => option.id === d.id)
         );
         selectStateUpdaters.addOptions(klinData);
       } else {
         const originalOptions = getOriginalOptions();
+        // TODO CHECK IF THIS APPLIES TO THE NORMAL REQUEST AS WELL
         // End the initial fetch in the case when lazy init is triggered and the response is empty (due to the select option useEffect that ends the initial fetch not being triggered)
         if (isLazyInit && isInitialFetch() && isEmpty(response.data)) {
           endInitialFetch();
@@ -74,15 +74,15 @@ const useSelectAsync = (
           setOriginalOptions(data);
         }
         if (
-          selectListContainerRef.current &&
-          selectListContainerRef.current.scrollTop
+          selectDomRefs.selectListContainerRef.current &&
+          selectDomRefs.selectListContainerRef.current.scrollTop
         ) {
-          selectListContainerRef.current.scroll({ top: 0 });
+          selectDomRefs.selectListContainerRef.current.scroll({ top: 0 });
         }
         selectStateUpdaters.setSelectOptions(data);
       }
     },
-    [state.selectOptions]
+    [selectOptions]
   );
 
   const { queryManagerState, queryManagerApi } = useQueryManager<SelectOptionT>(
@@ -116,24 +116,19 @@ const useSelectAsync = (
   }, [fetchFunction, fetchOnScroll]);
 
   useEffect(() => {
-    if (
-      isInitialFetch() &&
-      isLazyInit &&
-      isFunction(fetchFunction) &&
-      state.isOpen
-    ) {
+    if (isInitialFetch() && isLazyInit && isFunction(fetchFunction) && isOpen) {
       (async () => {
         await fetch();
       })();
     }
-  }, [state.isOpen]);
+  }, [isOpen]);
 
   useEffect(() => {
-    if (isLazyInit && isInitialFetch() && state.isOpen) {
+    if (isLazyInit && isInitialFetch() && isOpen) {
       onDropdownExpand();
       endInitialFetch();
     }
-  }, [state.selectOptions]);
+  }, [selectOptions]);
 
   const selectAsyncApi: SelectAsyncApi = {
     isLastPage,

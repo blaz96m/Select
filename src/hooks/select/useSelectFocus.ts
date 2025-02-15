@@ -234,7 +234,7 @@ const useSelectFocus = (selectProps: SelectProps): SelectFocusManager => {
   );
 
   return {
-    state: { focusedOptionCategory, focusedOptionIndex },
+    selectFocusState: { focusedOptionCategory, focusedOptionIndex },
     selectFocusHandlers: {
       focusNextOption,
       focusPreviousOption,

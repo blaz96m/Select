@@ -22,7 +22,7 @@ type StateCustomSetters = {
 
 type ResolvedStateData = {
   selectState: SelectState;
-  resolvedStateUpdatters: SelectStateUpdaters;
+  selectStateUpdaters: SelectStateUpdaters;
 };
 
 const useSelectStateResolver = (
@@ -187,7 +187,7 @@ const useSelectStateResolver = (
 
   return {
     selectState: { ...selectState, isOpen, selectOptions, inputValue },
-    resolvedStateUpdatters: {
+    selectStateUpdaters: {
       clearAllValues,
       selectValue,
       setInputValue,

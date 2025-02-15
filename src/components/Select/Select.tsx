@@ -88,23 +88,15 @@ import {
 } from "src/hooks/select";
 
 export type SelectComponentProps = SelectProps & {
-  usesInputAsync: boolean;
-  isLastPage: () => boolean;
-  displayedOptions: SelectOptionList | CategorizedSelectOptions;
-  preventInputUpdate: PreventInputUpdate;
-  onDropdownExpand: () => void;
-  loadNextPage: () => void;
+  selectApi: SelectApi;
   selectStateUpdaters: SelectStateUpdaters;
-  fetchOnScrollToBottom: boolean | undefined;
-  getSelectOptionsMap: () => Map<string, HTMLDivElement>;
   defaultSelectEventHandlers: DefaultSelectEventHandlers;
   customSelectEventHandlers: CustomSelectEventHandlers;
   eventHandlerFollowups: EventHandlerFollowupFunctions;
-  hasPaging?: boolean;
   handlePageChange: () => void;
+  isInitialFetch: () => boolean;
   handlePageReset: () => void;
   selectState: SelectState;
-  selectDomRefs: SelectDomRefs;
 };
 
 export type SelectProps = {
@@ -130,11 +122,8 @@ export type SelectProps = {
   disableInputFetchTrigger: boolean;
   disableInputUpdate: boolean;
   inputValue?: string;
-  loadNextPage: () => void;
   clearInputOnSelect: boolean;
   categoryKey: keyof SelectOptionT & string;
-  isInitialFetch: () => boolean;
-
   isCategorized?: boolean;
   setInputValue?: StateSetter<string>;
   selectOptions?: SelectOptionT[] | undefined;
@@ -167,31 +156,19 @@ export type SelectProps = {
 const Select = ({
   isMultiValue,
   isLoading,
-  onScrollToBottom,
-  onPageChange,
   selectState,
-  hasPaging,
-  displayedOptions,
-  selectDomRefs,
-  loadNextPage,
   lazyInit = false,
   isOptionDisabled,
-  onDropdownExpand,
-  preventInputUpdate,
-  clearInputOnSelect,
+  selectApi,
   defaultSelectEventHandlers,
   customSelectEventHandlers,
   eventHandlerFollowups,
-  fetchOnScrollToBottom,
-  usesInputAsync,
-  handleOptionsSearchTrigger,
   isInitialFetch,
   fetchFunction,
-  getSelectOptionsMap,
   selectStateUpdaters,
   handlePageChange,
   handlePageReset,
-  closeDropdownOnSelect,
+  // TODO HANDLE THIS PROP
   disableInputFetchTrigger = false,
   hasInput = true,
   removeSelectedOptionsFromList = true,
@@ -201,11 +178,13 @@ const Select = ({
   labelKey = "name",
   isCategorized = false,
 }: SelectComponentProps) => {
+  const { selectDomRefs, displayedOptions, getSelectOptionsMap } = selectApi;
+
   const { inputRef, selectListContainerRef } = selectDomRefs;
 
-  const { isOpen, inputValue, value, page } = selectState;
+  const { isOpen, inputValue, value } = selectState;
 
-  const { selectFocusHandlers, state: focusState } = useSelectFocus({
+  const { selectFocusHandlers, selectFocusState } = useSelectFocus({
     displayedOptions,
     isCategorized,
     categoryKey,
@@ -223,31 +202,23 @@ const Select = ({
     handleOptionHover,
   } = selectFocusHandlers;
 
-  const { focusedOptionCategory, focusedOptionIndex } = focusState;
+  const { focusedOptionCategory, focusedOptionIndex } = selectFocusState;
 
   const selectEventHandlers = useSelectEventHandlerResolver(
     defaultSelectEventHandlers,
     customSelectEventHandlers,
     eventHandlerFollowups,
     selectStateUpdaters,
+    selectState,
+    selectApi,
     {
-      usesInputAsync,
-      clearInputOnSelect,
-      onDropdownExpand,
       isLoading,
       fetchFunction,
       isInitialFetch,
-      closeDropdownOnSelect,
-      value,
       handlePageChange,
       handlePageReset,
-      inputValue,
-      isOpen,
       handleFocusOnClick: handleOptionFocusOnSelectByClick,
-      page,
-      displayedOptions,
       resetFocus,
-      fetchOnScrollToBottom,
       lazyInit,
     }
   );
@@ -337,11 +308,8 @@ const Select = ({
   const renderCategory = useCallback(
     (category: SelectCategoryT) => {
       const { categoryName, categoryOptions } = category;
-      const isCategoryFocused =
-        categoryName === focusState.focusedOptionCategory;
-      const focusedOptionIdx = isCategoryFocused
-        ? focusState.focusedOptionIndex
-        : -1;
+      const isCategoryFocused = categoryName === focusedOptionCategory;
+      const focusedOptionIdx = isCategoryFocused ? focusedOptionIndex : -1;
       const selectedOptionsInCategory = filter(
         value,
         (val) => val[categoryKey] === categoryName
@@ -384,8 +352,8 @@ const Select = ({
             focusNextOption={focusNextOption}
             focusPreviousOption={focusPreviousOption}
             addOptionOnKeyPress={handleOptionFocusOnSelectByKeyPress}
-            handleOptionsSearchTrigger={handleOptionsSearchTrigger}
-            preventInputUpdate={preventInputUpdate}
+            handleOptionsSearchTrigger={selectApi.handleOptionsSearchTrigger}
+            preventInputUpdate={selectApi.preventInputUpdate}
             key="select-input"
             disableInputFetchTrigger={disableInputFetchTrigger}
             isLoading={isLoading}

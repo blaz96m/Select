@@ -20,8 +20,6 @@ import Select, { SelectProps } from "src/components/Select/Select";
 import {
   useSelect,
   useSelectAsync,
-  useSelectDomHelper,
-  useSelectPropertiesResolver,
   useSelectStateResolver,
 } from "src/hooks/select";
 import {
@@ -69,19 +67,19 @@ export const SelectProvider = memo(
       recordsPerPage,
       removeSelectedOptionsFromList,
       onChange,
-      closeDropdownOnSelect: customCloseDropdownOnSelect,
+      closeDropdownOnSelect,
       lazyInit = false,
       fetchOnScroll = false,
       setIsOpen,
       isOpen,
-      preventInputUpdate: customPreventInputUpdate,
+      preventInputUpdate,
       inputFilterFunction,
       inputUpdateDebounceDuration,
       isMultiValue = false,
       disableInputUpdate = false,
       hasInput = true,
       fetchOnInputChange = true,
-      clearInputOnSelect: customClearInputOnSelect,
+      clearInputOnSelect,
       inputValue,
       setOptions,
       isLoading,
@@ -95,54 +93,33 @@ export const SelectProvider = memo(
       initializeState
     );
 
-    const { selectState, resolvedStateUpdatters: selectStateUpdaters } =
-      useSelectStateResolver(
-        defaultSelectState,
-        { selectOptions, inputValue, isOpen },
-        {
-          setIsOpen,
-          setOptions,
-          setInputValue: customSetInputValue,
-          setValue: onChange,
-        },
-        isMultiValue,
-        dispatch
-      );
-
-    const resolvedSelectProperties = useSelectPropertiesResolver(
+    const resolvedStateData = useSelectStateResolver(
+      defaultSelectState,
+      { selectOptions, inputValue, isOpen },
       {
-        fetchFunction,
-        fetchOnInputChange,
-        hasInput,
-        disableInputUpdate,
-        customClearInputOnSelect,
-        customPreventInputUpdate,
-        isMultiValue,
-        fetchOnScroll,
-        recordsPerPage,
-        customCloseDropdownOnSelect,
+        setIsOpen,
+        setOptions,
+        setInputValue: customSetInputValue,
+        setValue: onChange,
       },
-      selectState
+      isMultiValue,
+      dispatch
     );
 
-    const {
-      closeDropdownOnSelect,
-      fetchOnScrollToBottom,
-      hasPaging,
-      preventInputUpdate,
-      usesInputAsync,
-      clearInputOnSelect,
-    } = resolvedSelectProperties;
+    const { selectState, selectStateUpdaters } = resolvedStateData;
 
     const selectApi = useSelect(selectState, selectStateUpdaters, {
       isMultiValue,
       labelKey,
       isCategorized,
       customCategorizeFunction: categorizeFunction,
+      preventInputUpdate,
+      disableInputUpdate,
       sortFunction,
       fetchOnScroll,
       recordsPerPage,
-      usesInputAsync,
+      fetchOnInputChange,
+      hasInput,
       fetchFunction,
       clearInputOnSelect,
       inputUpdateDebounceDuration,
@@ -153,54 +130,33 @@ export const SelectProvider = memo(
       inputFilterFunction,
     });
 
-    const {
-      handleOptionsSearchTrigger,
-      selectDomRefs,
-      displayedOptions,
-      filterSearchedOptions,
-      loadNextPage,
-      onDropdownExpand,
-      selectEventHandlers,
-      handlePageReset,
-      getOriginalOptions,
-      focusInput,
-      getSelectOptionsMap,
-
-      setOriginalOptions,
-    } = selectApi;
-
-    const { selectAsyncApi, selectAsyncState } = useSelectAsync(selectState, {
-      isLazyInit: lazyInit,
-      recordsPerPage,
-      fetchOnInputChange,
-      onDropdownExpand: selectApi.onDropdownExpand,
-      fetchFunction,
-      fetchOnScroll: fetchOnScrollToBottom,
+    const { selectAsyncApi, selectAsyncState } = useSelectAsync(
+      selectState,
+      selectApi,
       selectStateUpdaters,
-      getOriginalOptions,
-      setOriginalOptions,
-      focusInput,
-      selectListContainerRef: selectDomRefs.selectListContainerRef,
-      inputValue: selectState.inputValue,
-      setInputValue: selectStateUpdaters.setInputValue,
-    });
+      {
+        isLazyInit: lazyInit,
+        recordsPerPage,
+        fetchOnInputChange,
+        fetchFunction,
+        fetchOnScroll: selectApi.fetchOnScrollToBottom,
+      }
+    );
 
-    const {
-      isLastPage,
-      loadNextPageAsync,
-      handlePageResetAsync,
-      isInitialFetch,
-    } = selectAsyncApi;
+    const { loadNextPage, selectEventHandlers, handlePageReset } = selectApi;
 
-    const resolvedPageValue = fetchOnScrollToBottom
+    const { loadNextPageAsync, handlePageResetAsync, isInitialFetch } =
+      selectAsyncApi;
+
+    const resolvedPageValue = selectApi.fetchOnScrollToBottom
       ? selectAsyncState.page
       : selectState.page;
 
-    const resolvedPageResetHandler = usesInputAsync
+    const resolvedPageResetHandler = selectApi.usesInputAsync
       ? handlePageResetAsync
       : handlePageReset;
 
-    const resolvedPageChangeHandler = fetchOnScrollToBottom
+    const resolvedPageChangeHandler = selectApi.fetchOnScrollToBottom
       ? loadNextPage
       : loadNextPageAsync;
 
@@ -234,26 +190,14 @@ export const SelectProvider = memo(
         <Select
           {...props}
           selectState={{ ...selectState, page: resolvedPageValue }}
-          selectDomRefs={selectDomRefs}
           defaultSelectEventHandlers={selectEventHandlers}
           customSelectEventHandlers={customSelectEventHandlers}
           eventHandlerFollowups={selectEventHandlerFollowups}
-          preventInputUpdate={preventInputUpdate}
-          handleOptionsSearchTrigger={handleOptionsSearchTrigger}
           isInitialFetch={isInitialFetch}
-          onDropdownExpand={onDropdownExpand}
-          fetchOnScrollToBottom={fetchOnScrollToBottom}
-          usesInputAsync={usesInputAsync}
-          closeDropdownOnSelect={closeDropdownOnSelect}
-          getSelectOptionsMap={getSelectOptionsMap}
-          clearInputOnSelect={clearInputOnSelect}
           selectStateUpdaters={selectStateUpdaters}
           handlePageReset={resolvedPageResetHandler}
           handlePageChange={resolvedPageChangeHandler}
-          setInputValue={selectStateUpdaters.setInputValue}
-          isLastPage={isLastPage}
-          displayedOptions={displayedOptions}
-          hasPaging={hasPaging}
+          selectApi={selectApi}
         />
       </SelectContext.Provider>
     );

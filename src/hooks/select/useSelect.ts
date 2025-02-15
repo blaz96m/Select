@@ -65,14 +65,19 @@ type CustomSelectStateSetters = {
 export type SelectApi = {
   handleOptionsSearchTrigger: () => void;
   onDropdownExpand: () => void;
+  usesInputAsync: boolean;
+  preventInputUpdate: PreventInputUpdate;
   selectEventHandlers: DefaultSelectEventHandlers;
+  fetchOnScrollToBottom: boolean | undefined;
   displayedOptions: SelectOptionList | CategorizedSelectOptions;
   getOriginalOptions: () => SelectOptionList;
   setOriginalOptions: (options: SelectOptionList) => void;
   getSelectOptionsMap: () => Map<string, HTMLDivElement>;
+  closeDropdownOnSelect: boolean;
   focusInput: () => void;
   selectDomRefs: SelectDomRefs;
   handlePageReset: () => void;
+  clearInputOnSelect: boolean;
   loadNextPage: () => void;
   filterSearchedOptions: () => void;
 };
@@ -83,11 +88,14 @@ const useSelect = (
   selectProps: {
     isMultiValue: boolean;
     labelKey: keyof SelectOptionT;
-    fetchOnScroll: boolean | undefined;
-    categoryKey: keyof SelectOptionT & string;
+    fetchOnInputChange: boolean;
+    disableInputUpdate: boolean;
     closeDropdownOnSelect: boolean | undefined;
-    usesInputAsync: boolean;
     clearInputOnSelect: boolean | undefined;
+    preventInputUpdate: CustomPreventInputUpdate;
+    fetchOnScroll: boolean | undefined;
+    hasInput: boolean;
+    categoryKey: keyof SelectOptionT & string;
     removeSelectedOptionsFromList: boolean;
     sortFunction: SelectSorterFunction | undefined;
     customCategorizeFunction?: CustomSelectCategorizeFunction;
@@ -110,13 +118,16 @@ const useSelect = (
     labelKey,
     fetchFunction,
     fetchOnScroll,
-    usesInputAsync,
-    closeDropdownOnSelect,
     inputFilterFunction: customInputFilterFunction,
     removeSelectedOptionsFromList,
-    clearInputOnSelect,
     isLoading,
+    fetchOnInputChange,
+    disableInputUpdate,
+    hasInput,
     customCategorizeFunction,
+    preventInputUpdate: customPreventInputUpdate,
+    clearInputOnSelect: customClearInputOnSelect,
+    closeDropdownOnSelect: customCloseDropdownOnSelect,
     sortFunction,
   } = selectProps;
 
@@ -206,6 +217,36 @@ const useSelect = (
   }, [filteredOptions, sortFunction]);
 
   const displayedOptions = sortedOptions || filteredOptions;
+
+  // #PROP RESOLVERS
+
+  const usesInputAsync = isFunction(fetchFunction) && fetchOnInputChange;
+
+  const defaultPreventInputUpdate = useCallback(
+    (updatedValue: string) => (!trim(updatedValue) && !inputValue) || !hasInput,
+    [hasInput, inputValue]
+  );
+  const preventInputUpdate = useCallback(
+    (updatedValue: string) => {
+      if (disableInputUpdate) return true;
+      if (isFunction(customPreventInputUpdate))
+        return customPreventInputUpdate(updatedValue, inputValue);
+      return defaultPreventInputUpdate(updatedValue);
+    },
+    [defaultPreventInputUpdate, customPreventInputUpdate, disableInputUpdate]
+  );
+
+  const defaultClearInputOnSelect = isMultiValue ? false : true;
+  const clearInputOnSelect = isNil(customClearInputOnSelect)
+    ? defaultClearInputOnSelect
+    : customClearInputOnSelect;
+
+  const closeDropdownOnSelectDefault = isMultiValue ? false : true;
+  const closeDropdownOnSelect = isNil(customCloseDropdownOnSelect)
+    ? closeDropdownOnSelectDefault
+    : customCloseDropdownOnSelect;
+
+  const fetchOnScrollToBottom = isFunction(fetchFunction) && fetchOnScroll;
 
   // #EVENT HANDLERS
 
@@ -313,8 +354,13 @@ const useSelect = (
 
   return {
     filterSearchedOptions,
+    fetchOnScrollToBottom,
     getOriginalOptions,
+    preventInputUpdate,
     handlePageReset,
+    closeDropdownOnSelect,
+    usesInputAsync,
+    clearInputOnSelect,
     displayedOptions,
     handleOptionsSearchTrigger,
     selectDomRefs: {

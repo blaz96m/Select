@@ -53,7 +53,7 @@ export type SelectFocusState = {
 };
 
 export type SelectFocusManager = {
-  state: SelectFocusState;
+  selectFocusState: SelectFocusState;
   selectFocusHandlers: {
     focusNextOption: (
       fallbackDirection?: SelectFocusNavigationFallbackDirection

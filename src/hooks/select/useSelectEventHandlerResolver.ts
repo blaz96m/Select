@@ -15,29 +15,20 @@ import {
   SelectStateUpdaters,
 } from "src/components/Select/types";
 import { SelectAsyncState } from "./useSelectAsync";
+import { SelectApi } from "./useSelect";
 
 type SelectProps = {
-  usesInputAsync: boolean;
-  clearInputOnSelect: boolean;
   isLoading: boolean | undefined;
   fetchFunction: SelectFetchFunc | undefined;
   isInitialFetch: () => boolean;
   lazyInit: boolean;
-  fetchOnScrollToBottom: boolean | undefined;
-  value: SelectOptionList;
-  inputValue: string;
-  onDropdownExpand: () => void;
   handlePageChange: () => void;
   handlePageReset: () => void;
   handleFocusOnClick: (
     focusedOptionIdx: number,
     focusedCategory: string
   ) => void;
-  isOpen: boolean;
-  page: number;
-  displayedOptions: SelectOptionList | CategorizedSelectOptions;
   resetFocus: () => void;
-  closeDropdownOnSelect: boolean | undefined;
 };
 
 const useSelectEventHandlerResolver = (
@@ -45,6 +36,8 @@ const useSelectEventHandlerResolver = (
   customEventHandlers: CustomSelectEventHandlers,
   eventHandlerFollowupFunctions: EventHandlerFollowupFunctions,
   selectStateUpdaters: SelectStateUpdaters,
+  selectState: SelectState,
+  selectApi: SelectApi,
   selectProps: SelectProps
 ): SelectEventHandlers => {
   const {
@@ -64,25 +57,26 @@ const useSelectEventHandlerResolver = (
     onAfterScrollToBottom,
   } = eventHandlerFollowupFunctions;
 
-  const { loadNextPage, toggleDropdownVisibility } = selectStateUpdaters;
   const {
     usesInputAsync,
     clearInputOnSelect,
+    onDropdownExpand,
+    displayedOptions,
+    closeDropdownOnSelect,
+  } = selectApi;
+
+  const { value, isOpen, page, inputValue } = selectState;
+
+  const { loadNextPage, toggleDropdownVisibility } = selectStateUpdaters;
+  const {
     fetchFunction,
     isInitialFetch,
     isLoading,
     lazyInit,
-    onDropdownExpand,
-    displayedOptions,
-    value,
-    isOpen,
-    inputValue,
-    page,
     resetFocus,
     handlePageReset,
     handlePageChange,
     handleFocusOnClick,
-    closeDropdownOnSelect,
   } = selectProps;
 
   const isFetchingDataOnLazyInit =
