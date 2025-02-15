@@ -1,4 +1,4 @@
-import { SelectState } from "src/components/Select/types/selectTypes";
+import { SelectState } from "src/Select/types/selectTypes";
 
 export const DEFAULT_SELECT_PLACEHOLDER = "Please select a value";
 

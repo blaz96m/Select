@@ -38,54 +38,48 @@ import {
   SelectIndicatorSection,
   SelectDropdownIndicator,
   SelectClearIndicator,
-} from "src/components/Select";
-import { selectReducer } from "src/stores/reducers/selectReducer";
+  SelectCategory,
+} from "src/Select/components";
+import { selectReducer } from "src/Select/stores/reducers/selectReducer";
 import {
   filterOptionListBySearchValue,
   initializeState,
 } from "src/utils/select";
 
 import {
-  CategorizedSelectOptions,
   CustomPreventInputUpdate,
   CustomSelectCategorizeFunction,
   DefaultSelectEventHandlers,
-  HandleClearIndicatorClick,
-  HandleValueClear,
   InputChangeHandler,
-  OptionClickHandler,
-  PreventInputUpdate,
   SelectCategoryT,
-  SelectCustomComponents,
   CustomSelectEventHandlers,
-  SelectFetchFunc,
   SelectOptionList,
   SelectOptionT,
   SelectSorterFunction,
-  SelectState,
-  StateSetter,
-  selectRendererOverload,
   CustomOptionClickHandler,
   CustomValueClearClickHandler,
   CustomClearIndicatorClickHandler,
   DropdownClickHandler,
   CustomScrollToBottomHandler,
   EventHandlerFollowupFunctions,
-  SelectStateUpdaters,
-} from "./types";
+  SelectFetchFunction,
+} from "src/Select/types/selectGeneralTypes";
 
-import "./styles/_select.scss";
-
-import SelectCategory from "../SelectCategory";
-import { SelectApi } from "src/hooks/select/useSelect";
 import {
-  SelectDomHelpers,
-  SelectDomRefs,
-} from "src/hooks/select/useSelectDomHelper";
+  SelectState,
+  StateSetter,
+  SelectApi,
+  SelectStateUpdaters,
+} from "src/Select/types/selectStateTypes";
+
+import { SelectProps } from "src/Select/types/selectComponentTypes";
+
+import "../styles/_select.scss";
+
 import {
   useSelectEventHandlerResolver,
   useSelectFocus,
-} from "src/hooks/select";
+} from "src/Select/hooks";
 
 export type SelectComponentProps = SelectProps & {
   selectApi: SelectApi;
@@ -97,60 +91,6 @@ export type SelectComponentProps = SelectProps & {
   isInitialFetch: () => boolean;
   handlePageReset: () => void;
   selectState: SelectState;
-};
-
-export type SelectProps = {
-  value: SelectOptionT[] | [];
-  onOptionClick?: CustomOptionClickHandler;
-  onAfterOptionClick?: CustomOptionClickHandler;
-  onClearIndicatorClick?: CustomClearIndicatorClickHandler;
-  onAfterClearIndicatorClick?: CustomClearIndicatorClickHandler;
-  onDropdownClick?: DropdownClickHandler;
-  onAfterDropdownClick?: DropdownClickHandler;
-  onInputUpdate?: InputChangeHandler;
-  onAfterInputUpdate?: InputChangeHandler;
-  onValueClear?: CustomValueClearClickHandler;
-  onAfterValueClear?: CustomValueClearClickHandler;
-  onScrollToBottom?: CustomScrollToBottomHandler;
-  onAfterScrollToBottom?: CustomScrollToBottomHandler;
-  labelKey: keyof SelectOptionT;
-  onChange: Dispatch<SetStateAction<SelectOptionT[]>>;
-  isMultiValue: boolean;
-  closeDropdownOnSelect?: boolean;
-  fetchOnInputChange: boolean;
-  removeSelectedOptionsFromList: boolean;
-  disableInputFetchTrigger: boolean;
-  disableInputUpdate: boolean;
-  inputValue?: string;
-  clearInputOnSelect: boolean;
-  categoryKey: keyof SelectOptionT & string;
-  isCategorized?: boolean;
-  setInputValue?: StateSetter<string>;
-  selectOptions?: SelectOptionT[] | undefined;
-  setOptions?: StateSetter<SelectOptionList>;
-  fetchOnScroll: boolean;
-  isOptionDisabled?: (option: SelectOptionT) => boolean;
-  inputFilterFunction: (
-    selectOptions: SelectOptionList,
-    inputValue: string
-  ) => SelectOptionList;
-  lazyInit: boolean;
-  hasInput: boolean;
-  isOpen?: boolean;
-  setIsOpen?: StateSetter<boolean>;
-  useInputUpdateTriggerEffect: boolean;
-  inputUpdateDebounceDuration?: number;
-  handleOptionsSearchTrigger: () => void;
-  placeHolder?: string;
-  preventInputUpdate: CustomPreventInputUpdate;
-  fetchFunction?: SelectFetchFunc;
-  sortFunction?: SelectSorterFunction;
-  onPageChange?: (page: number) => void;
-  showClearIndicator?: boolean;
-  useDataPartitioning?: boolean;
-  isLoading?: boolean;
-  categorizeFunction?: CustomSelectCategorizeFunction;
-  recordsPerPage?: number;
 };
 
 const Select = ({
@@ -174,7 +114,7 @@ const Select = ({
   removeSelectedOptionsFromList = true,
   showClearIndicator = true,
   categoryKey = "",
-  placeHolder = DEFAULT_SELECT_PLACEHOLDER,
+  placeholder = DEFAULT_SELECT_PLACEHOLDER,
   labelKey = "name",
   isCategorized = false,
 }: SelectComponentProps) => {
@@ -340,7 +280,7 @@ const Select = ({
           <Select.Value
             labelKey={labelKey}
             isMultiValue={isMultiValue}
-            placeHolder={placeHolder}
+            placeholder={placeholder}
             inputValue={inputValue}
             onClear={handleValueClearClick}
             value={value}

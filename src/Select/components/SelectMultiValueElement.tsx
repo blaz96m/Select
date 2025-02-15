@@ -1,26 +1,9 @@
 import React from "react";
-import {
-  SelectOptionT,
-  SelectStateSetters,
-  SelectMultiValueCustomComponentProps,
-  SelectCustomComponents,
-  CustomSelectMultiValueRenderer,
-  SelectMultiValueInnerProps,
-  SelectOptionList,
-  HandleValueClear,
-  ValueClearClickHandler,
-} from "./types/selectTypes";
+import { SelectMultiValueProps } from "src/Select/types/selectComponentTypes";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTimes } from "@fortawesome/free-solid-svg-icons";
 import { isFunction } from "lodash";
-import { useSelectContext } from "src/stores/providers/SelectProvider";
-
-export type SelectMultiValueProps = {
-  value: SelectOptionT;
-  labelKey: keyof SelectOptionT;
-  valueList: SelectOptionList;
-  handleValueClear: ValueClearClickHandler;
-};
+import { useSelectContext } from "src/Select/components/SelectProvider";
 
 const SelectMultiValueElement = ({
   value,

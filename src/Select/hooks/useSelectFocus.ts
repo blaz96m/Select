@@ -2,13 +2,13 @@ import { first, head, isEmpty, isNull, isNumber, isObject, last } from "lodash";
 import { Ref, RefObject, useCallback, useState } from "react";
 import {
   CategorizedSelectOptions,
-  SelectFocusManager,
   SelectFocusNavigationFallbackDirection,
   SelectKeyboardNavigationDirection,
   SelectOptionList,
   SelectOptionT,
   SelectCategoryFocusDetails,
-} from "src/components/Select/types";
+} from "src/Select/types/selectGeneralTypes";
+import { SelectFocusApi } from "src/Select/types/selectStateTypes";
 import { getObjectKeys } from "src/utils/data-types/objects/helpers";
 import {
   getNextCategoryFocusDetailsInDirection,
@@ -28,7 +28,7 @@ type SelectProps = {
   selectListContainerRef: RefObject<HTMLDivElement>;
 };
 
-const useSelectFocus = (selectProps: SelectProps): SelectFocusManager => {
+const useSelectFocus = (selectProps: SelectProps): SelectFocusApi => {
   const [focusedOptionIndex, setFocusedOptionIndex] = useState<number | null>(
     0
   );

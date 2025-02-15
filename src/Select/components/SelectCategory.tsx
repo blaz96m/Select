@@ -1,24 +1,8 @@
 import React, { memo } from "react";
 import { isElement, isEmpty, isFunction, isNumber, map, some } from "lodash";
-import {
-  CustomSelectCategoryRenderer,
-  SelectOptionList,
-  SelectOptionT,
-} from "./Select/types";
-import { useSelectContext } from "src/stores/providers/SelectProvider";
 
-export type SelectCategoryProps = {
-  categoryOptions: SelectOptionList;
-  categoryName: keyof SelectOptionT;
-  selectedOptions: SelectOptionList | null;
-  focusedOptionIdx: number | null;
-  renderOption: (
-    option: SelectOptionT,
-    index: number,
-    focusedOptionIdx: number | null,
-    selectedOptions: SelectOptionList | null
-  ) => JSX.Element;
-};
+import { SelectCategoryProps } from "src/Select/types/selectComponentTypes";
+import { useSelectContext } from "src/Select/components/SelectProvider";
 
 const SelectCategory = memo(
   ({

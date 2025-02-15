@@ -4,7 +4,7 @@ import {
   SelectState,
   SelectOptionList,
   SelectOptionT,
-} from "src/components/Select/types/selectTypes";
+} from "src/Select/types/selectTypes";
 
 export enum SelectReducerActionTypes {
   OPEN = "OPEN",
@@ -22,40 +22,32 @@ export enum SelectReducerActionTypes {
   RESET_PAGE = "RESET_PAGE",
 }
 
-export type SelectVisibiltyActions = {
+type SelectVisibiltyActions = {
   type:
     | SelectReducerActionTypes.OPEN
     | SelectReducerActionTypes.CLOSE
     | SelectReducerActionTypes.TOGGLE_VISIBILTY;
 };
 
-export type SelectValueActions =
+type SelectValueActions =
   | {
       type: SelectReducerActionTypes.SET_VALUE;
       payload: { option: SelectOptionT; isMultiValue: boolean };
     }
   | { type: SelectReducerActionTypes.CLEAR_VALUE };
 
-export type SelectInputActions =
+type SelectInputActions =
   | { type: SelectReducerActionTypes.SET_INPUT; payload: string }
   | { type: SelectReducerActionTypes.CLEAR_INPUT };
 
-export type SelectOptionSetterAction = {
+type SelectOptionSetterAction = {
   type: SelectReducerActionTypes.SET_OPTIONS;
   payload: SelectOptionList;
 };
 
-export type AddSelectOptionsListAction = {
+type AddSelectOptionsListAction = {
   type: SelectReducerActionTypes.ADD_OPTION_LISTS;
   payload: SelectOptionList;
-};
-
-export type SetFocusedOptionActions = {
-  type: SelectReducerActionTypes.SET_FOCUSED_OPTION;
-  payload: {
-    focusedOptionId: string;
-    focusedCategory?: keyof SelectOptionT;
-  };
 };
 
 export type SelectPageActions = {
@@ -70,7 +62,6 @@ type SelectActions =
   | SelectValueActions
   | SelectOptionSetterAction
   | SelectPageActions
-  | SetFocusedOptionActions
   | AddSelectOptionsListAction;
 
 export type SelectReducerDispatch = Dispatch<SelectActions>;
@@ -113,18 +104,6 @@ export const selectReducer = (
           ...action.payload,
         ],
       };
-
-    case SelectReducerActionTypes.SET_FOCUSED_OPTION: {
-      const { focusedOptionId, focusedCategory } = action.payload;
-      if (state.focusedOptionId == focusedOptionId) {
-        return state;
-      }
-      return {
-        ...state,
-        focusedOptionId: focusedOptionId,
-        focusedCategory: focusedCategory,
-      };
-    }
 
     default:
       return state;

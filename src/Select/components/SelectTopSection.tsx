@@ -1,9 +1,7 @@
 import { isFunction } from "lodash";
 import { ReactNode, memo } from "react";
 import { flushSync } from "react-dom";
-import { useSelectContext } from "src/stores/providers/SelectProvider";
-import { calculateSpaceAndDisplayOptionList } from "src/utils/select";
-import { DropdownClickHandler, SelectFetchFunc } from "./types";
+import { DropdownClickHandler } from "src/Select/types/selectGeneralTypes";
 
 type SelectTopSectionProps = {
   children: ReactNode;

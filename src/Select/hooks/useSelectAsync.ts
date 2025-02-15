@@ -1,21 +1,22 @@
 import { filter, find, isEmpty, isFunction, trim } from "lodash";
 import { useCallback, useEffect, Dispatch, SetStateAction } from "react";
 import {
-  SelectState,
-  SelectOptionList,
   SelectOptionT,
+  SelectFetchFunction,
+} from "src/Select/types/selectGeneralTypes";
+import {
   SelectStateUpdaters,
-  SelectFetchFunc,
-} from "src/components/Select/types";
+  SelectState,
+  SelectApi,
+} from "src/Select/types/selectStateTypes";
 
 import { useQueryManager } from "src/hooks/requests";
-import { ResponseDetails } from "../requests/useQueryManager";
+import { ResponseDetails } from "../../hooks/requests/useQueryManager";
 import { QueryManagerState } from "src/stores/reducers/queryManagerReducer";
-import { SelectApi } from "./useSelect";
 
-export type SelectAsyncState = Pick<QueryManagerState, "searchQuery" | "page">;
+type SelectAsyncState = Pick<QueryManagerState, "searchQuery" | "page">;
 
-export type SelectAsyncApi = {
+type SelectAsyncApi = {
   isLastPage: () => boolean;
   isInitialFetch: () => boolean;
   loadNextPageAsync: () => void;
@@ -31,7 +32,7 @@ const useSelectAsync = (
     fetchOnInputChange?: boolean;
     isLazyInit?: boolean;
     fetchOnScroll?: boolean;
-    fetchFunction: SelectFetchFunc | undefined;
+    fetchFunction: SelectFetchFunction | undefined;
   }
 ): { selectAsyncApi: SelectAsyncApi; selectAsyncState: SelectAsyncState } => {
   const {

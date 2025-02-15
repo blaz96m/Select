@@ -20,21 +20,23 @@ import {
 } from "lodash";
 import {
   SelectOptionList,
-  SelectState,
   CategorizedSelectOptions,
   SelectOptionT,
   SelectKeyboardNavigationDirection,
+  CustomClass,
+  SelectFocusNavigationFallbackDirection,
+  SelectCategoryFocusDetails,
+} from "src/Select/types/selectGeneralTypes";
+
+import { StateSetter, SelectState } from "src/Select/types/selectStateTypes";
+import {
   SelectComponents,
   SelectOptionInnerProps,
   SelectOptionComponentHandlers,
   SelectInputComponentHandlers,
   SelectInputInnerProps,
   SelectComponentHandlers,
-  CustomClass,
-  SelectFocusNavigationFallbackDirection,
-  SelectCategoryFocusDetails,
-  StateSetter,
-} from "src/components/Select/types";
+} from "src/Select/types/selectComponentTypes";
 import { getObjectKeys } from "../data-types/objects/helpers";
 import { FALLBACK_CATEGORY_NAME, INITIAL_STATE } from "./constants";
 
@@ -134,7 +136,7 @@ export const categorizeOptions = (
 
 const getNextOptionIdxInDirection = (
   focusedOptionIdx: number,
-  focusedOptions: SelectOptionT[],
+  focusedOptions: SelectOptionList,
   direction: SelectKeyboardNavigationDirection
 ) => {
   const nextIdxInDirection = getNextIdxInDirection(direction, focusedOptionIdx);
@@ -237,7 +239,7 @@ const getNextIdxInDirection = (
 
 const getFocusedOptionIdxOnCategoryChange = (
   direction: SelectKeyboardNavigationDirection,
-  categoryOptions: SelectOptionT[]
+  categoryOptions: SelectOptionList
 ) => (direction === "down" ? 0 : categoryOptions.length - 1);
 
 export const getCategoryFocusDetails = (

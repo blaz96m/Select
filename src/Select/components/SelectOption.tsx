@@ -8,40 +8,18 @@ import {
   useState,
 } from "react";
 import clsx from "clsx";
-
 import {
-  HandleOptionHover,
-  OptionClickHandler,
   SelectComponents,
   SelectOptionInnerProps,
-  SelectOptionT,
-  SelectStateSetters,
-} from "src/components/Select/types/selectTypes";
+  SelectOptionProps,
+} from "src/Select/types/selectComponentTypes";
 import { isFunction, isNil } from "lodash";
 import {
   generateComponentInnerProps,
   getFocusedOptionIdx,
 } from "src/utils/select";
-import { useSelectContext } from "src/stores/providers/SelectProvider";
+import { useSelectContext } from "src/Select/components/SelectProvider";
 import { FALLBACK_CATEGORY_NAME } from "src/utils/select/constants";
-
-export type SelectOptionProps = {
-  labelKey: keyof SelectOptionT;
-  option: SelectOptionT;
-  optionIndex: number;
-  handleHover: (
-    e: React.MouseEvent<HTMLDivElement, MouseEvent>,
-    isFocused: boolean,
-    optionIndex: number
-  ) => void;
-  getSelectOptionsMap: () => Map<string, HTMLDivElement>;
-  isCategorized: boolean;
-  isFocused: boolean;
-  isSelected: boolean;
-  isDisabled: boolean;
-  onClick: OptionClickHandler;
-  categoryKey?: keyof SelectOptionT;
-};
 
 const SelectOption = memo((props: SelectOptionProps) => {
   const {

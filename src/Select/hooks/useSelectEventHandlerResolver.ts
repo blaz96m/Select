@@ -1,25 +1,24 @@
 import { isFunction } from "lodash";
 import { useCallback } from "react";
-import { flushSync } from "react-dom";
+
 import {
-  CategorizedSelectOptions,
   DefaultSelectEventHandlers,
   EventHandlerFollowupFunctions,
-  SelectAsyncStateUpdaters,
   CustomSelectEventHandlers,
   SelectEventHandlers,
-  SelectFetchFunc,
-  SelectOptionList,
+  SelectFetchFunction,
   SelectOptionT,
+} from "src/Select/types/selectGeneralTypes";
+
+import {
   SelectState,
   SelectStateUpdaters,
-} from "src/components/Select/types";
-import { SelectAsyncState } from "./useSelectAsync";
-import { SelectApi } from "./useSelect";
+  SelectApi,
+} from "src/Select/types/selectStateTypes";
 
 type SelectProps = {
   isLoading: boolean | undefined;
-  fetchFunction: SelectFetchFunc | undefined;
+  fetchFunction: SelectFetchFunction | undefined;
   isInitialFetch: () => boolean;
   lazyInit: boolean;
   handlePageChange: () => void;

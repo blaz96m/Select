@@ -1,20 +1,11 @@
 import React from "react";
-import {
-  CustomSelectClearIndicatorRenderer,
-  HandleClearIndicatorClick,
-  SelectOptionList,
-  SelectStateSetters,
-} from "src/components/Select/types";
+
+import { SelectClearIndicatorProps } from "src/Select/types/selectComponentTypes";
 import { faClose } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { isEmpty, isFunction } from "lodash";
 import clsx from "clsx";
-import { useSelectContext } from "src/stores/providers/SelectProvider";
-
-export type SelectClearIndicatorProps = {
-  handleClearIndicatorClick: HandleClearIndicatorClick;
-  isLoading: boolean | undefined;
-};
+import { useSelectContext } from "src/Select/components/SelectProvider";
 
 const SelectClearIndicator = ({
   handleClearIndicatorClick,

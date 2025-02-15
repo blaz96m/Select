@@ -1,35 +1,18 @@
-import {
-  useCallback,
-  useRef,
-  useEffect,
-  Dispatch,
-  SetStateAction,
-  useMemo,
-} from "react";
-import {
-  SelectReducerDispatch,
-  SelectReducerActionTypes,
-} from "src/stores/reducers/selectReducer";
+import { useCallback, useRef, useEffect, useMemo } from "react";
 import {
   SelectOptionList,
   CategorizedSelectOptions,
   SelectOptionT,
-  SelectState,
-  SelectStateSetters,
   CustomPreventInputUpdate,
-  PreventInputUpdate,
-  OptionClickHandler,
-  HandleValueClear,
-  HandleClearIndicatorClick,
-  SelectStateUpdaters,
   CustomSelectCategorizeFunction,
   SelectSorterFunction,
-  SelectDomRefs,
-  ValueClearClickHandler,
-  SelectEventHandlers,
-  DefaultSelectEventHandlers,
-  SelectFetchFunc,
-} from "src/components/Select/types";
+  SelectFetchFunction,
+} from "src/Select/types/selectGeneralTypes";
+import {
+  SelectState,
+  SelectStateUpdaters,
+  SelectApi,
+} from "src/Select/types/selectStateTypes";
 import {
   cloneDeep,
   filter,
@@ -49,38 +32,10 @@ import {
   isFocusedOptionInViewport,
   scrollToTarget,
 } from "src/utils/select";
-import { SelectDomHelpers } from "./useSelectDomHelper";
 import {
   FALLBACK_CATEGORY_NAME,
   NO_CATEGORY_KEY,
 } from "src/utils/select/constants";
-
-type StateSetter<T> = Dispatch<SetStateAction<T>>;
-
-type CustomSelectStateSetters = {
-  setValue: StateSetter<SelectOptionList>;
-  setOptions?: StateSetter<SelectOptionList>;
-};
-
-export type SelectApi = {
-  handleOptionsSearchTrigger: () => void;
-  onDropdownExpand: () => void;
-  usesInputAsync: boolean;
-  preventInputUpdate: PreventInputUpdate;
-  selectEventHandlers: DefaultSelectEventHandlers;
-  fetchOnScrollToBottom: boolean | undefined;
-  displayedOptions: SelectOptionList | CategorizedSelectOptions;
-  getOriginalOptions: () => SelectOptionList;
-  setOriginalOptions: (options: SelectOptionList) => void;
-  getSelectOptionsMap: () => Map<string, HTMLDivElement>;
-  closeDropdownOnSelect: boolean;
-  focusInput: () => void;
-  selectDomRefs: SelectDomRefs;
-  handlePageReset: () => void;
-  clearInputOnSelect: boolean;
-  loadNextPage: () => void;
-  filterSearchedOptions: () => void;
-};
 
 const useSelect = (
   selectState: SelectState,
@@ -95,12 +50,12 @@ const useSelect = (
     preventInputUpdate: CustomPreventInputUpdate;
     fetchOnScroll: boolean | undefined;
     hasInput: boolean;
-    categoryKey: keyof SelectOptionT & string;
+    categoryKey: (keyof SelectOptionT & string) | undefined;
     removeSelectedOptionsFromList: boolean;
     sortFunction: SelectSorterFunction | undefined;
     customCategorizeFunction?: CustomSelectCategorizeFunction;
     recordsPerPage?: number;
-    fetchFunction: SelectFetchFunc | undefined;
+    fetchFunction: SelectFetchFunction | undefined;
     isLoading: boolean | undefined;
     inputUpdateDebounceDuration?: number;
     isCategorized?: boolean;

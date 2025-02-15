@@ -7,38 +7,17 @@ import {
   useImperativeHandle,
 } from "react";
 import { hasIn, isEmpty, isFunction, trim } from "lodash";
+
 import {
-  SelectOptionList,
-  SelectOptionT,
-  SelectKeyboardNavigationDirection,
-  SelectStateSetters,
-  CustomSelectInputRenderer,
   SelectComponents,
   SelectInputInnerProps,
-  SelectFocusNavigationFallbackDirection,
-  CustomPreventInputUpdate,
-  PreventInputUpdate,
-} from "src/components/Select/types";
+  SelectInputProps,
+} from "src/Select/types/selectComponentTypes";
 import { useInput } from "src/hooks/input";
 import { generateComponentInnerProps } from "src/utils/select";
 import clsx from "clsx";
 
-import { useSelectContext } from "src/stores/providers/SelectProvider";
-
-export type SelectInputProps = {
-  onInputChange: (inputValue: string) => void;
-  inputValue: string;
-  focusNextOption: (
-    fallbackDirection?: SelectFocusNavigationFallbackDirection
-  ) => void;
-  focusPreviousOption: () => void;
-  addOptionOnKeyPress: () => void;
-  hasInput: boolean;
-  handleOptionsSearchTrigger: () => void;
-  disableInputFetchTrigger: boolean;
-  preventInputUpdate: PreventInputUpdate;
-  isLoading?: boolean;
-};
+import { useSelectContext } from "src/Select/components/SelectProvider";
 
 const SelectInput = memo(
   forwardRef<HTMLInputElement, SelectInputProps>((props, ref) => {

@@ -8,3 +8,6 @@ export { default as SelectValueSection } from "./SelectValueSection";
 export { default as SelectIndicatorSection } from "./SelectIndicatorSection";
 export { default as SelectDropdownIndicator } from "./SelectDropdownIndicator";
 export { default as SelectClearIndicator } from "./SelectClearIndicator";
+export { default as SelectCategory } from "./SelectCategory";
+export { default as SelectComponent } from "./Select";
+export { SelectProvider as Select, useSelectContext } from "./SelectProvider";

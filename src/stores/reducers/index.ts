@@ -1,0 +1,1 @@
+export { queryManagerReducer } from "./queryManagerReducer";

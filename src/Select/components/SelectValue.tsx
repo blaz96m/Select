@@ -1,33 +1,25 @@
 import { map, isEmpty, isFunction, head } from "lodash";
+import { ValueClearClickHandler } from "src/Select/types/selectGeneralTypes";
 import {
-  SelectOptionList,
-  SelectOptionT,
   SelectSingleValueProps,
-  HandleValueClear,
-  ValueClearClickHandler,
-} from "./types/selectTypes";
+  SelectValueProps,
+} from "src/Select/types/selectComponentTypes";
 import SelectMultiValueElement from "./SelectMultiValueElement";
 import { memo } from "react";
-import { useSelectContext } from "src/stores/providers/SelectProvider";
-
-export type SelectValueProps = {
-  labelKey: keyof SelectOptionT;
-  value: SelectOptionList;
-  onClear: ValueClearClickHandler;
-};
+import { useSelectContext } from "src/Select/components/SelectProvider";
 
 type SelectValueContainerPropTypes = SelectValueProps & {
   isMultiValue: boolean;
-  placeHolder: string;
+  placeholder: string;
   inputValue: string;
-  onClear: HandleValueClear;
+  onClear: ValueClearClickHandler;
 };
 
 const SelectValue = memo(
   ({
     labelKey,
     isMultiValue,
-    placeHolder,
+    placeholder,
     inputValue,
     onClear,
     value,
@@ -36,7 +28,7 @@ const SelectValue = memo(
     return (
       <>
         {showPlaceholder && (
-          <span className="select__placeholder">{placeHolder}</span>
+          <span className="select__placeholder">{placeholder}</span>
         )}
         {isMultiValue ? (
           <MultiValue value={value} labelKey={labelKey} onClear={onClear} />

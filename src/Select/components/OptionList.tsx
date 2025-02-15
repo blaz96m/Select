@@ -9,24 +9,17 @@ import {
 } from "react";
 import { isEmpty, isFunction, isNull, isNumber, map, each } from "lodash";
 import {
-  CategorizedSelectOptions,
   SelectOptionList,
   SelectOptionT,
+} from "src/Select/types/selectGeneralTypes";
+import {
   SelectCategoryRenderer,
   SelectOptionRenderer,
-} from "./types";
+  OptionListProps,
+} from "src/Select/types/selectComponentTypes";
 import { useScrollManager } from "src/hooks/dom";
 import clsx from "clsx";
 import { OPTIONS_EMPTY_TEXT } from "src/utils/select/constants";
-
-export type OptionListProps = {
-  displayedOptions: SelectOptionList | CategorizedSelectOptions;
-  renderFunction: SelectCategoryRenderer | SelectOptionRenderer;
-  categoryKey: string;
-  isCategorized?: boolean;
-  isLoading?: boolean;
-  handleScrollToBottom: () => void;
-};
 
 const OptionList = memo(
   forwardRef<HTMLDivElement, OptionListProps>(

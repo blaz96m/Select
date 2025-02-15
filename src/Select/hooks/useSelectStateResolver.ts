@@ -3,14 +3,16 @@ import { useCallback } from "react";
 import {
   SelectOptionList,
   SelectOptionT,
+} from "src/Select/types/selectGeneralTypes";
+import {
   SelectState,
   StateSetter,
   SelectStateUpdaters,
-} from "src/components/Select/types";
+} from "src/Select/types/selectStateTypes";
 import {
   SelectReducerActionTypes,
   SelectReducerDispatch,
-} from "src/stores/reducers/selectReducer";
+} from "src/Select/stores/reducers/selectReducer";
 import { resolveStateSetters, resolveStateValue } from "src/utils/select";
 
 type StateCustomSetters = {

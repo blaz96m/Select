@@ -3,7 +3,7 @@ import { ReactNode } from "react";
 type IndicatorSectionProps = {
   children: ReactNode;
   spinner: JSX.Element;
-    isLoading?: boolean;
+  isLoading?: boolean;
 };
 
 const SelectIndicatorSection = ({
@@ -14,9 +14,7 @@ const SelectIndicatorSection = ({
   return (
     <div className="select__top__indicator-section">
       {children}
-      <div className="select__loader">
-      {isLoading && spinner}
-      </div>
+      <div className="select__loader">{isLoading && spinner}</div>
     </div>
   );
 };

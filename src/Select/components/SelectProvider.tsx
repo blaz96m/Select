@@ -8,24 +8,22 @@ import {
   useCallback,
 } from "react";
 import {
-  SelectCustomComponents,
-  SelectOptionList,
-  SelectStateSetters,
-  SelectOptionT,
   CustomSelectEventHandlers,
   EventHandlerFollowupFunctions,
-} from "src/components/Select/types/selectTypes";
+} from "src/Select/types/selectGeneralTypes";
 
-import Select, { SelectProps } from "src/components/Select/Select";
+import {
+  SelectCustomComponents,
+  SelectProps,
+} from "src/Select/types/selectComponentTypes";
+
+import { SelectComponent } from "src/Select/components";
 import {
   useSelect,
   useSelectAsync,
   useSelectStateResolver,
-} from "src/hooks/select";
-import {
-  SelectReducerActionTypes,
-  selectReducer,
-} from "../reducers/selectReducer";
+} from "src/Select/hooks";
+import { selectReducer } from "src/Select/stores/reducers";
 import { initializeState } from "src/utils/select";
 import { omit, isFunction, noop, every } from "lodash";
 import { getObjectKeys } from "src/utils/data-types/objects/helpers";
@@ -187,7 +185,7 @@ export const SelectProvider = memo(
 
     return (
       <SelectContext.Provider value={data}>
-        <Select
+        <SelectComponent
           {...props}
           selectState={{ ...selectState, page: resolvedPageValue }}
           defaultSelectEventHandlers={selectEventHandlers}

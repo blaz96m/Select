@@ -1,5 +1,4 @@
 import { useState, memo, useCallback } from "react";
-import Select from "./components/Select/Select";
 import {
   SelectOptionT,
   SelectOptionInnerProps,
@@ -25,10 +24,10 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { SelectInputProps } from "./components/Select/SelectInput";
 import { SelectClearIndicatorProps } from "./components/Select/SelectClearIndicator";
-import { SelectCategoryProps } from "./components/SelectCategory";
+import { SelectCategoryProps } from "./Select/components/SelectCategory";
 
 import axiosClient from "./api/axios/axiosClient";
-import { SelectProvider } from "./stores/providers/SelectProvider";
+import { Select } from "./Select/components";
 
 function App() {
   let currCategoryCount = 1;
@@ -42,7 +41,7 @@ function App() {
       category: `Category-${currCategoryCount}`,
     };
   });
-  const [value, setValue] = useState<SelectOptionT[]>([]);
+  const [value, setValue] = useState<SelectOptionList>([]);
   const [currLabel, setCurrLabel] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [count, setCount] = useState(0);
@@ -211,7 +210,7 @@ function App() {
       {message && <div>Selected Item: {message}</div>}
       <div>Count: {count}</div>
       <div>Selected Value: {currLabel}</div>
-      <SelectProvider
+      <Select
         fetchFunction={getMovieList}
         isMultiValue={false}
         preventInputUpdate={preventer}
