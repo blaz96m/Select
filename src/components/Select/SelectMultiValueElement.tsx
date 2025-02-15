@@ -8,6 +8,7 @@ import {
   SelectMultiValueInnerProps,
   SelectOptionList,
   HandleValueClear,
+  ValueClearClickHandler,
 } from "./types/selectTypes";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTimes } from "@fortawesome/free-solid-svg-icons";
@@ -18,7 +19,7 @@ export type SelectMultiValueProps = {
   value: SelectOptionT;
   labelKey: keyof SelectOptionT;
   valueList: SelectOptionList;
-  handleValueClear: HandleValueClear;
+  handleValueClear: ValueClearClickHandler;
 };
 
 const SelectMultiValueElement = ({
@@ -33,19 +34,17 @@ const SelectMultiValueElement = ({
   const context = useSelectContext();
   const {
     components: { SelectMultiValueElement: customComponent },
-    getSelectStateSetters,
   } = context;
 
   if (isFunction(customComponent)) {
     const props = {
       value,
       labelKey,
-      getSelectStateSetters,
       valueList,
       handleValueClear,
     };
     const innerProps = { onClick: handleValueClear, className };
-    return customComponent({ ...props, getSelectStateSetters }, innerProps);
+    return customComponent({ ...props }, innerProps);
   }
   return (
     <div className={className}>
@@ -53,7 +52,7 @@ const SelectMultiValueElement = ({
       <div
         className="select__value--icon__container"
         onClick={(e: React.MouseEvent<HTMLDivElement, MouseEvent>) =>
-          handleValueClear(e, value.id)
+          handleValueClear(e, value)
         }
       >
         <FontAwesomeIcon className="select__value--icon" icon={faTimes} />

@@ -23,7 +23,6 @@ const SelectClearIndicator = ({
   const context = useSelectContext();
   const {
     components: { SelectClearIndicatorElement },
-    getSelectStateSetters,
   } = context;
 
   const customComponent = SelectClearIndicatorElement;
@@ -37,7 +36,6 @@ const SelectClearIndicator = ({
   if (isFunction(customComponent)) {
     return customComponent(
       {
-        getSelectStateSetters,
         isLoading,
         handleClearIndicatorClick,
       },

@@ -15,6 +15,8 @@ import {
   first,
   isNumber,
   cloneDeep,
+  isNil,
+  isFunction,
 } from "lodash";
 import {
   SelectOptionList,
@@ -31,15 +33,16 @@ import {
   CustomClass,
   SelectFocusNavigationFallbackDirection,
   SelectCategoryFocusDetails,
+  StateSetter,
 } from "src/components/Select/types";
 import { getObjectKeys } from "../data-types/objects/helpers";
 import { FALLBACK_CATEGORY_NAME, INITIAL_STATE } from "./constants";
 
 export const initializeState = (
-  selectOptions: SelectOptionList | []
+  selectOptions: SelectOptionList | undefined
 ): SelectState => ({
   ...INITIAL_STATE,
-  selectOptions: selectOptions,
+  selectOptions: selectOptions || [],
 });
 
 export const filterOptionListBySearchValue = (
@@ -368,6 +371,11 @@ export const isFocusedOptionInViewport = (
   );
 };
 
+export const resolveStateValue = <T>(
+  defaultStateValue: T,
+  customStateValue: T | undefined | null
+): T => (!isNil(customStateValue) ? customStateValue : defaultStateValue);
+
 export const scrollToTarget = (
   target: HTMLDivElement,
   options: ScrollIntoViewOptions = { behavior: "smooth", block: "center" }
@@ -376,6 +384,13 @@ export const scrollToTarget = (
   target.scrollIntoView(options);
 };
 
+export const resolveStateSetters = <T = void>(
+  defaultStateSetterFunction: T extends void ? () => void : (arg: T) => void,
+  customStateSetter?: T extends void ? () => void : StateSetter<T>
+): T extends void ? () => void : (arg: T) => void => {
+  if (isFunction(customStateSetter)) return customStateSetter;
+  return defaultStateSetterFunction;
+};
 export const generateComponentInnerProps = (
   componentType: keyof typeof SelectComponents,
   props: SelectComponentHandlers

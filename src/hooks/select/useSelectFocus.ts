@@ -1,5 +1,5 @@
 import { first, head, isEmpty, isNull, isNumber, isObject, last } from "lodash";
-import { useCallback, useState } from "react";
+import { Ref, RefObject, useCallback, useState } from "react";
 import {
   CategorizedSelectOptions,
   SelectFocusManager,
@@ -24,7 +24,8 @@ type SelectProps = {
   displayedOptions: SelectOptionList | CategorizedSelectOptions;
   isCategorized: boolean;
   categoryKey: string;
-  handleScrollToFocusedOption: (optionId: string) => void;
+  getSelectOptionsMap: () => Map<string, HTMLDivElement>;
+  selectListContainerRef: RefObject<HTMLDivElement>;
 };
 
 const useSelectFocus = (selectProps: SelectProps): SelectFocusManager => {
@@ -38,8 +39,20 @@ const useSelectFocus = (selectProps: SelectProps): SelectFocusManager => {
     displayedOptions,
     isCategorized,
     categoryKey,
-    handleScrollToFocusedOption,
+    getSelectOptionsMap,
+    selectListContainerRef,
   } = selectProps;
+
+  const handleScrollToFocusedOption = useCallback((optionId: string) => {
+    const listContainer = selectListContainerRef.current;
+    const selectOptionMap = getSelectOptionsMap();
+    const selectOptionNode = selectOptionMap.get(optionId)!;
+    if (listContainer) {
+      if (!isFocusedOptionInViewport(listContainer, selectOptionNode)) {
+        scrollToTarget(selectOptionNode);
+      }
+    }
+  }, []);
 
   const setCategoryFocusDetails = (
     focusDetails: SelectCategoryFocusDetails | null

@@ -33,7 +33,6 @@ export type SelectInputProps = {
   ) => void;
   focusPreviousOption: () => void;
   addOptionOnKeyPress: () => void;
-  setInput: (inputValue: string) => void;
   hasInput: boolean;
   handleOptionsSearchTrigger: () => void;
   disableInputFetchTrigger: boolean;
@@ -49,18 +48,17 @@ const SelectInput = memo(
       onInputChange,
       focusNextOption,
       focusPreviousOption,
-      setInput,
       preventInputUpdate,
       hasInput,
       addOptionOnKeyPress,
       isLoading,
     } = props;
+
     const innerRef = useRef<HTMLInputElement>(null);
 
     const selectContext = useSelectContext();
     const {
       components: { SelectInputElement: customComponentProperties },
-      getSelectStateSetters,
     } = selectContext;
 
     const className = clsx({
@@ -74,8 +72,7 @@ const SelectInput = memo(
       onInputChange,
       preventInputUpdate,
       handleOptionsSearchTrigger,
-      inputValue,
-      setInput
+      inputValue
     );
 
     const handleKeyPress = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -107,13 +104,13 @@ const SelectInput = memo(
       return customComponentProperties.renderContainer ? (
         <div className="select__input__wrapper">
           {customComponentProperties.customComponent(
-            { ...props, getSelectStateSetters },
+            { ...props },
             inputInnerProps as SelectInputInnerProps
           )}
         </div>
       ) : (
         customComponentProperties.customComponent(
-          { ...props, getSelectStateSetters },
+          { ...props },
           inputInnerProps as SelectInputInnerProps
         )
       );

@@ -48,18 +48,30 @@ import {
 import {
   CategorizedSelectOptions,
   CustomPreventInputUpdate,
+  CustomSelectCategorizeFunction,
+  DefaultSelectEventHandlers,
   HandleClearIndicatorClick,
   HandleValueClear,
+  InputChangeHandler,
   OptionClickHandler,
   PreventInputUpdate,
   SelectCategoryT,
   SelectCustomComponents,
+  CustomSelectEventHandlers,
   SelectFetchFunc,
   SelectOptionList,
   SelectOptionT,
   SelectSorterFunction,
   SelectState,
+  StateSetter,
   selectRendererOverload,
+  CustomOptionClickHandler,
+  CustomValueClearClickHandler,
+  CustomClearIndicatorClickHandler,
+  DropdownClickHandler,
+  CustomScrollToBottomHandler,
+  EventHandlerFollowupFunctions,
+  SelectStateUpdaters,
 } from "./types";
 
 import "./styles/_select.scss";
@@ -70,33 +82,45 @@ import {
   SelectDomHelpers,
   SelectDomRefs,
 } from "src/hooks/select/useSelectDomHelper";
-import { useSelectFocus } from "src/hooks/select";
+import {
+  useSelectEventHandlerResolver,
+  useSelectFocus,
+} from "src/hooks/select";
 
 export type SelectComponentProps = SelectProps & {
-  useInputAsync: boolean;
+  usesInputAsync: boolean;
   isLastPage: () => boolean;
   displayedOptions: SelectOptionList | CategorizedSelectOptions;
   preventInputUpdate: PreventInputUpdate;
-  handlePageChange: () => void;
-  handleValueClear: HandleValueClear;
-  setInputValue: (inputValue: string) => void;
-  handleOptionClick: OptionClickHandler;
-  handleClearIndicatorClick: HandleClearIndicatorClick;
-  handleDropdownClick: () => void;
-  handleInputChange: (inputValue: string) => void;
-  resetPage: () => void;
+  onDropdownExpand: () => void;
+  loadNextPage: () => void;
+  selectStateUpdaters: SelectStateUpdaters;
+  fetchOnScrollToBottom: boolean | undefined;
+  getSelectOptionsMap: () => Map<string, HTMLDivElement>;
+  defaultSelectEventHandlers: DefaultSelectEventHandlers;
+  customSelectEventHandlers: CustomSelectEventHandlers;
+  eventHandlerFollowups: EventHandlerFollowupFunctions;
   hasPaging?: boolean;
-  isLazyInitFetchComplete?: boolean;
-} & { selectState: SelectState } & {
-  selectApi: SelectApi;
-} & {
-  selectDomHelpers: SelectDomHelpers;
-} & {
+  handlePageChange: () => void;
+  handlePageReset: () => void;
+  selectState: SelectState;
   selectDomRefs: SelectDomRefs;
 };
 
 export type SelectProps = {
   value: SelectOptionT[] | [];
+  onOptionClick?: CustomOptionClickHandler;
+  onAfterOptionClick?: CustomOptionClickHandler;
+  onClearIndicatorClick?: CustomClearIndicatorClickHandler;
+  onAfterClearIndicatorClick?: CustomClearIndicatorClickHandler;
+  onDropdownClick?: DropdownClickHandler;
+  onAfterDropdownClick?: DropdownClickHandler;
+  onInputUpdate?: InputChangeHandler;
+  onAfterInputUpdate?: InputChangeHandler;
+  onValueClear?: CustomValueClearClickHandler;
+  onAfterValueClear?: CustomValueClearClickHandler;
+  onScrollToBottom?: CustomScrollToBottomHandler;
+  onAfterScrollToBottom?: CustomScrollToBottomHandler;
   labelKey: keyof SelectOptionT;
   onChange: Dispatch<SetStateAction<SelectOptionT[]>>;
   isMultiValue: boolean;
@@ -105,69 +129,69 @@ export type SelectProps = {
   removeSelectedOptionsFromList: boolean;
   disableInputFetchTrigger: boolean;
   disableInputUpdate: boolean;
-  onValueClear: HandleValueClear;
-  handlePageChange: () => void;
-  clearInputOnSelect?: boolean;
+  inputValue?: string;
+  loadNextPage: () => void;
+  clearInputOnSelect: boolean;
   categoryKey: keyof SelectOptionT & string;
-  onOptionSelect?: (option: SelectOptionT) => void;
+  isInitialFetch: () => boolean;
+
   isCategorized?: boolean;
-  selectOptions?: SelectOptionT[] | [];
-  fetchOnScroll?: boolean;
+  setInputValue?: StateSetter<string>;
+  selectOptions?: SelectOptionT[] | undefined;
+  setOptions?: StateSetter<SelectOptionList>;
+  fetchOnScroll: boolean;
   isOptionDisabled?: (option: SelectOptionT) => boolean;
   inputFilterFunction: (
     selectOptions: SelectOptionList,
     inputValue: string
   ) => SelectOptionList;
-
-  lazyInit?: boolean;
+  lazyInit: boolean;
   hasInput: boolean;
-  handlePageReset: () => void;
+  isOpen?: boolean;
+  setIsOpen?: StateSetter<boolean>;
   useInputUpdateTriggerEffect: boolean;
   inputUpdateDebounceDuration?: number;
   handleOptionsSearchTrigger: () => void;
   placeHolder?: string;
   preventInputUpdate: CustomPreventInputUpdate;
-  fetchFunc?: SelectFetchFunc;
-  sorterFn?: SelectSorterFunction;
-  onInputChange: (inputValue: string) => void;
-  onScrollToBottom?: (
-    page: number,
-    options: SelectOptionList | CategorizedSelectOptions
-  ) => void;
+  fetchFunction?: SelectFetchFunc;
+  sortFunction?: SelectSorterFunction;
   onPageChange?: (page: number) => void;
   showClearIndicator?: boolean;
   useDataPartitioning?: boolean;
   isLoading?: boolean;
-  onDropdownExpand?: () => void;
-  onDropdownCollapse?: () => void;
-  categorizeFunction?: (options: SelectOptionList) => CategorizedSelectOptions;
+  categorizeFunction?: CustomSelectCategorizeFunction;
   recordsPerPage?: number;
 };
 
 const Select = ({
-  value,
   isMultiValue,
   isLoading,
   onScrollToBottom,
   onPageChange,
-  selectApi,
   selectState,
   hasPaging,
   displayedOptions,
-  selectDomHelpers,
   selectDomRefs,
-  handlePageChange,
+  loadNextPage,
+  lazyInit = false,
   isOptionDisabled,
+  onDropdownExpand,
   preventInputUpdate,
-  handleOptionClick,
-  handleInputChange,
+  clearInputOnSelect,
+  defaultSelectEventHandlers,
+  customSelectEventHandlers,
+  eventHandlerFollowups,
+  fetchOnScrollToBottom,
+  usesInputAsync,
   handleOptionsSearchTrigger,
-  setInputValue,
-  handleValueClear,
-  resetPage,
-  handleDropdownClick,
-  handleClearIndicatorClick,
-  closeDropdownOnSelect = false,
+  isInitialFetch,
+  fetchFunction,
+  getSelectOptionsMap,
+  selectStateUpdaters,
+  handlePageChange,
+  handlePageReset,
+  closeDropdownOnSelect,
   disableInputFetchTrigger = false,
   hasInput = true,
   removeSelectedOptionsFromList = true,
@@ -177,33 +201,65 @@ const Select = ({
   labelKey = "name",
   isCategorized = false,
 }: SelectComponentProps) => {
-  const { getSelectOptionsMap, focusInput, handleScrollToFocusedOption } =
-    selectDomHelpers;
-
-  const { filterSearchedOptions } = selectApi;
-
   const { inputRef, selectListContainerRef } = selectDomRefs;
 
-  const { isOpen, inputValue, page } = selectState;
+  const { isOpen, inputValue, value, page } = selectState;
 
   const { selectFocusHandlers, state: focusState } = useSelectFocus({
     displayedOptions,
     isCategorized,
     categoryKey,
-    handleScrollToFocusedOption,
+    getSelectOptionsMap,
+    selectListContainerRef,
   });
-
-  const { focusedOptionCategory, focusedOptionIndex } = focusState;
 
   const {
     focusNextOption,
     focusPreviousOption,
-    setFocusOnHover,
+    resetFocus,
     handleOptionFocusOnSelectByClick,
     handleOptionFocusOnSelectByKeyPress,
     isOptionFocused,
     handleOptionHover,
   } = selectFocusHandlers;
+
+  const { focusedOptionCategory, focusedOptionIndex } = focusState;
+
+  const selectEventHandlers = useSelectEventHandlerResolver(
+    defaultSelectEventHandlers,
+    customSelectEventHandlers,
+    eventHandlerFollowups,
+    selectStateUpdaters,
+    {
+      usesInputAsync,
+      clearInputOnSelect,
+      onDropdownExpand,
+      isLoading,
+      fetchFunction,
+      isInitialFetch,
+      closeDropdownOnSelect,
+      value,
+      handlePageChange,
+      handlePageReset,
+      inputValue,
+      isOpen,
+      handleFocusOnClick: handleOptionFocusOnSelectByClick,
+      page,
+      displayedOptions,
+      resetFocus,
+      fetchOnScrollToBottom,
+      lazyInit,
+    }
+  );
+
+  const {
+    handleClearIndicatorClick,
+    handleDropdownClick,
+    handleInputChange,
+    handleOptionClick,
+    handleScrollToBottom,
+    handleValueClearClick,
+  } = selectEventHandlers;
 
   const handleOptionRender = useCallback(
     (
@@ -217,33 +273,20 @@ const Select = ({
         <SelectOption
           key={option.id}
           option={option}
+          onClick={handleOptionClick}
           optionIndex={index}
           getSelectOptionsMap={getSelectOptionsMap}
-          handleFocusOnClick={handleOptionFocusOnSelectByClick}
-          onSelect={handleOptionClick}
           handleHover={handleOptionHover}
           categoryKey={categoryKey}
           isCategorized={isCategorized}
-          resetPage={resetPage}
           labelKey={labelKey}
           isFocused={isFocused}
           isSelected={isSelected}
           isDisabled={isDisabled}
-          removeSelectedOptionsFromList={removeSelectedOptionsFromList}
         />
       );
     },
-    [
-      handleOptionFocusOnSelectByClick,
-      isMultiValue,
-      closeDropdownOnSelect,
-      labelKey,
-      removeSelectedOptionsFromList,
-      resetPage,
-      isCategorized,
-      categoryKey,
-      setFocusOnHover,
-    ]
+    [labelKey, isCategorized, categoryKey, handleOptionHover]
   );
 
   const renderOptionFromList = useCallback(
@@ -324,14 +367,14 @@ const Select = ({
 
   return (
     <Select.Container>
-      <Select.Top handleDropdownClick={handleDropdownClick}>
+      <Select.Top onClick={handleDropdownClick}>
         <Select.ValueSection isMultiValue={isMultiValue}>
           <Select.Value
             labelKey={labelKey}
             isMultiValue={isMultiValue}
             placeHolder={placeHolder}
             inputValue={inputValue}
-            handleValueClear={handleValueClear}
+            onClear={handleValueClearClick}
             value={value}
           />
 
@@ -341,7 +384,6 @@ const Select = ({
             focusNextOption={focusNextOption}
             focusPreviousOption={focusPreviousOption}
             addOptionOnKeyPress={handleOptionFocusOnSelectByKeyPress}
-            setInput={setInputValue}
             handleOptionsSearchTrigger={handleOptionsSearchTrigger}
             preventInputUpdate={preventInputUpdate}
             key="select-input"
@@ -367,13 +409,9 @@ const Select = ({
       {isOpen && (
         <Select.OptionList
           categoryKey={categoryKey}
+          handleScrollToBottom={handleScrollToBottom}
           ref={selectListContainerRef}
           displayedOptions={displayedOptions}
-          customOnScrollToBottom={onScrollToBottom}
-          handlePageChange={handlePageChange}
-          onPageChange={onPageChange}
-          page={page}
-          hasPaging={hasPaging}
           isLoading={isLoading}
           renderFunction={isCategorized ? renderCategory : renderOptionFromList}
           isCategorized={isCategorized}

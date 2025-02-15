@@ -5,6 +5,7 @@ import { SelectValueProps } from "../SelectValue";
 import { SelectMultiValueProps } from "src/components/Select/SelectMultiValueElement";
 import { SelectInputProps } from "src/components/Select/SelectInput";
 import { SelectCategoryProps } from "src/components/SelectCategory";
+import { Dispatch, SetStateAction } from "react";
 
 export type SelectOptionT = {
   id: string;
@@ -28,7 +29,7 @@ export type SelectState = {
 export type SelectStateSetters = {
   closeDropdown: () => void;
   openDropdown: () => void;
-  toggleDropdown: () => void;
+  toggleDropdownVisibility: () => void;
   setInputValue: (value: string) => void;
   clearInput: () => void;
   setOptions: (options: SelectOptionList) => void;
@@ -73,8 +74,15 @@ export type SelectFocusManager = {
 
 export type HandleValueClear = (
   e: React.MouseEvent<HTMLDivElement, MouseEvent>,
-  optionId: string
+  option: SelectOptionT
 ) => void;
+
+export type SelectDomRefs = {
+  selectListContainerRef: React.RefObject<HTMLDivElement>;
+  selectOptionRef: React.RefObject<HTMLDivElement>;
+  inputRef: React.RefObject<HTMLInputElement>;
+  selectOptionsRef: React.MutableRefObject<Map<string, HTMLDivElement> | null>;
+};
 
 export type SelectSorterFunction = (
   options: SelectOptionList | CategorizedSelectOptions
@@ -87,11 +95,6 @@ export type SelectCategorizeFuntion = (
 export type CustomSelectCategorizeFunction = (
   options: SelectOptionList
 ) => CategorizedSelectOptions;
-
-export type SelectFetchFunction = (
-  link: string,
-  params?: { searchQuery?: string; page?: number; [key: string]: any }
-) => { data: any[]; totalRecords?: number };
 
 export type SelectKeyboardNavigationDirection = "down" | "up";
 
@@ -193,7 +196,7 @@ export type SelectOptionComponentHandlers = {
   option: SelectOptionT;
   isCategorized: boolean;
   categoryKey?: keyof SelectOptionT;
-  handleOptionClick: (option: SelectOptionT) => void;
+  handleOptionClick: (option: SelectOptionT, isSelected: boolean) => void;
   handleMouseHover: (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => void;
   className: string;
   refCallback: (node: HTMLDivElement | null) => void;
@@ -224,16 +227,30 @@ export type SelectMultiValueCustomComponentProps = {
 } & Omit<SelectValueProps, "value">;
 
 export type SelectMultiValueInnerProps = {
-  onClick: (
-    e: React.MouseEvent<HTMLDivElement, MouseEvent>,
-    valueId: string
-  ) => void;
+  onClick: HandleValueClear;
   className: string;
 };
+
+export type StateSetter<T> = Dispatch<SetStateAction<T>> | ((arg: T) => void);
 
 export type HandleClearIndicatorClick = (
   e: React.MouseEvent<HTMLDivElement, MouseEvent>
 ) => void;
+
+export type SelectStateUpdaters = {
+  setInputValue: (inputValue: string) => void;
+  toggleDropdownVisibility: () => void;
+  selectValue: (option: SelectOptionT) => void;
+  addOptions: (options: SelectOptionList) => void;
+  openDropdown: () => void;
+  closeDropdown: () => void;
+  resetPage: () => void;
+  loadNextPage: () => void;
+  clearInput: () => void;
+  setSelectOptions: (options: SelectOptionList) => void;
+  clearAllValues: () => void;
+  clearValue: (optionId: keyof SelectOptionT) => void;
+};
 
 type CustomSelectComponentRenderer<
   ComponentPropsT extends SelectCustomComponentProps,
@@ -245,9 +262,7 @@ type CustomSelectComponentRenderer<
       innerProps: InnerPropsT
     ) => JSX.Element;
 
-type CustomComponentProps<T> = T & {
-  getSelectStateSetters: () => SelectStateSetters;
-};
+type CustomComponentProps<T> = T;
 
 export type CustomSelectOptionRenderer = CustomSelectComponentRenderer<
   SelectOptionProps,
@@ -296,15 +311,83 @@ export type SelectCustomComponents = {
   };
 };
 
+export type SelectEventHandlers = {
+  handleValueClearClick: ValueClearClickHandler;
+  handleOptionClick: OptionClickHandler;
+  handleClearIndicatorClick: ClearIndicatorClickHanlder;
+  handleDropdownClick: DropdownClickHandler;
+  handleInputChange: InputChangeHandler;
+  handleScrollToBottom: () => void;
+};
+
+export type CustomValueClearClickHandler = (
+  e: React.MouseEvent<HTMLDivElement, MouseEvent>,
+  option: SelectOptionT
+) => void;
+
+export type CustomOptionClickHandler = (
+  option: SelectOptionT,
+  isSelected: boolean
+) => void;
+
+export type CustomClearIndicatorClickHandler = (
+  e: React.MouseEvent<HTMLDivElement, MouseEvent>,
+  inputValue: string,
+  value: SelectOptionList
+) => void;
+
+export type CustomScrollToBottomHandler = (
+  options: SelectOptionList | CategorizedSelectOptions,
+  page: number
+) => void;
+
+export type CustomDropdownClickHandler = (isOpen: boolean) => void;
+
+export type CustomSelectEventHandlers = {
+  onInputUpdate?: InputChangeHandler;
+  onValueClear?: CustomValueClearClickHandler;
+  onOptionClick?: CustomOptionClickHandler;
+  onClearIndicatorClick?: CustomClearIndicatorClickHandler;
+  onDropdownClick?: CustomDropdownClickHandler;
+  onScrollToBottom?: CustomScrollToBottomHandler;
+};
+
+export type EventHandlerFollowupFunctions = {
+  onAfterInputUpdate?: InputChangeHandler;
+  onAfterValueClear?: CustomValueClearClickHandler;
+  onAfterOptionClick?: CustomOptionClickHandler;
+  onAfterClearIndicatorClick?: CustomClearIndicatorClickHandler;
+  onAfterDropdownClick?: CustomDropdownClickHandler;
+  onAfterScrollToBottom?: CustomScrollToBottomHandler;
+};
+
+export type InputChangeHandler = (
+  inputValue: string,
+  value?: SelectOptionList
+) => void;
+
+export type DropdownClickHandler = () => void;
+
+export type ClearIndicatorClickHanlder = (
+  e: React.MouseEvent<HTMLDivElement, MouseEvent>
+) => void;
+
+export type ValueClearClickHandler = (
+  e: React.MouseEvent<HTMLDivElement, MouseEvent>,
+  option: SelectOptionT
+) => void;
+
 export type OptionClickHandler = (
   option: SelectOptionT,
-  optionIndex: number,
-  isSelected: boolean,
-  handleOptionFocusAfterClick: (
-    optionIndex: number,
-    optionCategory: string
-  ) => void
+  isFocused: boolean,
+  focusedOptionIdx: number,
+  focusedCategory: string
 ) => void;
+
+export type SelectAsyncStateUpdaters = {
+  handlePageResetAsync: () => void;
+  loadNextPageAsync: () => void;
+};
 
 export type CustomClass = { className: string; override?: boolean };
 
@@ -325,6 +408,20 @@ export type CustomClasses = {
   selectSingleValue?: CustomClass;
   selectMultiValue?: CustomClass;
   selectCategory?: CustomClass;
+};
+
+export type DefaultSelectEventHandlers = Omit<
+  SelectEventHandlers,
+  | "handleValueClearClick"
+  | "handleScrollToBottom"
+  | "handleOptionClick"
+  | "handleDropdownClick"
+> & {
+  handleValueClearClick: (
+    e: React.MouseEvent<HTMLDivElement, MouseEvent>,
+    optionId: string
+  ) => void;
+  handleOptionClick: (option: SelectOptionT, isSelected: boolean) => void;
 };
 
 export enum SelectComponents {

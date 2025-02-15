@@ -55,6 +55,10 @@
       display: inline;
     }
 
+    &:disabled {
+      background-color: transparent;
+    }
+
     &:focus {
       .dropdown__top__container {
         outline: 1px solid blue;

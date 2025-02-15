@@ -1,5 +1,7 @@
 export { default as useSelect } from "./useSelect";
 export { default as useSelectAsync } from "./useSelectAsync";
-export { default as useSelectComputation } from "./useSelectComputation";
 export { default as useSelectDomHelper } from "./useSelectDomHelper";
 export { default as useSelectFocus } from "./useSelectFocus";
+export { default as useSelectPropertiesResolver } from "./useSelectPropertiesResolver";
+export { default as useSelectStateResolver } from "./useSelectStateResolver";
+export { default as useSelectEventHandlerResolver } from "./useSelectEventHandlerResolver";

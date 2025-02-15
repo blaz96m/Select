@@ -19,6 +19,7 @@ export enum SelectReducerActionTypes {
   ADD_OPTION_CATEGORIES = "ADD_OPTION_CATEGORIES",
   SET_FOCUSED_OPTION = "SET_FOCUSED:OPTION",
   GO_TO_NEXT_PAGE = "GO_TO_NEXT_PAGE",
+  RESET_PAGE = "RESET_PAGE",
 }
 
 export type SelectVisibiltyActions = {
@@ -26,10 +27,6 @@ export type SelectVisibiltyActions = {
     | SelectReducerActionTypes.OPEN
     | SelectReducerActionTypes.CLOSE
     | SelectReducerActionTypes.TOGGLE_VISIBILTY;
-};
-
-export type SelectPageAction = {
-  type: SelectReducerActionTypes.GO_TO_NEXT_PAGE;
 };
 
 export type SelectValueActions =
@@ -62,7 +59,9 @@ export type SetFocusedOptionActions = {
 };
 
 export type SelectPageActions = {
-  type: SelectReducerActionTypes.GO_TO_NEXT_PAGE;
+  type:
+    | SelectReducerActionTypes.GO_TO_NEXT_PAGE
+    | SelectReducerActionTypes.RESET_PAGE;
 };
 
 type SelectActions =
@@ -72,8 +71,7 @@ type SelectActions =
   | SelectOptionSetterAction
   | SelectPageActions
   | SetFocusedOptionActions
-  | AddSelectOptionsListAction
-  | SelectPageAction;
+  | AddSelectOptionsListAction;
 
 export type SelectReducerDispatch = Dispatch<SelectActions>;
 
@@ -91,7 +89,7 @@ export const selectReducer = (
       return { ...state, isOpen: !state.isOpen };
     case SelectReducerActionTypes.SET_INPUT:
       return state.inputValue !== action.payload
-        ? { ...state, inputValue: action.payload }
+        ? { ...state, inputValue: action.payload, isOpen: true }
         : state;
     case SelectReducerActionTypes.CLEAR_INPUT:
       return { ...state, inputValue: "" };
@@ -103,6 +101,9 @@ export const selectReducer = (
         : { ...state, selectOptions: action.payload };
     case SelectReducerActionTypes.GO_TO_NEXT_PAGE:
       return { ...state, page: state.page + 1 };
+
+    case SelectReducerActionTypes.RESET_PAGE:
+      return { ...state, page: 1 };
 
     case SelectReducerActionTypes.ADD_OPTION_LISTS:
       return {

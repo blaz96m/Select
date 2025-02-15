@@ -18,21 +18,12 @@ const useInput = (
     ...args: any
   ) => boolean,
   inputEffectTriggerFunction?: (...args: any) => any,
-  customInputState?: string,
-  /* TODO - FIX */
-  customInputSetter?:
-    | Dispatch<SetStateAction<string>>
-    | ((value: string) => void)
+  customInputState?: string
 ): [string, (e: ChangeEvent<HTMLInputElement>) => void] => {
   const [input, setInput] = useState<string>("");
 
   const isInitialRef = useRef(true);
 
-  const updateInputValue = isFunction(customInputSetter)
-    ? customInputSetter
-    : setInput;
-
-  // TODO ADD STATE RESOLVER
   const inputValue = !isNil(customInputState) ? customInputState : input;
 
   const shouldCancelInputUpdate = useCallback(
@@ -47,8 +38,9 @@ const useInput = (
       e.preventDefault();
       return;
     }
-    updateInputValue(e.target.value);
-    isFunction(onInputUpdate) && onInputUpdate(e.target.value);
+    isFunction(onInputUpdate)
+      ? onInputUpdate(e.target.value)
+      : setInput(inputValue);
   };
 
   useEffect(() => {

@@ -1,9 +1,10 @@
-import { map, isEmpty, isFunction } from "lodash";
+import { map, isEmpty, isFunction, head } from "lodash";
 import {
   SelectOptionList,
   SelectOptionT,
   SelectSingleValueProps,
   HandleValueClear,
+  ValueClearClickHandler,
 } from "./types/selectTypes";
 import SelectMultiValueElement from "./SelectMultiValueElement";
 import { memo } from "react";
@@ -12,14 +13,14 @@ import { useSelectContext } from "src/stores/providers/SelectProvider";
 export type SelectValueProps = {
   labelKey: keyof SelectOptionT;
   value: SelectOptionList;
-  handleValueClear: HandleValueClear;
+  onClear: ValueClearClickHandler;
 };
 
 type SelectValueContainerPropTypes = SelectValueProps & {
   isMultiValue: boolean;
   placeHolder: string;
   inputValue: string;
-  handleValueClear: HandleValueClear;
+  onClear: HandleValueClear;
 };
 
 const SelectValue = memo(
@@ -28,7 +29,7 @@ const SelectValue = memo(
     isMultiValue,
     placeHolder,
     inputValue,
-    handleValueClear,
+    onClear,
     value,
   }: SelectValueContainerPropTypes) => {
     const showPlaceholder = isEmpty(value) && isEmpty(inputValue);
@@ -38,13 +39,9 @@ const SelectValue = memo(
           <span className="select__placeholder">{placeHolder}</span>
         )}
         {isMultiValue ? (
-          <MultiValue
-            value={value}
-            labelKey={labelKey}
-            handleValueClear={handleValueClear}
-          />
+          <MultiValue value={value} labelKey={labelKey} onClear={onClear} />
         ) : (
-          <SingleValue value={value[0]} labelKey={labelKey} />
+          <SingleValue value={head(value)!} labelKey={labelKey} />
         )}
       </>
     );
@@ -57,13 +54,11 @@ const SingleValue = ({ value, labelKey }: SelectSingleValueProps) => {
 
   const {
     components: { SelectSingleValueElement: customComponent },
-    getSelectStateSetters,
   } = context;
 
   if (!isEmpty(value)) {
     if (isFunction(customComponent)) {
       return customComponent({
-        getSelectStateSetters,
         value: value || {},
         labelKey,
       });
@@ -72,11 +67,7 @@ const SingleValue = ({ value, labelKey }: SelectSingleValueProps) => {
   }
 };
 
-const MultiValue = ({
-  value,
-  labelKey,
-  handleValueClear,
-}: SelectValueProps) => {
+const MultiValue = ({ value, labelKey, onClear }: SelectValueProps) => {
   if (isEmpty(value)) {
     return;
   }
@@ -84,7 +75,7 @@ const MultiValue = ({
     <>
       {map(value, (val) => (
         <SelectMultiValueElement
-          handleValueClear={handleValueClear}
+          handleValueClear={onClear}
           valueList={value}
           key={val.id}
           value={val}

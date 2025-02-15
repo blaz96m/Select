@@ -89,10 +89,10 @@ const resolveStateValuesAndSetters = (
 
 const setConfig = <T>(
   propValues?: Partial<RequestConfig>,
-  fetchFunc?: (...args: any) => Promise<Response<T> | void>
+  fetchFunction?: (...args: any) => Promise<Response<T> | void>
 ) => {
   const config = REQUEST_CONFIG_DEFAULT_VALUES;
-  if (!isFunction(fetchFunc) || !propValues) {
+  if (!isFunction(fetchFunction) || !propValues) {
     config.isDisabled = true;
     return config;
   }
@@ -129,7 +129,7 @@ type QueryManagerApi<ResponseItemT> = {
   goToNextPage: () => void;
   goToPreviousPage: () => void;
   getTotalRecords: () => number;
-  getIsInitialFetch: () => boolean;
+  isInitialFetch: () => boolean;
   isLastPage: () => boolean;
   fetch: QueryManagerFetchFunc<ResponseItemT>;
   endInitialFetch: () => void;
@@ -150,7 +150,7 @@ type RequestConfig = {
 };
 
 const useQueryManager = <ResponseItemT>(
-  fetchFunc?: (
+  fetchFunction?: (
     params: RequestParams,
     ...args: any
   ) => Promise<Response<ResponseItemT>> | Promise<void>,
@@ -168,12 +168,12 @@ const useQueryManager = <ResponseItemT>(
   const totalRecordsRef = useRef(0);
 
   if (requestConfigRef.current == null) {
-    requestConfigRef.current = setConfig<ResponseItemT>(config, fetchFunc);
+    requestConfigRef.current = setConfig<ResponseItemT>(config, fetchFunction);
   }
 
   const getRequestConfig = () => requestConfigRef.current as RequestConfig;
   const getTotalRecords = useCallback(() => totalRecordsRef.current, []);
-  const getIsInitialFetch = useCallback(() => isInitialFetchRef.current, []);
+  const isInitialFetch = useCallback(() => isInitialFetchRef.current, []);
 
   const { searchQuery } = resolveStateValuesAndSetters(
     state,
@@ -186,7 +186,7 @@ const useQueryManager = <ResponseItemT>(
       params?: Partial<RequestParams>,
       ...args: any
     ): Promise<Response<ResponseItemT> | void> => {
-      if (!isFunction(fetchFunc)) return { data: [] };
+      if (!isFunction(fetchFunction)) return { data: [] };
       const requestConfig = getRequestConfig();
       const requestParams = {
         searchQuery: (params && params.searchQuery) || searchQuery,
@@ -196,7 +196,7 @@ const useQueryManager = <ResponseItemT>(
         recordsPerPage: requestConfig.recordsPerPage,
         ...params,
       };
-      const response = await fetchFunc(requestParams, ...args);
+      const response = await fetchFunction(requestParams, ...args);
       if (response) {
         totalRecordsRef.current = response.totalRecords || 0;
         isFunction(onAfterFetch) &&
@@ -207,7 +207,7 @@ const useQueryManager = <ResponseItemT>(
         return response;
       }
     },
-    [fetchFunc, searchQuery, state.page, state.sort]
+    [fetchFunction, searchQuery, state.page, state.sort]
   );
   // TODO MAKE RECORDS PER PAGE OR RATHER PAGE SIZE A PART OF STATE, ALSO RENAME
   const isLastPage = useCallback(() => {
@@ -353,7 +353,7 @@ const useQueryManager = <ResponseItemT>(
       getTotalRecords,
       isLastPage,
       fetch,
-      getIsInitialFetch,
+      isInitialFetch,
       endInitialFetch,
     },
   };

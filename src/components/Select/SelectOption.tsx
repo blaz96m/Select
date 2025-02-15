@@ -3,6 +3,7 @@ import {
   SetStateAction,
   forwardRef,
   memo,
+  useCallback,
   useEffect,
   useState,
 } from "react";
@@ -17,7 +18,10 @@ import {
   SelectStateSetters,
 } from "src/components/Select/types/selectTypes";
 import { isFunction, isNil } from "lodash";
-import { generateComponentInnerProps } from "src/utils/select";
+import {
+  generateComponentInnerProps,
+  getFocusedOptionIdx,
+} from "src/utils/select";
 import { useSelectContext } from "src/stores/providers/SelectProvider";
 import { FALLBACK_CATEGORY_NAME } from "src/utils/select/constants";
 
@@ -25,16 +29,17 @@ export type SelectOptionProps = {
   labelKey: keyof SelectOptionT;
   option: SelectOptionT;
   optionIndex: number;
-  handleFocusOnClick: (optionIdx: number, optionCategory: string) => void;
+  handleHover: (
+    e: React.MouseEvent<HTMLDivElement, MouseEvent>,
+    isFocused: boolean,
+    optionIndex: number
+  ) => void;
   getSelectOptionsMap: () => Map<string, HTMLDivElement>;
-  handleHover: HandleOptionHover;
   isCategorized: boolean;
   isFocused: boolean;
   isSelected: boolean;
-  removeSelectedOptionsFromList: boolean;
   isDisabled: boolean;
-  resetPage: () => void;
-  onSelect: OptionClickHandler;
+  onClick: OptionClickHandler;
   categoryKey?: keyof SelectOptionT;
 };
 
@@ -43,14 +48,13 @@ const SelectOption = memo((props: SelectOptionProps) => {
     labelKey,
     option,
     optionIndex,
-    handleFocusOnClick,
-    handleHover,
     getSelectOptionsMap,
     categoryKey,
     isCategorized,
     isSelected,
+    handleHover,
     isDisabled,
-    onSelect,
+    onClick,
     isFocused,
   } = props;
 
@@ -58,7 +62,6 @@ const SelectOption = memo((props: SelectOptionProps) => {
 
   const {
     components: { SelectOptionElement: customComponent },
-    getSelectStateSetters,
   } = context;
 
   const className = clsx({
@@ -67,6 +70,8 @@ const SelectOption = memo((props: SelectOptionProps) => {
     "select__option--selected": isSelected,
     "select__option--focused": isFocused,
   });
+
+  const optionCategory = option[categoryKey!] || "";
 
   const refCallback = (node: HTMLDivElement | null) => {
     const selectOptionsMap = getSelectOptionsMap();
@@ -83,7 +88,7 @@ const SelectOption = memo((props: SelectOptionProps) => {
       {
         option,
         handleOptionClick: () =>
-          onSelect(option, optionIndex, isSelected, handleFocusOnClick),
+          onClick(option, isFocused, optionIndex, optionCategory),
         handleMouseHover: (e: React.MouseEvent<HTMLDivElement, MouseEvent>) =>
           handleHover(e, isFocused, optionIndex),
         refCallback,
@@ -92,10 +97,7 @@ const SelectOption = memo((props: SelectOptionProps) => {
         categoryKey,
       }
     );
-    return customComponent(
-      { ...props, getSelectStateSetters },
-      innerProps as SelectOptionInnerProps
-    );
+    return customComponent({ ...props }, innerProps as SelectOptionInnerProps);
   }
 
   return (
@@ -117,9 +119,7 @@ const SelectOption = memo((props: SelectOptionProps) => {
       }}
       id={option.id}
       className={className}
-      onClick={() =>
-        onSelect(option, optionIndex, isSelected, handleFocusOnClick)
-      }
+      onClick={() => onClick(option, isSelected, optionIndex, optionCategory)}
     >
       {option[labelKey]}
     </div>

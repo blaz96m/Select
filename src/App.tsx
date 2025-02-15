@@ -48,6 +48,8 @@ function App() {
   const [count, setCount] = useState(0);
   const [message, setMessage] = useState("");
 
+  const [isOpen, setIsOpen] = useState(false);
+
   const onOptionClick = useCallback((option: any) => {
     setMessage(option.title);
   }, []);
@@ -210,7 +212,7 @@ function App() {
       <div>Count: {count}</div>
       <div>Selected Value: {currLabel}</div>
       <SelectProvider
-        fetchFunc={getMovieList}
+        fetchFunction={getMovieList}
         isMultiValue={false}
         preventInputUpdate={preventer}
         value={value}
@@ -218,6 +220,8 @@ function App() {
         clearInputOnSelect={false}
         categoryKey="original_language"
         isCategorized={true}
+        isOpen={isOpen}
+        setIsOpen={setIsOpen}
         onChange={setValue}
         closeDropdownOnSelect={false}
         removeSelectedOptionsFromList={false}

@@ -22,17 +22,10 @@ import { OPTIONS_EMPTY_TEXT } from "src/utils/select/constants";
 export type OptionListProps = {
   displayedOptions: SelectOptionList | CategorizedSelectOptions;
   renderFunction: SelectCategoryRenderer | SelectOptionRenderer;
-  handlePageChange: () => void;
   categoryKey: string;
-  page: number;
   isCategorized?: boolean;
   isLoading?: boolean;
-  hasPaging?: boolean;
-  customOnScrollToBottom?: (
-    page: number,
-    options: SelectOptionList | CategorizedSelectOptions
-  ) => void;
-  onPageChange?: (page: number) => void;
+  handleScrollToBottom: () => void;
 };
 
 const OptionList = memo(
@@ -41,31 +34,16 @@ const OptionList = memo(
       {
         renderFunction,
         displayedOptions,
-        handlePageChange,
+        handleScrollToBottom,
         isCategorized,
         categoryKey,
-        hasPaging,
-        page,
-        customOnScrollToBottom,
-        onPageChange,
         isLoading,
       },
       ref
     ) => {
       const hasCategories = categoryKey && isCategorized;
 
-      const onScrollToBottom = () => {
-        if (isFunction(customOnScrollToBottom))
-          return customOnScrollToBottom(page, displayedOptions);
-
-        if (hasPaging) {
-          const nextPage = page + 1;
-          handlePageChange();
-          isFunction(onPageChange) && onPageChange(nextPage);
-        }
-      };
-
-      const bottomScrollActions = { onArrive: onScrollToBottom };
+      const bottomScrollActions = { onArrive: handleScrollToBottom };
       const innerRef = useRef<HTMLDivElement>(null);
       useImperativeHandle(ref, () => innerRef.current!);
       useScrollManager<HTMLDivElement>(
