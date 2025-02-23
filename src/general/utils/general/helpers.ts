@@ -1,4 +1,4 @@
-import { debounce, isFunction } from "lodash";
+import { debounce, isFunction, isNil } from "lodash";
 
 type DebouncedFunction<T extends any[]> = (...args: T) => Promise<any>;
 
@@ -19,3 +19,8 @@ export const debounceAsync = <T extends any[]>(
 
 export const isAsyncFunction = (fn: () => any) =>
   isFunction(fn) && fn?.constructor?.name === "AsyncFunction";
+
+export const resolveStateValue = <T>(
+  defaultStateValue: T,
+  customStateValue: T | undefined | null
+): T => (!isNil(customStateValue) ? customStateValue : defaultStateValue);

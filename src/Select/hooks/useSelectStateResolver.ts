@@ -6,21 +6,16 @@ import {
 } from "src/Select/types/selectGeneralTypes";
 import {
   SelectState,
-  StateSetter,
+  CustomState,
+  CustomStateSetters,
   SelectStateUpdaters,
 } from "src/Select/types/selectStateTypes";
 import {
   SelectReducerActionTypes,
   SelectReducerDispatch,
-} from "src/Select/stores/reducers/selectReducer";
-import { resolveStateSetters, resolveStateValue } from "src/utils/select";
-
-type StateCustomSetters = {
-  setValue: StateSetter<SelectOptionList>;
-  setInputValue: StateSetter<string> | undefined;
-  setOptions: StateSetter<SelectOptionList> | undefined;
-  setIsOpen: StateSetter<boolean> | undefined;
-};
+} from "src/Select/stores/selectReducer";
+import { resolveStateSetters } from "src/Select/utils";
+import { resolveStateValue } from "src/general/utils/general";
 
 type ResolvedStateData = {
   selectState: SelectState;
@@ -29,8 +24,8 @@ type ResolvedStateData = {
 
 const useSelectStateResolver = (
   selectState: SelectState,
-  customState: Partial<SelectState>,
-  customStateSetters: StateCustomSetters,
+  customState: CustomState,
+  customStateSetters: CustomStateSetters,
   isMultiValue: boolean,
   dispatch: SelectReducerDispatch
 ): ResolvedStateData => {
@@ -41,41 +36,36 @@ const useSelectStateResolver = (
     value,
   } = selectState;
 
-  const {
-    inputValue: customInputState,
-    selectOptions: customOptionState,
-    isOpen: customIsOpen,
-  } = customState;
+  const { customInputValue, customSelectOptions, customIsOpen } = customState;
 
   // #STATE RESOLVERS
-  const inputValue = resolveStateValue(defaultInputState, customInputState);
+  const inputValue = resolveStateValue(defaultInputState, customInputValue);
   const selectOptions = resolveStateValue(
     defaultOptionState,
-    customOptionState
+    customSelectOptions
   );
   const isOpen = resolveStateValue(defaultIsOpen, customIsOpen);
 
-  // #STATE UPDATE RESOLVERS
+  // #STATE UPDATER RESOLVERS
   const {
-    setIsOpen,
-    setInputValue: customInputValueSetter,
-    setOptions: customOptionsSetter,
+    customSetIsOpen,
+    customSetInputValue,
+    customSetSelectOptions,
     setValue,
   } = customStateSetters;
 
   // #isOpen Resolvers
-  const openDropdown = useCallback(
-    () =>
-      isFunction(setIsOpen)
-        ? setIsOpen(true)
-        : dispatch({ type: SelectReducerActionTypes.OPEN }),
-    []
-  );
+
+  const openDropdown = useCallback(() => {
+    isFunction(customSetIsOpen)
+      ? customSetIsOpen(true)
+      : dispatch({ type: SelectReducerActionTypes.OPEN });
+  }, []);
 
   const closeDropdown = useCallback(
     () =>
-      isFunction(setIsOpen)
-        ? setIsOpen(false)
+      isFunction(customSetIsOpen)
+        ? customSetIsOpen(false)
         : dispatch({ type: SelectReducerActionTypes.CLOSE }),
     []
   );
@@ -85,27 +75,31 @@ const useSelectStateResolver = (
     []
   );
 
-  const customToggleDropdown = useCallback(() => setIsOpen!(isOpen), [isOpen]);
+  const customToggleDropdown = useCallback(
+    () => customSetIsOpen!(!isOpen),
+    [isOpen]
+  );
 
   const toggleDropdownVisibility = resolveStateSetters(
     defaultToggleDropdown,
+    customSetIsOpen,
     customToggleDropdown
-  );
+  ) as () => void;
 
   // #inputValue Resolvers
 
   const clearInput = useCallback(
     () =>
-      isFunction(customInputValueSetter)
-        ? customInputValueSetter("")
+      isFunction(customSetInputValue)
+        ? customSetInputValue("")
         : dispatch({ type: SelectReducerActionTypes.CLEAR_INPUT }),
     []
   );
 
   const setInputValue = useCallback(
     (inputValue: string) =>
-      isFunction(customInputValueSetter)
-        ? customInputValueSetter(inputValue)
+      isFunction(customSetInputValue)
+        ? customSetInputValue(inputValue)
         : dispatch({
             type: SelectReducerActionTypes.SET_INPUT,
             payload: inputValue,
@@ -117,8 +111,8 @@ const useSelectStateResolver = (
 
   const setSelectOptions = useCallback(
     (options: SelectOptionList) =>
-      isFunction(customOptionsSetter)
-        ? customOptionsSetter(options)
+      isFunction(customSetSelectOptions)
+        ? customSetSelectOptions(options)
         : dispatch({
             type: SelectReducerActionTypes.SET_OPTIONS,
             payload: options,
@@ -137,14 +131,16 @@ const useSelectStateResolver = (
 
   const customAddSelectOptions = useCallback(
     (optionsToAdd: SelectOptionList) => {
+      console.log("TO ADD ", optionsToAdd);
       const updatedSelectedOptions = concat(selectOptions, optionsToAdd);
-      customOptionsSetter!(updatedSelectedOptions);
+      customSetSelectOptions!(updatedSelectedOptions);
     },
-    []
+    [selectOptions]
   );
 
   const addOptions = resolveStateSetters<SelectOptionList>(
     defaultAddSelectOptions,
+    customSetSelectOptions,
     customAddSelectOptions
   );
 
@@ -155,7 +151,7 @@ const useSelectStateResolver = (
       const updatedValue = isMultiValue ? [...value, option] : [option];
       setValue(updatedValue);
     },
-    [value]
+    [value, isMultiValue]
   );
 
   const clearValue = useCallback(

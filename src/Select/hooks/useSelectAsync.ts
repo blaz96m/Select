@@ -8,31 +8,27 @@ import {
   SelectStateUpdaters,
   SelectState,
   SelectApi,
+  SelectAsyncApi,
 } from "src/Select/types/selectStateTypes";
 
-import { useQueryManager } from "src/hooks/requests";
-import { ResponseDetails } from "../../hooks/requests/useQueryManager";
-import { QueryManagerState } from "src/stores/reducers/queryManagerReducer";
+import { useQueryManager } from "src/general/hooks";
+import { ResponseDetails } from "src/general/hooks/useQueryManager";
+import { QueryManagerState } from "src/general/stores/queryManagerReducer";
 
 type SelectAsyncState = Pick<QueryManagerState, "searchQuery" | "page">;
-
-type SelectAsyncApi = {
-  isLastPage: () => boolean;
-  isInitialFetch: () => boolean;
-  loadNextPageAsync: () => void;
-  handlePageResetAsync: () => void;
-};
 
 const useSelectAsync = (
   selectState: SelectState,
   selectApi: SelectApi,
   selectStateUpdaters: SelectStateUpdaters,
-  props: {
+  selectProps: {
+    updateSelectOptionsAfterFetch: boolean;
+    fetchFunction: SelectFetchFunction | undefined;
     recordsPerPage?: number;
+    isLoading: boolean | undefined;
     fetchOnInputChange?: boolean;
     isLazyInit?: boolean;
     fetchOnScroll?: boolean;
-    fetchFunction: SelectFetchFunction | undefined;
   }
 ): { selectAsyncApi: SelectAsyncApi; selectAsyncState: SelectAsyncState } => {
   const {
@@ -41,7 +37,9 @@ const useSelectAsync = (
     isLazyInit,
     recordsPerPage,
     fetchOnScroll,
-  } = props;
+    isLoading,
+    updateSelectOptionsAfterFetch,
+  } = selectProps;
 
   const {
     getOriginalOptions,
@@ -55,7 +53,7 @@ const useSelectAsync = (
   const { inputValue, selectOptions, isOpen } = selectState;
 
   const updateSelectOptions = useCallback(
-    (response: ResponseDetails<SelectOptionT>) => {
+    async (response: ResponseDetails<SelectOptionT>) => {
       const { data, params } = response;
       // TODO - REMOVE
       if (params && params.page !== 1) {
@@ -63,15 +61,12 @@ const useSelectAsync = (
           data,
           (d) => !find(selectOptions, (option) => option.id === d.id)
         );
-        selectStateUpdaters.addOptions(klinData);
+        updateSelectOptionsAfterFetch &&
+          selectStateUpdaters.addOptions(klinData);
       } else {
         const originalOptions = getOriginalOptions();
-        // TODO CHECK IF THIS APPLIES TO THE NORMAL REQUEST AS WELL
-        // End the initial fetch in the case when lazy init is triggered and the response is empty (due to the select option useEffect that ends the initial fetch not being triggered)
-        if (isLazyInit && isInitialFetch() && isEmpty(response.data)) {
-          endInitialFetch();
-        }
-        if (isEmpty(originalOptions)) {
+        if (isEmpty(originalOptions) && updateSelectOptionsAfterFetch) {
+          // Set the original options only once in case the user wants to use frontend pagination, will not work properly if fetch on scroll is enabled
           setOriginalOptions(data);
         }
         if (
@@ -80,7 +75,8 @@ const useSelectAsync = (
         ) {
           selectDomRefs.selectListContainerRef.current.scroll({ top: 0 });
         }
-        selectStateUpdaters.setSelectOptions(data);
+        updateSelectOptionsAfterFetch &&
+          selectStateUpdaters.setSelectOptions(data);
       }
     },
     [selectOptions]
@@ -90,6 +86,7 @@ const useSelectAsync = (
     fetchFunction,
     updateSelectOptions,
     { searchQuery: inputValue, setSearchQuery: setInputValue },
+    isLoading,
     {
       fetchOnInit: !isLazyInit,
       recordsPerPage,
@@ -97,14 +94,8 @@ const useSelectAsync = (
     }
   );
 
-  const {
-    goToNextPage,
-    isLastPage,
-    fetch,
-    isInitialFetch,
-    endInitialFetch,
-    resetPage,
-  } = queryManagerApi;
+  const { goToNextPage, isLastPage, fetch, isInitialFetch, resetPage } =
+    queryManagerApi;
 
   const loadNextPageAsync = useCallback(() => {
     !isLastPage() && goToNextPage();
@@ -117,17 +108,17 @@ const useSelectAsync = (
   }, [fetchFunction, fetchOnScroll]);
 
   useEffect(() => {
+    const abortController = new AbortController();
+    const signal = abortController.signal;
+
     if (isInitialFetch() && isLazyInit && isFunction(fetchFunction) && isOpen) {
-      (async () => {
-        await fetch();
-      })();
+      fetch({}, signal);
     }
   }, [isOpen]);
 
   useEffect(() => {
-    if (isLazyInit && isInitialFetch() && isOpen) {
+    if (isLazyInit && isLoading && isOpen) {
       onDropdownExpand();
-      endInitialFetch();
     }
   }, [selectOptions]);
 

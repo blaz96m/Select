@@ -13,8 +13,8 @@ import {
   SelectInputInnerProps,
   SelectInputProps,
 } from "src/Select/types/selectComponentTypes";
-import { useInput } from "src/hooks/input";
-import { generateComponentInnerProps } from "src/utils/select";
+import { useInput } from "src/general/hooks";
+import { generateComponentInnerProps } from "src/Select/utils";
 import clsx from "clsx";
 
 import { useSelectContext } from "src/Select/components/SelectProvider";
@@ -46,6 +46,18 @@ const SelectInput = memo(
     });
 
     useImperativeHandle(ref, () => innerRef.current!, []);
+    /*
+    useImperativeHandle(
+      ref,
+      () => ({
+        ...innerRef.current!,
+        focusInput: () => {
+          debugger;
+          innerRef.current?.focus();
+        },
+      }),
+      []
+    );*/
 
     const [_, handleInputChange] = useInput(
       onInputChange,
@@ -98,7 +110,6 @@ const SelectInput = memo(
     return (
       <div className="select__input__wrapper">
         <input
-          key="select-input"
           className={className}
           onChange={handleInputChange}
           value={inputValue}

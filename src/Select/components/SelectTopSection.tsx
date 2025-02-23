@@ -1,6 +1,5 @@
 import { isFunction } from "lodash";
 import { ReactNode, memo } from "react";
-import { flushSync } from "react-dom";
 import { DropdownClickHandler } from "src/Select/types/selectGeneralTypes";
 
 type SelectTopSectionProps = {

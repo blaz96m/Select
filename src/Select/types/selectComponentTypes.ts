@@ -18,6 +18,7 @@ import {
   OptionClickHandler,
   ValueClearClickHandler,
   ClearIndicatorClickHanlder,
+  CustomDropdownClickHandler,
 } from "src/Select/types/selectGeneralTypes";
 
 import { StateSetter } from "src/Select/types/selectStateTypes";
@@ -193,19 +194,21 @@ export type SelectProps = {
   labelKey: keyof SelectOptionT;
   onChange: StateSetter<SelectOptionList>;
   isMultiValue: boolean;
+  usesAsync: boolean;
   fetchOnInputChange: boolean;
   removeSelectedOptionsFromList: boolean;
   disableInputFetchTrigger: boolean;
   disableInputUpdate: boolean;
   isCategorized: boolean;
   fetchOnScroll: boolean;
+  clearInputOnIdicatorClick: boolean;
   lazyInit: boolean;
   hasInput: boolean;
   onOptionClick?: CustomOptionClickHandler;
   onAfterOptionClick?: CustomOptionClickHandler;
   onClearIndicatorClick?: CustomClearIndicatorClickHandler;
   onAfterClearIndicatorClick?: CustomClearIndicatorClickHandler;
-  onDropdownClick?: DropdownClickHandler;
+  onDropdownClick?: CustomDropdownClickHandler;
   onAfterDropdownClick?: DropdownClickHandler;
   onInputUpdate?: InputChangeHandler;
   onAfterInputUpdate?: InputChangeHandler;
@@ -214,12 +217,13 @@ export type SelectProps = {
   onScrollToBottom?: CustomScrollToBottomHandler;
   onAfterScrollToBottom?: CustomScrollToBottomHandler;
   closeDropdownOnSelect?: boolean;
+  updateSelectOptionsAfterFetch: boolean;
   inputValue?: string;
   categoryKey?: keyof SelectOptionT & string;
   clearInputOnSelect?: boolean;
   setInputValue?: StateSetter<string>;
   selectOptions?: SelectOptionList;
-  setOptions?: StateSetter<SelectOptionList>;
+  setSelectOptions?: StateSetter<SelectOptionList>;
   isOptionDisabled?: (option: SelectOptionT) => boolean;
   inputFilterFunction?: (
     selectOptions: SelectOptionList,

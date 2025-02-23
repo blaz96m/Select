@@ -23,11 +23,10 @@ import {
   useSelectAsync,
   useSelectStateResolver,
 } from "src/Select/hooks";
-import { selectReducer } from "src/Select/stores/reducers";
-import { initializeState } from "src/utils/select";
+import { selectReducer } from "src/Select/stores";
+import { initializeState } from "src/Select/utils";
 import { omit, isFunction, noop, every } from "lodash";
 import { getObjectKeys } from "src/utils/data-types/objects/helpers";
-import { flushSync } from "react-dom";
 
 const arePropsEqual = (
   oldProps: SelectProps & { customComponents: SelectCustomComponents },
@@ -56,7 +55,6 @@ export const SelectProvider = memo(
     ...props
   }: SelectProps & { customComponents: SelectCustomComponents }) => {
     const {
-      isCategorized,
       labelKey,
       categoryKey,
       categorizeFunction,
@@ -66,54 +64,57 @@ export const SelectProvider = memo(
       removeSelectedOptionsFromList,
       onChange,
       closeDropdownOnSelect,
-      lazyInit = false,
-      fetchOnScroll = false,
-      setIsOpen,
-      isOpen,
+      setIsOpen: customSetIsOpen,
       preventInputUpdate,
       inputFilterFunction,
       inputUpdateDebounceDuration,
+      value,
+      clearInputOnSelect,
+      setSelectOptions: customSetSelectOptions,
+      isOpen: customIsOpen,
+      selectOptions: customSelectOptions,
+      isLoading,
+      setInputValue: customSetInputValue,
+      inputValue: customInputValue,
+      usesAsync = false,
+      isCategorized = false,
+      clearInputOnIdicatorClick = true,
+      updateSelectOptionsAfterFetch = true,
+      lazyInit = false,
+      fetchOnScroll = false,
       isMultiValue = false,
       disableInputUpdate = false,
       hasInput = true,
       fetchOnInputChange = true,
-      clearInputOnSelect,
-      inputValue,
-      setOptions,
-      isLoading,
-      setInputValue: customSetInputValue,
-      selectOptions,
     } = props;
 
-    const [defaultSelectState, dispatch] = useReducer(
-      selectReducer,
-      selectOptions,
-      initializeState
-    );
+    const customState = {
+      customInputValue,
+      customIsOpen,
+      customSelectOptions,
+    };
 
-    const resolvedStateData = useSelectStateResolver(
-      defaultSelectState,
-      { selectOptions, inputValue, isOpen },
-      {
-        setIsOpen,
-        setOptions,
-        setInputValue: customSetInputValue,
-        setValue: onChange,
-      },
-      isMultiValue,
-      dispatch
-    );
+    const customStateSetters = {
+      customSetIsOpen,
+      customSetSelectOptions,
+      customSetInputValue,
+      setValue: onChange,
+    };
 
-    const { selectState, selectStateUpdaters } = resolvedStateData;
-
-    const selectApi = useSelect(selectState, selectStateUpdaters, {
+    const selectApi = useSelect({
       isMultiValue,
       labelKey,
       isCategorized,
+      defaultSelectOptions: customSelectOptions,
+      value,
       customCategorizeFunction: categorizeFunction,
       preventInputUpdate,
+      usesAsync,
       disableInputUpdate,
+      clearInputOnIdicatorClick,
       sortFunction,
+      customState,
+      customStateSetters,
       fetchOnScroll,
       recordsPerPage,
       fetchOnInputChange,
@@ -128,20 +129,28 @@ export const SelectProvider = memo(
       inputFilterFunction,
     });
 
+    const {
+      selectState,
+      selectStateUpdaters,
+      loadNextPage,
+      selectEventHandlers,
+      handlePageReset,
+    } = selectApi;
+
     const { selectAsyncApi, selectAsyncState } = useSelectAsync(
       selectState,
       selectApi,
       selectStateUpdaters,
       {
         isLazyInit: lazyInit,
+        updateSelectOptionsAfterFetch,
         recordsPerPage,
         fetchOnInputChange,
+        isLoading,
         fetchFunction,
         fetchOnScroll: selectApi.fetchOnScrollToBottom,
       }
     );
-
-    const { loadNextPage, selectEventHandlers, handlePageReset } = selectApi;
 
     const { loadNextPageAsync, handlePageResetAsync, isInitialFetch } =
       selectAsyncApi;
@@ -155,8 +164,8 @@ export const SelectProvider = memo(
       : handlePageReset;
 
     const resolvedPageChangeHandler = selectApi.fetchOnScrollToBottom
-      ? loadNextPage
-      : loadNextPageAsync;
+      ? loadNextPageAsync
+      : loadNextPage;
 
     const data = useMemo(
       () => ({
@@ -178,7 +187,7 @@ export const SelectProvider = memo(
       onAfterClearIndicatorClick: props.onAfterClearIndicatorClick,
       onAfterDropdownClick: props.onAfterDropdownClick,
       onAfterInputUpdate: props.onAfterInputUpdate,
-      onAfterOptionClick: props.onOptionClick,
+      onAfterOptionClick: props.onAfterOptionClick,
       onAfterScrollToBottom: props.onAfterScrollToBottom,
       onAfterValueClear: props.onAfterValueClear,
     };
@@ -196,6 +205,7 @@ export const SelectProvider = memo(
           handlePageReset={resolvedPageResetHandler}
           handlePageChange={resolvedPageChangeHandler}
           selectApi={selectApi}
+          selectAsyncApi={selectAsyncApi}
         />
       </SelectContext.Provider>
     );

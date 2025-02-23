@@ -54,15 +54,15 @@ export type SelectEventHandlers = {
   handleScrollToBottom: () => void;
 };
 
-export type DefaultSelectEventHandlers = Pick<
+export type DefaultSelectEventHandlers = Omit<
   SelectEventHandlers,
-  "handleClearIndicatorClick" | "handleInputChange"
+  "handleScrollToBottom" | "handleValueClearClick"
 > & {
   handleValueClearClick: (
     e: React.MouseEvent<HTMLDivElement, MouseEvent>,
     optionId: string
   ) => void;
-  handleOptionClick: (option: SelectOptionT, isSelected: boolean) => void;
+  handleValueSelectOnKeyPress: () => void;
 };
 
 // # CUSTOM EVENT HANDLERS
@@ -117,10 +117,13 @@ export type CustomPreventInputUpdate = (
 
 export type PreventInputUpdate = (newInputValue: string) => boolean;
 
-export type SelectFetchFunction = (params: {
-  page?: number;
-  searchQuery?: string;
-}) => Promise<{ data: SelectOptionList; totalRecords: number }> | Promise<void>;
+export type SelectFetchFunction = (
+  params: {
+    page?: number;
+    searchQuery?: string;
+  },
+  signal?: AbortSignal
+) => Promise<{ data: SelectOptionList; totalRecords: number }> | Promise<void>;
 
 export type CustomSelectCategorizeFunction = (
   options: SelectOptionList
@@ -136,9 +139,11 @@ export type SelectCategorizeFuntion = (
 
 // #OTHER PROPERTIES
 
-export type SelectFocusNavigationFallbackDirection = "opposite" | "previous";
+export type SelectFocusNavigationFallbackDirection =
+  | SelectKeyboardNavigationDirection
+  | "opposite";
 
-export type SelectKeyboardNavigationDirection = "down" | "up";
+export type SelectKeyboardNavigationDirection = "next" | "previous";
 
 export type SelectDomRefs = {
   selectListContainerRef: React.RefObject<HTMLDivElement>;

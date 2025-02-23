@@ -25,7 +25,7 @@ import {
   split,
 } from "lodash";
 
-import { DEFAULT_SELECT_PLACEHOLDER } from "src/utils/select/constants";
+import { DEFAULT_SELECT_PLACEHOLDER } from "src/Select/utils/constants";
 import { Spinner } from "src/components/Spinner";
 import {
   SelectContainer,
@@ -40,11 +40,10 @@ import {
   SelectClearIndicator,
   SelectCategory,
 } from "src/Select/components";
-import { selectReducer } from "src/Select/stores/reducers/selectReducer";
 import {
   filterOptionListBySearchValue,
   initializeState,
-} from "src/utils/select";
+} from "src/Select/utils";
 
 import {
   CustomPreventInputUpdate,
@@ -70,19 +69,18 @@ import {
   StateSetter,
   SelectApi,
   SelectStateUpdaters,
+  SelectAsyncApi,
 } from "src/Select/types/selectStateTypes";
 
 import { SelectProps } from "src/Select/types/selectComponentTypes";
 
 import "../styles/_select.scss";
 
-import {
-  useSelectEventHandlerResolver,
-  useSelectFocus,
-} from "src/Select/hooks";
+import { useSelectEventHandlerResolver } from "src/Select/hooks";
 
-export type SelectComponentProps = SelectProps & {
+type SelectComponentProps = SelectProps & {
   selectApi: SelectApi;
+  selectAsyncApi: SelectAsyncApi;
   selectStateUpdaters: SelectStateUpdaters;
   defaultSelectEventHandlers: DefaultSelectEventHandlers;
   customSelectEventHandlers: CustomSelectEventHandlers;
@@ -97,19 +95,17 @@ const Select = ({
   isMultiValue,
   isLoading,
   selectState,
-  lazyInit = false,
   isOptionDisabled,
   selectApi,
+  selectAsyncApi,
   defaultSelectEventHandlers,
   customSelectEventHandlers,
   eventHandlerFollowups,
-  isInitialFetch,
-  fetchFunction,
-  selectStateUpdaters,
   handlePageChange,
   handlePageReset,
   // TODO HANDLE THIS PROP
   disableInputFetchTrigger = false,
+  clearInputOnIdicatorClick = true,
   hasInput = true,
   removeSelectedOptionsFromList = true,
   showClearIndicator = true,
@@ -118,26 +114,23 @@ const Select = ({
   labelKey = "name",
   isCategorized = false,
 }: SelectComponentProps) => {
-  const { selectDomRefs, displayedOptions, getSelectOptionsMap } = selectApi;
+  const {
+    selectDomRefs,
+    displayedOptions,
+    getSelectOptionsMap,
+    selectFocusHandlers,
+    selectFocusState,
+  } = selectApi;
 
   const { inputRef, selectListContainerRef } = selectDomRefs;
 
   const { isOpen, inputValue, value } = selectState;
-
-  const { selectFocusHandlers, selectFocusState } = useSelectFocus({
-    displayedOptions,
-    isCategorized,
-    categoryKey,
-    getSelectOptionsMap,
-    selectListContainerRef,
-  });
 
   const {
     focusNextOption,
     focusPreviousOption,
     resetFocus,
     handleOptionFocusOnSelectByClick,
-    handleOptionFocusOnSelectByKeyPress,
     isOptionFocused,
     handleOptionHover,
   } = selectFocusHandlers;
@@ -148,18 +141,15 @@ const Select = ({
     defaultSelectEventHandlers,
     customSelectEventHandlers,
     eventHandlerFollowups,
-    selectStateUpdaters,
-    selectState,
     selectApi,
+    selectAsyncApi,
     {
       isLoading,
-      fetchFunction,
-      isInitialFetch,
+      clearInputOnIdicatorClick,
       handlePageChange,
       handlePageReset,
-      handleFocusOnClick: handleOptionFocusOnSelectByClick,
+      handleOptionFocusOnClick: handleOptionFocusOnSelectByClick,
       resetFocus,
-      lazyInit,
     }
   );
 
@@ -171,6 +161,8 @@ const Select = ({
     handleScrollToBottom,
     handleValueClearClick,
   } = selectEventHandlers;
+
+  const { handleValueSelectOnKeyPress } = defaultSelectEventHandlers;
 
   const handleOptionRender = useCallback(
     (
@@ -197,7 +189,7 @@ const Select = ({
         />
       );
     },
-    [labelKey, isCategorized, categoryKey, handleOptionHover]
+    [labelKey, isCategorized, categoryKey, handleOptionHover, handleOptionClick]
   );
 
   const renderOptionFromList = useCallback(
@@ -291,10 +283,9 @@ const Select = ({
             inputValue={inputValue}
             focusNextOption={focusNextOption}
             focusPreviousOption={focusPreviousOption}
-            addOptionOnKeyPress={handleOptionFocusOnSelectByKeyPress}
+            addOptionOnKeyPress={handleValueSelectOnKeyPress}
             handleOptionsSearchTrigger={selectApi.handleOptionsSearchTrigger}
             preventInputUpdate={selectApi.preventInputUpdate}
-            key="select-input"
             disableInputFetchTrigger={disableInputFetchTrigger}
             isLoading={isLoading}
             ref={inputRef}

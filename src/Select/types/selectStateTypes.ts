@@ -9,6 +9,7 @@ import {
   DefaultSelectEventHandlers,
   CategorizedSelectOptions,
   SelectDomRefs,
+  SelectKeyboardNavigationDirection,
 } from "src/Select/types/selectGeneralTypes";
 
 export type StateSetter<T> = Dispatch<SetStateAction<T>> | ((arg: T) => void);
@@ -38,12 +39,16 @@ export type SelectStateUpdaters = {
   clearValue: (optionId: keyof SelectOptionT) => void;
 };
 
-type SelectFocusState = {
+export type SelectFocusState = {
   focusedOptionIndex: number | null;
   focusedOptionCategory: keyof SelectOptionT;
 };
 
 export type SelectApi = {
+  selectState: SelectState;
+  selectStateUpdaters: SelectStateUpdaters;
+  selectFocusState: SelectFocusState;
+  selectFocusHandlers: SelectFocusHandlers;
   handleOptionsSearchTrigger: () => void;
   onDropdownExpand: () => void;
   usesInputAsync: boolean;
@@ -63,22 +68,49 @@ export type SelectApi = {
   filterSearchedOptions: () => void;
 };
 
+export type SelectAsyncApi = {
+  isLastPage: () => boolean;
+  isInitialFetch: () => boolean;
+  loadNextPageAsync: () => void;
+  handlePageResetAsync: () => void;
+};
+
+export type SelectFocusHandlers = {
+  focusNextOption: (
+    fallbackDirection?: SelectFocusNavigationFallbackDirection
+  ) => void;
+  focusPreviousOption: () => void;
+  handleOptionFocusOnSelectByClick: (
+    focusedOptionIdx: number,
+    focusedCategory: string,
+    direction: SelectKeyboardNavigationDirection,
+    fallbackDirection: SelectFocusNavigationFallbackDirection
+  ) => void;
+  handleOptionFocusOnSelectByKeyPress: (
+    direction: SelectKeyboardNavigationDirection,
+    fallbackDirection: SelectFocusNavigationFallbackDirection
+  ) => void;
+  handleOptionHover: OptionHoverHandler;
+  setFocusOnHover: (optionIdx: number, optionCategory: string) => void;
+  isOptionFocused: (option: SelectOptionT, optionIdx: number) => boolean;
+  getFocusedOption: () => SelectOptionT | void;
+  resetFocus: () => void;
+};
+
 export type SelectFocusApi = {
   selectFocusState: SelectFocusState;
-  selectFocusHandlers: {
-    focusNextOption: (
-      fallbackDirection?: SelectFocusNavigationFallbackDirection
-    ) => void;
-    focusPreviousOption: () => void;
-    handleOptionFocusOnSelectByClick: (
-      focusedOptionIdx: number,
-      focusedCategory: string
-    ) => void;
-    handleOptionFocusOnSelectByKeyPress: () => void;
-    handleOptionHover: OptionHoverHandler;
-    setFocusOnHover: (optionIdx: number, optionCategory: string) => void;
-    isOptionFocused: (option: SelectOptionT, optionIdx: number) => boolean;
-    getFocusedOption: () => SelectOptionT | void;
-    resetFocus: () => void;
-  };
+  selectFocusHandlers: SelectFocusHandlers;
+};
+
+export type CustomStateSetters = {
+  setValue: StateSetter<SelectOptionList>;
+  customSetInputValue: StateSetter<string> | undefined;
+  customSetSelectOptions: StateSetter<SelectOptionList> | undefined;
+  customSetIsOpen: StateSetter<boolean> | undefined;
+};
+
+export type CustomState = {
+  customInputValue: string | undefined;
+  customSelectOptions: SelectOptionList | undefined;
+  customIsOpen: boolean | undefined;
 };

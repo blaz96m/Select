@@ -1,10 +1,11 @@
 import { isEmpty } from "lodash";
 import { Dispatch } from "react";
 import {
-  SelectState,
   SelectOptionList,
   SelectOptionT,
-} from "src/Select/types/selectTypes";
+} from "src/Select/types/selectGeneralTypes";
+
+import { SelectState } from "src/Select/types/selectStateTypes";
 
 export enum SelectReducerActionTypes {
   OPEN = "OPEN",
@@ -80,7 +81,7 @@ export const selectReducer = (
       return { ...state, isOpen: !state.isOpen };
     case SelectReducerActionTypes.SET_INPUT:
       return state.inputValue !== action.payload
-        ? { ...state, inputValue: action.payload, isOpen: true }
+        ? { ...state, inputValue: action.payload }
         : state;
     case SelectReducerActionTypes.CLEAR_INPUT:
       return { ...state, inputValue: "" };

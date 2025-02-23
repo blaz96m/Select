@@ -1,4 +1,4 @@
-import { useCallback, useRef, useEffect, useMemo } from "react";
+import { useCallback, useRef, useEffect, useMemo, useReducer } from "react";
 import {
   SelectOptionList,
   CategorizedSelectOptions,
@@ -7,11 +7,16 @@ import {
   CustomSelectCategorizeFunction,
   SelectSorterFunction,
   SelectFetchFunction,
+  SelectKeyboardNavigationDirection,
+  SelectFocusNavigationFallbackDirection,
 } from "src/Select/types/selectGeneralTypes";
+
 import {
   SelectState,
   SelectStateUpdaters,
   SelectApi,
+  CustomState,
+  CustomStateSetters,
 } from "src/Select/types/selectStateTypes";
 import {
   cloneDeep,
@@ -20,6 +25,8 @@ import {
   isEmpty,
   isFunction,
   isNil,
+  isNumber,
+  isObject,
   reduce,
   slice,
   trim,
@@ -29,45 +36,59 @@ import {
   categorizeOptions,
   filterDataBySelectedValues,
   filterOptionListBySearchValue,
+  initializeState,
   isFocusedOptionInViewport,
+  isFocusedOptionIndexValid,
   scrollToTarget,
-} from "src/utils/select";
+} from "src/Select/utils";
 import {
   FALLBACK_CATEGORY_NAME,
   NO_CATEGORY_KEY,
-} from "src/utils/select/constants";
+} from "src/Select/utils/constants";
+import {
+  SelectReducerDispatch,
+  selectReducer,
+} from "src/Select/stores/selectReducer";
+import { useSelectFocus, useSelectStateResolver } from "src/Select/hooks";
 
-const useSelect = (
-  selectState: SelectState,
-  selectStateUpdaters: SelectStateUpdaters,
-  selectProps: {
-    isMultiValue: boolean;
-    labelKey: keyof SelectOptionT;
-    fetchOnInputChange: boolean;
-    disableInputUpdate: boolean;
-    closeDropdownOnSelect: boolean | undefined;
-    clearInputOnSelect: boolean | undefined;
-    preventInputUpdate: CustomPreventInputUpdate;
-    fetchOnScroll: boolean | undefined;
-    hasInput: boolean;
-    categoryKey: (keyof SelectOptionT & string) | undefined;
-    removeSelectedOptionsFromList: boolean;
-    sortFunction: SelectSorterFunction | undefined;
-    customCategorizeFunction?: CustomSelectCategorizeFunction;
-    recordsPerPage?: number;
-    fetchFunction: SelectFetchFunction | undefined;
-    isLoading: boolean | undefined;
-    inputUpdateDebounceDuration?: number;
-    isCategorized?: boolean;
-    inputFilterFunction?: (
-      selectOptions: SelectOptionList,
-      inputValue: string
-    ) => SelectOptionList;
-  }
-): SelectApi => {
+const useSelect = (selectProps: {
+  isMultiValue: boolean;
+  customState: CustomState;
+  customStateSetters: CustomStateSetters;
+  labelKey: keyof SelectOptionT;
+  fetchOnInputChange: boolean;
+  clearInputOnIdicatorClick: boolean;
+  value: SelectOptionList;
+  defaultSelectOptions?: SelectOptionList;
+  disableInputUpdate: boolean;
+  closeDropdownOnSelect: boolean | undefined;
+  clearInputOnSelect: boolean | undefined;
+  preventInputUpdate: CustomPreventInputUpdate;
+  fetchOnScroll: boolean | undefined;
+  hasInput: boolean;
+  usesAsync: boolean;
+  categoryKey: (keyof SelectOptionT & string) | undefined;
+  removeSelectedOptionsFromList: boolean;
+  sortFunction: SelectSorterFunction | undefined;
+  customCategorizeFunction?: CustomSelectCategorizeFunction;
+  recordsPerPage?: number;
+  fetchFunction: SelectFetchFunction | undefined;
+  isLoading: boolean | undefined;
+  inputUpdateDebounceDuration?: number;
+  isCategorized: boolean;
+  inputFilterFunction?: (
+    selectOptions: SelectOptionList,
+    inputValue: string
+  ) => SelectOptionList;
+}): SelectApi => {
   const {
     isCategorized,
+    customState,
+    customStateSetters,
     recordsPerPage,
+    defaultSelectOptions,
+    value,
+    usesAsync,
     categoryKey,
     isMultiValue,
     labelKey,
@@ -78,6 +99,7 @@ const useSelect = (
     isLoading,
     fetchOnInputChange,
     disableInputUpdate,
+    clearInputOnIdicatorClick,
     hasInput,
     customCategorizeFunction,
     preventInputUpdate: customPreventInputUpdate,
@@ -85,6 +107,24 @@ const useSelect = (
     closeDropdownOnSelect: customCloseDropdownOnSelect,
     sortFunction,
   } = selectProps;
+
+  // #STATE RESOLVER
+
+  const [defaultSelectState, dispatch] = useReducer(
+    selectReducer,
+    defaultSelectOptions,
+    initializeState
+  );
+
+  const resolvedStateData = useSelectStateResolver(
+    { ...defaultSelectState, value },
+    customState,
+    customStateSetters,
+    isMultiValue,
+    dispatch
+  );
+
+  const { selectState, selectStateUpdaters } = resolvedStateData;
 
   const {
     clearValue,
@@ -95,13 +135,19 @@ const useSelect = (
     setSelectOptions,
     setInputValue,
     resetPage,
+    openDropdown,
+    toggleDropdownVisibility,
   } = selectStateUpdaters;
 
-  const { inputValue, page, selectOptions, value } = selectState;
+  const { inputValue, page, selectOptions, isOpen } = selectState;
 
   // #REFS
   // The originalOptions ref is only used in case all the data for the select comes from the frontend, enabling the partitioning of the options while storing the original value that never changes.
   const originalOptionsRef = useRef<SelectOptionList>(selectOptions);
+
+  const hasPaging =
+    (isNumber(recordsPerPage) && recordsPerPage > 0) ||
+    (usesAsync && fetchOnScroll);
 
   const selectListContainerRef = useRef<HTMLDivElement>(null);
   const selectOptionRef = useRef<HTMLDivElement>(null);
@@ -173,6 +219,37 @@ const useSelect = (
 
   const displayedOptions = sortedOptions || filteredOptions;
 
+  // SELECT FOCUS HANDLER
+  const { selectFocusHandlers, selectFocusState } = useSelectFocus({
+    displayedOptions,
+    isCategorized,
+    categoryKey,
+    getSelectOptionsMap,
+    selectListContainerRef,
+  });
+
+  const { focusedOptionCategory, focusedOptionIndex } = selectFocusState;
+
+  const getFocusDirectionsOnSelect = useCallback(
+    (isOptionSelected: boolean) => {
+      const removeOptionFromSelectedValues =
+        isOptionSelected && !removeSelectedOptionsFromList;
+      const focusDirection: SelectKeyboardNavigationDirection =
+        removeOptionFromSelectedValues ? "previous" : "next";
+      const focusFallbackDirection: SelectFocusNavigationFallbackDirection =
+        removeOptionFromSelectedValues ? "next" : "previous";
+
+      return { focusDirection, focusFallbackDirection };
+    },
+    [removeSelectedOptionsFromList]
+  );
+
+  const {
+    handleOptionFocusOnSelectByClick,
+    resetFocus,
+    handleOptionFocusOnSelectByKeyPress,
+  } = selectFocusHandlers;
+
   // #PROP RESOLVERS
 
   const usesInputAsync = isFunction(fetchFunction) && fetchOnInputChange;
@@ -186,7 +263,8 @@ const useSelect = (
       if (disableInputUpdate) return true;
       if (isFunction(customPreventInputUpdate))
         return customPreventInputUpdate(updatedValue, inputValue);
-      return defaultPreventInputUpdate(updatedValue);
+      const res = defaultPreventInputUpdate(updatedValue);
+      return res;
     },
     [defaultPreventInputUpdate, customPreventInputUpdate, disableInputUpdate]
   );
@@ -210,7 +288,20 @@ const useSelect = (
     focusInput();
     selectListContainer &&
       calculateSpaceAndDisplayOptionList(selectListContainer);
-  }, [focusInput]);
+  }, [focusInput, focusedOptionIndex, focusedOptionCategory]);
+
+  const onDropdownCollapse = useCallback(() => {
+    resetFocus();
+  }, [resetFocus]);
+
+  const onOptionSelect = useCallback(
+    (isSelected: boolean, option: SelectOptionT) => {
+      return isSelected && !removeSelectedOptionsFromList
+        ? clearValue(option.id)
+        : selectValue(option);
+    },
+    [removeSelectedOptionsFromList, clearValue, selectValue]
+  );
 
   // TODO REFACTOR MAYBEEE (CHANGE NAME)
   const hasMoreData = useCallback(() => {
@@ -221,6 +312,39 @@ const useSelect = (
     return false;
   }, [page, recordsPerPage]);
 
+  const handleValueSelectOnKeyPress = useCallback(() => {
+    if (
+      !isFocusedOptionIndexValid(focusedOptionIndex) ||
+      (isCategorized && !focusedOptionCategory)
+    )
+      return;
+
+    const targetOption = isCategorized
+      ? (displayedOptions as CategorizedSelectOptions)[focusedOptionCategory][
+          focusedOptionIndex!
+        ]
+      : (displayedOptions as SelectOptionList)[focusedOptionIndex!];
+
+    const selectOptionsMap = getSelectOptionsMap();
+    const targetOptionNode = selectOptionsMap.get(targetOption.id);
+    if (targetOptionNode) {
+      const isOptionSelected = targetOptionNode.dataset.selected! === "true";
+      onOptionSelect(isOptionSelected, targetOption);
+
+      const { focusDirection, focusFallbackDirection } =
+        getFocusDirectionsOnSelect(isOptionSelected);
+
+      handleOptionFocusOnSelectByKeyPress(
+        focusDirection,
+        focusFallbackDirection
+      );
+    }
+  }, [
+    handleOptionFocusOnSelectByKeyPress,
+    isCategorized,
+    removeSelectedOptionsFromList,
+  ]);
+
   const loadNextPage = useCallback(() => {
     if (hasMoreData()) {
       selectStateUpdaters.loadNextPage();
@@ -228,14 +352,16 @@ const useSelect = (
   }, [hasMoreData]);
 
   const handlePageReset = useCallback(() => {
-    if (!fetchOnScroll && recordsPerPage) {
+    if (hasPaging) {
       resetPage();
     }
-  }, [fetchOnScroll, recordsPerPage]);
+  }, [hasPaging, resetPage]);
 
   const handleInputChange = useCallback(
     (inputValue: string) => {
       setInputValue(inputValue);
+      openDropdown();
+
       if (!isMultiValue && clearInputOnSelect) {
         clearAllValues();
       }
@@ -253,26 +379,61 @@ const useSelect = (
       if (isLoading) return;
       e.stopPropagation();
       !isEmpty(value) && clearAllValues();
-      inputValue && clearInput();
+      inputValue && clearInputOnIdicatorClick && clearInput();
       focusInput();
     },
-    [inputValue, value, isLoading]
+    [inputValue, value, isLoading, clearInputOnIdicatorClick]
   );
 
-  const handleOptionClick = (option: SelectOptionT, isSelected: boolean) => {
+  const handleDropdownClick = useCallback(() => {
     if (isLoading) return;
-    if (!removeSelectedOptionsFromList && isSelected) {
-      clearValue(option.id);
-    } else {
-      selectValue(option);
-    }
-    clearInputOnSelect && clearInput();
-    if (!closeDropdownOnSelect) {
-      focusInput();
-    } else {
-      closeDropdown();
-    }
-  };
+    const willOpen = !isOpen;
+    toggleDropdownVisibility();
+    willOpen ? onDropdownExpand() : onDropdownCollapse();
+  }, [
+    isLoading,
+    isOpen,
+    toggleDropdownVisibility,
+    onDropdownExpand,
+    onDropdownCollapse,
+  ]);
+
+  const handleOptionClick = useCallback(
+    (
+      option: SelectOptionT,
+      isSelected: boolean,
+      optionIdx: number,
+      optionCategory: string
+    ) => {
+      if (isLoading) return;
+      onOptionSelect(isSelected, option);
+      clearInputOnSelect && clearInput();
+
+      if (!closeDropdownOnSelect) {
+        focusInput();
+        const { focusDirection, focusFallbackDirection } =
+          getFocusDirectionsOnSelect(isSelected);
+        handleOptionFocusOnSelectByClick(
+          optionIdx,
+          optionCategory,
+          focusDirection,
+          focusFallbackDirection
+        );
+      } else {
+        closeDropdown();
+        resetFocus();
+      }
+    },
+    [
+      closeDropdown,
+      focusInput,
+      selectValue,
+      clearValue,
+      resetFocus,
+      isLoading,
+      removeSelectedOptionsFromList,
+    ]
+  );
 
   const handleValueClearClick = (
     e: React.MouseEvent<HTMLDivElement, MouseEvent>,
@@ -280,6 +441,7 @@ const useSelect = (
   ) => {
     e.stopPropagation();
     clearValue(optionId);
+    focusInput();
   };
 
   const filterSearchedOptions = useCallback(() => {
@@ -288,7 +450,7 @@ const useSelect = (
       ? customInputFilterFunction(originalOptions, inputValue)
       : filterOptionListBySearchValue(originalOptions, labelKey, inputValue);
     setSelectOptions(filteredOptions);
-  }, [selectOptions, inputValue]);
+  }, [selectOptions, inputValue, customInputFilterFunction]);
 
   // Gets passed to the useEffect of the input component, will not run if async search is enabled
   const handleOptionsSearchTrigger = useCallback(() => {
@@ -302,12 +464,19 @@ const useSelect = (
     return timeoutId;
   }, [usesInputAsync, fetchFunction, filterSearchedOptions]);
 
-  // TODO - see to this yea
   useEffect(() => {
-    focusInput();
-  }, [selectOptions]);
+    if (page === 1) {
+      resetFocus();
+    }
+    // Focus input after options load, used for async operations since the input will be disabled if the loading state is provided
+    if (isOpen && isFunction(fetchFunction)) {
+      focusInput();
+    }
+  }, [selectOptions, resetFocus]);
 
   return {
+    selectState,
+    selectStateUpdaters,
     filterSearchedOptions,
     fetchOnScrollToBottom,
     getOriginalOptions,
@@ -318,6 +487,8 @@ const useSelect = (
     clearInputOnSelect,
     displayedOptions,
     handleOptionsSearchTrigger,
+    selectFocusState,
+    selectFocusHandlers,
     selectDomRefs: {
       inputRef,
       selectListContainerRef,
@@ -326,6 +497,8 @@ const useSelect = (
     },
     selectEventHandlers: {
       handleClearIndicatorClick,
+      handleValueSelectOnKeyPress,
+      handleDropdownClick,
       handleInputChange,
       handleOptionClick,
       handleValueClearClick,

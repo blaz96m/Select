@@ -13,7 +13,7 @@ import {
 } from "./components/Select/types/selectTypes";
 import "src/style.scss";
 import { SelectOptionProps } from "./components/Select/SelectOption";
-import { filter, isEmpty, toLower } from "lodash";
+import { filter, isEmpty, split, toLower } from "lodash";
 import { SelectMultiValueProps } from "./components/Select/SelectMultiValueElement";
 import { SelectValueProps } from "./components/Select/SelectValue";
 import { SelectDropdownIndicatorProps } from "./components/Select/SelectDropdownIndicator";
@@ -28,6 +28,35 @@ import { SelectCategoryProps } from "./Select/components/SelectCategory";
 
 import axiosClient from "./api/axios/axiosClient";
 import { Select } from "./Select/components";
+import {
+  getSecondShieeet,
+  getShieet,
+  getShit,
+  selectDropdownState,
+  setIsOpen,
+  setSelectOptions,
+  setYearFilta,
+  store,
+} from "./Store";
+import { useSelect } from "./Select/hooks";
+import { Provider, useDispatch, useSelector } from "react-redux";
+import { RootState } from "@reduxjs/toolkit/query";
+
+export const getMovieList = async (
+  { page = 1, searchQuery = "a" },
+  signal: AbortSignal
+) => {
+  try {
+    const reselt = await axiosClient.get(
+      `/search/movie?query=${searchQuery || "a"}&page=${page}`
+    );
+    const data = reselt.data;
+    const totalRecords = data["total_results"];
+    return { data: data.results as SelectOptionList, totalRecords };
+  } catch (err) {
+    err;
+  }
+};
 
 function App() {
   let currCategoryCount = 1;
@@ -42,12 +71,13 @@ function App() {
     };
   });
   const [value, setValue] = useState<SelectOptionList>([]);
+  const [val2, setValue2] = useState<SelectOptionList>([]);
   const [currLabel, setCurrLabel] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [count, setCount] = useState(0);
   const [message, setMessage] = useState("");
 
-  const [isOpen, setIsOpen] = useState(false);
+  //const [isOpen, setIsOpen] = useState(false);
 
   const onOptionClick = useCallback((option: any) => {
     setMessage(option.title);
@@ -60,27 +90,12 @@ function App() {
     ): SelectOptionList => {
       return filter(displayedOptions, (option) => {
         let optionLel = option["name"] as string;
-        const optionForReal = optionLel.replace(" ", "").replace("-", "");
-        return toLower(optionForReal).includes(inputValue);
+        return toLower(optionLel).replace(/\s/g, "").includes(inputValue);
       });
     },
     []
   );
 
-  const getMovieList = useCallback(async ({ page = 1, searchQuery = "a" }) => {
-    try {
-      setIsLoading(true);
-      const reselt = await axiosClient.get(
-        `/search/movie?query=${searchQuery || "a"}&page=${page}`
-      );
-      const data = reselt.data;
-      const totalRecords = data["total_results"];
-      setIsLoading(false);
-      return { data: data.results as SelectOptionList, totalRecords };
-    } catch (err) {
-      err;
-    }
-  }, []);
   let categoryCount = 1;
   const items = Array.from({ length: 100 }, (_, i) => {
     let category = `Category-${categoryCount}`;
@@ -203,6 +218,38 @@ function App() {
     return newStr.includes("2");
   };
 
+  const isOpen = useSelector((state: any) => state.dropdown.isOpen);
+  const isLoadingSt = useSelector((state: any) => state.dropdown.loading);
+  const secondOptions = useSelector(
+    (state: any) => state.dropdown.secondSelectOptions
+  );
+  const selectOptions = useSelector(
+    (state: any) => state.dropdown.selectOptions
+  );
+  const dispatch = useDispatch();
+
+  const chenge = (isOpen: boolean) => {
+    dispatch(setIsOpen(isOpen));
+  };
+
+  const setOptions = (optionList: SelectOptionList) => {
+    dispatch(setSelectOptions(optionList));
+  };
+
+  const onDropdownClick = (isOpen: boolean) => {
+    dispatch(setIsOpen(!isOpen));
+  };
+
+  const onFetchFunc = async (req, signal) => {
+    const res = await dispatch(getShit(req, signal));
+    return res.payload;
+  };
+
+  const secondOnFetch = async (req, signal) => {
+    const res = await dispatch(getSecondShieeet(req, signal));
+    return res.payload;
+  };
+
   return (
     <>
       <button onClick={() => setCount((count) => count + 1)}>Next</button>
@@ -211,22 +258,24 @@ function App() {
       <div>Count: {count}</div>
       <div>Selected Value: {currLabel}</div>
       <Select
-        fetchFunction={getMovieList}
-        isMultiValue={false}
-        preventInputUpdate={preventer}
+        fetchFunction={onFetchFunc}
+        isMultiValue={true}
+        closeDropdownOnSelect={false}
         value={value}
         labelKey="title"
         clearInputOnSelect={false}
         categoryKey="original_language"
         isCategorized={true}
-        isOpen={isOpen}
-        setIsOpen={setIsOpen}
+        //isOpen={isOpen}
+        //onDropdownClick={onDropdownClick}
+        //setIsOpen={chenge}
+        setSelectOptions={setOptions}
+        selectOptions={selectOptions}
         onChange={setValue}
-        closeDropdownOnSelect={false}
         removeSelectedOptionsFromList={false}
         onOptionSelect={onOptionClick}
         fetchOnScroll={true}
-        isLoading={isLoading}
+        isLoading={isLoadingSt}
         lazyInit={true}
         inputFilterFunction={customFilter}
         /*

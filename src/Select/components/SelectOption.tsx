@@ -17,9 +17,9 @@ import { isFunction, isNil } from "lodash";
 import {
   generateComponentInnerProps,
   getFocusedOptionIdx,
-} from "src/utils/select";
+} from "src/Select/utils";
 import { useSelectContext } from "src/Select/components/SelectProvider";
-import { FALLBACK_CATEGORY_NAME } from "src/utils/select/constants";
+import { FALLBACK_CATEGORY_NAME } from "src/Select/utils/constants";
 
 const SelectOption = memo((props: SelectOptionProps) => {
   const {
@@ -87,6 +87,7 @@ const SelectOption = memo((props: SelectOptionProps) => {
       data-category={
         isCategorized ? option[categoryKey!] || FALLBACK_CATEGORY_NAME : ""
       }
+      data-selected={isSelected}
       ref={(node) => {
         const selectOptionsMap = getSelectOptionsMap();
         if (node) {

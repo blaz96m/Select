@@ -1,4 +1,4 @@
-@use "src/utils/styles/" as *;
+@use "src/general/utils/styles/" as *;
 .select {
   &__container {
     display: flex;
@@ -43,6 +43,7 @@
   }
   &__input {
     width: auto;
+    pointer-events: none;
 
     border: 0;
     outline: none;
@@ -192,6 +193,7 @@
     }
     &--selected {
       background-color: $blue;
+
       color: white;
     }
 

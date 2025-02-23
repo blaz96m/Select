@@ -1,4 +1,4 @@
-@use "src/utils/styles/" as *;
+@use "src/general/utils/styles" as *;
 .spinner {
   width: 48px;
   height: 48px;
@@ -30,6 +30,10 @@
 }
 
 @keyframes loading {
-  from {-webkit-transform: rotate(0deg);}
-  to   {-webkit-transform: rotate(359deg);}
+  from {
+    -webkit-transform: rotate(0deg);
+  }
+  to {
+    -webkit-transform: rotate(359deg);
+  }
 }

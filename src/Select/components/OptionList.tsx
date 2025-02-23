@@ -17,9 +17,9 @@ import {
   SelectOptionRenderer,
   OptionListProps,
 } from "src/Select/types/selectComponentTypes";
-import { useScrollManager } from "src/hooks/dom";
+import { useScrollManager } from "src/general/hooks";
 import clsx from "clsx";
-import { OPTIONS_EMPTY_TEXT } from "src/utils/select/constants";
+import { OPTIONS_EMPTY_TEXT } from "src/Select/utils/constants";
 
 const OptionList = memo(
   forwardRef<HTMLDivElement, OptionListProps>(

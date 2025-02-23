@@ -11,19 +11,17 @@ import {
 import { SelectFocusApi } from "src/Select/types/selectStateTypes";
 import { getObjectKeys } from "src/utils/data-types/objects/helpers";
 import {
-  getNextCategoryFocusDetailsInDirection,
   getCategoryFocusDetails,
   getFocusedOptionIdx,
-  categorizeOptions,
   isFocusedOptionInViewport,
   scrollToTarget,
   isFocusedOptionIndexValid,
-} from "src/utils/select";
+} from "src/Select/utils";
 
 type SelectProps = {
   displayedOptions: SelectOptionList | CategorizedSelectOptions;
   isCategorized: boolean;
-  categoryKey: string;
+  categoryKey?: string;
   getSelectOptionsMap: () => Map<string, HTMLDivElement>;
   selectListContainerRef: RefObject<HTMLDivElement>;
 };
@@ -73,6 +71,8 @@ const useSelectFocus = (selectProps: SelectProps): SelectFocusApi => {
       focusedOptionIndex: number | null,
       focusedOptionCategory: keyof SelectOptionT,
       fallbackDirection: SelectFocusNavigationFallbackDirection = "opposite",
+      // Check if an option exists in the fallback direction provided before checking for the fallback category (only for categorized options)
+      checkOptionFalbackInCategory = false,
       scrollToFocusedOption = true
     ) => {
       if (!isEmpty(displayedOptions)) {
@@ -83,7 +83,8 @@ const useSelectFocus = (selectProps: SelectProps): SelectFocusApi => {
             focusedOptionCategory,
             displayedOptions as CategorizedSelectOptions,
             direction,
-            fallbackDirection
+            fallbackDirection,
+            checkOptionFalbackInCategory
           );
           setCategoryFocusDetails(focusDetails);
         } else {
@@ -104,7 +105,7 @@ const useSelectFocus = (selectProps: SelectProps): SelectFocusApi => {
   const focusNextOption = useCallback(
     (fallbackDirection: SelectFocusNavigationFallbackDirection = "opposite") =>
       handleOptionFocusChange(
-        "down",
+        "next",
         focusedOptionIndex,
         focusedOptionCategory,
         fallbackDirection
@@ -114,32 +115,47 @@ const useSelectFocus = (selectProps: SelectProps): SelectFocusApi => {
 
   const focusPreviousOption = useCallback(
     () =>
-      handleOptionFocusChange("up", focusedOptionIndex, focusedOptionCategory),
+      handleOptionFocusChange(
+        "previous",
+        focusedOptionIndex,
+        focusedOptionCategory
+      ),
 
     [handleOptionFocusChange, focusedOptionIndex, focusedOptionCategory]
   );
 
   const handleOptionFocusOnSelectByClick = useCallback(
-    (focusedOptionIdx: number, focusedCategory: string) =>
+    (
+      focusedOptionIdx: number,
+      focusedCategory: string,
+      direction: SelectKeyboardNavigationDirection = "next",
+      fallbackDirection: SelectFocusNavigationFallbackDirection = "previous"
+    ) =>
       handleOptionFocusChange(
-        "down",
+        direction,
         focusedOptionIdx,
         focusedCategory,
-        "previous",
+        fallbackDirection,
+        true,
         false
       ),
     [handleOptionFocusChange]
   );
 
   const handleOptionFocusOnSelectByKeyPress = useCallback(
-    () =>
+    (
+      direction: SelectKeyboardNavigationDirection = "next",
+      fallbackDirection: SelectFocusNavigationFallbackDirection = "previous"
+    ) => {
       handleOptionFocusChange(
-        "down",
+        direction,
         focusedOptionIndex,
         focusedOptionCategory,
-        "previous",
+        fallbackDirection,
+        true,
         false
-      ),
+      );
+    },
     [handleOptionFocusChange, focusedOptionIndex, focusedOptionCategory]
   );
 
@@ -151,19 +167,19 @@ const useSelectFocus = (selectProps: SelectProps): SelectFocusApi => {
     [isCategorized]
   );
 
-  const resetFocus = () => {
+  const resetFocus = useCallback(() => {
     if (isEmpty(displayedOptions)) return;
     if (isCategorized) {
       const categories = getObjectKeys(displayedOptions);
       setFocusedOptionCategory(categories[0]);
     }
     setFocusedOptionIndex(0);
-  };
+  }, [isCategorized, displayedOptions]);
 
   const isOptionFocused = useCallback(
     (option: SelectOptionT, optionIdx: number) => {
       if (isCategorized) {
-        const optionCategory = option[categoryKey];
+        const optionCategory = option[categoryKey!];
         return (
           optionCategory === focusedOptionCategory &&
           optionIdx === focusedOptionIndex

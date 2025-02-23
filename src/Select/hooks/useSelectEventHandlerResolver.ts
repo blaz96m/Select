@@ -1,4 +1,4 @@
-import { isFunction } from "lodash";
+import { isFunction, isNull, isNumber } from "lodash";
 import { useCallback } from "react";
 
 import {
@@ -14,16 +14,16 @@ import {
   SelectState,
   SelectStateUpdaters,
   SelectApi,
+  SelectAsyncApi,
 } from "src/Select/types/selectStateTypes";
+import { SelectFocusState } from "src/Select/types/selectStateTypes";
 
 type SelectProps = {
   isLoading: boolean | undefined;
-  fetchFunction: SelectFetchFunction | undefined;
-  isInitialFetch: () => boolean;
-  lazyInit: boolean;
+  clearInputOnIdicatorClick: boolean;
   handlePageChange: () => void;
   handlePageReset: () => void;
-  handleFocusOnClick: (
+  handleOptionFocusOnClick: (
     focusedOptionIdx: number,
     focusedCategory: string
   ) => void;
@@ -34,9 +34,8 @@ const useSelectEventHandlerResolver = (
   defaultEventHandlers: DefaultSelectEventHandlers,
   customEventHandlers: CustomSelectEventHandlers,
   eventHandlerFollowupFunctions: EventHandlerFollowupFunctions,
-  selectStateUpdaters: SelectStateUpdaters,
-  selectState: SelectState,
   selectApi: SelectApi,
+  selectAsyncApi: SelectAsyncApi,
   selectProps: SelectProps
 ): SelectEventHandlers => {
   const {
@@ -57,37 +56,37 @@ const useSelectEventHandlerResolver = (
   } = eventHandlerFollowupFunctions;
 
   const {
-    usesInputAsync,
     clearInputOnSelect,
-    onDropdownExpand,
+
     displayedOptions,
     closeDropdownOnSelect,
+    selectState,
+    selectStateUpdaters,
+    selectFocusHandlers,
   } = selectApi;
 
   const { value, isOpen, page, inputValue } = selectState;
 
-  const { loadNextPage, toggleDropdownVisibility } = selectStateUpdaters;
   const {
-    fetchFunction,
-    isInitialFetch,
     isLoading,
-    lazyInit,
     resetFocus,
     handlePageReset,
     handlePageChange,
-    handleFocusOnClick,
+    handleOptionFocusOnClick,
+    clearInputOnIdicatorClick,
   } = selectProps;
 
-  const isFetchingDataOnLazyInit =
-    isFunction(fetchFunction) && lazyInit && !isInitialFetch();
+  const { toggleDropdownVisibility } = selectStateUpdaters;
 
   const handleInputChange = useCallback(
     (inputValue: string) => {
-      if (isFunction(onInputUpdate)) return onInputUpdate(inputValue, value);
-      defaultEventHandlers.handleInputChange(inputValue);
-      handlePageReset();
-      resetFocus();
-      isFunction(onAfterInputUpdate) && onAfterInputUpdate(inputValue, value);
+      if (isFunction(onInputUpdate)) {
+        onInputUpdate(inputValue, value);
+      } else {
+        defaultEventHandlers.handleInputChange(inputValue);
+        handlePageReset();
+        isFunction(onAfterInputUpdate) && onAfterInputUpdate(inputValue, value);
+      }
     },
     [defaultEventHandlers.handleInputChange, onInputUpdate, onAfterInputUpdate]
   );
@@ -101,42 +100,48 @@ const useSelectEventHandlerResolver = (
     ) => {
       if (isFunction(onOptionClick)) {
         onOptionClick(option, isSelected);
+        // Keep the focus logic due to its state being controlled.
+        !closeDropdownOnSelect &&
+          handleOptionFocusOnClick(focusedOptionIdx, focusedCategory);
+        closeDropdownOnSelect && resetFocus();
       } else {
-        defaultEventHandlers.handleOptionClick(option, isSelected);
+        defaultEventHandlers.handleOptionClick(
+          option,
+          isSelected,
+          focusedOptionIdx,
+          focusedCategory
+        );
         clearInputOnSelect && handlePageReset();
-        if (clearInputOnSelect || closeDropdownOnSelect) {
-          resetFocus();
-        }
+
         isFunction(onAfterOptionClick) &&
           onAfterOptionClick(option, isSelected);
       }
-      handleFocusOnClick(focusedOptionIdx, focusedCategory);
     },
     [
       onOptionClick,
       defaultEventHandlers.handleOptionClick,
       clearInputOnSelect,
-      usesInputAsync,
+      resetFocus,
+      handlePageReset,
+      onAfterOptionClick,
     ]
   );
 
   const handleDropdownClick = useCallback(() => {
-    if (isFunction(onDropdownClick)) return onDropdownClick(isOpen);
-    if (isLoading) return;
     const willOpen = !isOpen;
-    toggleDropdownVisibility();
-    if (willOpen) {
-      onDropdownExpand();
+    if (isFunction(onDropdownClick)) {
+      onDropdownClick(isOpen);
+      !willOpen && resetFocus();
     } else {
-      resetFocus();
+      defaultEventHandlers.handleDropdownClick();
+      isFunction(onAfterDropdownClick) && onAfterDropdownClick(willOpen);
     }
-    isFunction(onAfterDropdownClick) && onAfterDropdownClick(willOpen);
   }, [
-    isLoading,
     isOpen,
-    isFetchingDataOnLazyInit,
     onDropdownClick,
     onAfterDropdownClick,
+    resetFocus,
+    defaultEventHandlers.handleDropdownClick,
   ]);
 
   const handleClearIndicatorClick = useCallback(
@@ -145,6 +150,9 @@ const useSelectEventHandlerResolver = (
         return onClearIndicatorClick(e, inputValue, value);
 
       defaultEventHandlers.handleClearIndicatorClick(e);
+      if (inputValue && clearInputOnIdicatorClick) {
+        handlePageReset();
+      }
       isFunction(onAfterClearIndicatorClick) &&
         onAfterClearIndicatorClick(e, inputValue, value);
     },

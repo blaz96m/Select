@@ -1,3 +1,5 @@
+import { clear, time } from "console";
+import { sign } from "crypto";
 import { stat } from "fs";
 import {
   isEmpty,
@@ -8,6 +10,7 @@ import {
   isNil,
   defaults,
   noop,
+  trim,
 } from "lodash";
 import {
   useCallback,
@@ -19,84 +22,25 @@ import {
   SetStateAction,
 } from "react";
 import {
+  INITIAL_STATE,
+  REQUEST_CONFIG_DEFAULT_VALUES,
+} from "src/general/utils/queryManager/constants";
+import {
   queryManagerReducer,
   QueryManagerReducerActionTypes,
   QueryManagerState,
   QueryManagerActions,
-} from "src/stores/reducers/queryManagerReducer";
-
-const INITIAL_STATE = {
-  page: 1,
-  sort: "",
-  searchQuery: "",
-};
-
-const REQUEST_CONFIG_DEFAULT_VALUES: RequestConfig = {
-  isDisabled: false,
-  fetchOnInit: true,
-  defaultSort: "",
-  recordsPerPage: 15,
-  fetchOnInputChange: false,
-};
+} from "src/general/stores/queryManagerReducer";
+import { resolveStateValue } from "src/general/utils/general";
+import {
+  resolveAndGetRequestParams,
+  setConfig,
+} from "src/general/utils/queryManager/helpers";
 
 type CustomStateSetters = {
   setSearchQuery: Dispatch<SetStateAction<string>> | ((value: string) => void);
   setSort: Dispatch<SetStateAction<string>> | ((value: string) => void);
   setPage: Dispatch<SetStateAction<number>> | ((value: number) => void);
-};
-
-const resolveStateValue = <T>(
-  defaultStateValue: T,
-  customStateValue: T | undefined | null
-): T => (!isNil(customStateValue) ? customStateValue : defaultStateValue);
-
-const resolveStateSetter = <T>(
-  defaultStateSetter: ((arg: T) => void) | Dispatch<SetStateAction<T>>,
-  customStateSetter:
-    | ((arg: T) => void)
-    | Dispatch<SetStateAction<T>>
-    | undefined
-): ((arg: T) => void) | Dispatch<SetStateAction<T>> =>
-  isFunction(customStateSetter) ? customStateSetter : defaultStateSetter;
-
-const resolveStateValuesAndSetters = (
-  defaultState: QueryManagerState,
-  dispatch: Dispatch<QueryManagerActions>,
-  customState?: Partial<QueryManagerState> & Partial<CustomStateSetters>
-) => {
-  const searchQuery = resolveStateValue(
-    defaultState.searchQuery,
-    customState?.searchQuery
-  );
-  const setSearchQueryDispatch = (inputVal: string) =>
-    dispatch({
-      type: QueryManagerReducerActionTypes.SET_SEARCH_QUERY,
-      payload: inputVal,
-    });
-
-  const handleSearchQueryUpdate = resolveStateSetter(
-    setSearchQueryDispatch,
-    customState?.setSearchQuery
-  );
-
-  const clearSearchQueryDispatch = () =>
-    dispatch({ type: QueryManagerReducerActionTypes.CLEAR_SEARCH_QUERY });
-
-  return {
-    searchQuery,
-  };
-};
-
-const setConfig = <T>(
-  propValues?: Partial<RequestConfig>,
-  fetchFunction?: (...args: any) => Promise<Response<T> | void>
-) => {
-  const config = REQUEST_CONFIG_DEFAULT_VALUES;
-  if (!isFunction(fetchFunction) || !propValues) {
-    config.isDisabled = true;
-    return config;
-  }
-  return merge(config, propValues);
 };
 
 export type Response<T> = {
@@ -109,7 +53,7 @@ export type ResponseDetails<T> = Response<T> & {
   params?: Partial<RequestParams>;
 };
 
-type RequestParams = {
+export type RequestParams = {
   page?: number;
   searchQuery?: string;
   sort?: string;
@@ -140,7 +84,7 @@ type QueryManagerFetchFunc<ResponseItemT> = (
   ...args: any
 ) => Promise<Response<ResponseItemT> | void>;
 
-type RequestConfig = {
+export type RequestConfig = {
   isDisabled: boolean;
   defaultSort: string;
   fetchOnInit: boolean;
@@ -152,10 +96,12 @@ type RequestConfig = {
 const useQueryManager = <ResponseItemT>(
   fetchFunction?: (
     params: RequestParams,
+    signal?: AbortSignal,
     ...args: any
   ) => Promise<Response<ResponseItemT>> | Promise<void>,
   onAfterFetch?: (responseDetails: ResponseDetails<ResponseItemT>) => void,
   customState?: Partial<CustomStateSetters> & Partial<QueryManagerState>,
+  isLoading?: boolean,
   config?: Partial<RequestConfig>
 ): {
   queryManagerState: QueryManagerState;
@@ -175,33 +121,37 @@ const useQueryManager = <ResponseItemT>(
   const getTotalRecords = useCallback(() => totalRecordsRef.current, []);
   const isInitialFetch = useCallback(() => isInitialFetchRef.current, []);
 
-  const { searchQuery } = resolveStateValuesAndSetters(
-    state,
-    dispatch,
-    customState
+  const searchQuery = resolveStateValue(
+    state.searchQuery,
+    customState?.searchQuery
   );
+
+  const page = resolveStateValue(state.page, customState?.page);
+
+  const sort = resolveStateValue(state.sort, customState?.sort);
 
   const fetch = useCallback(
     async (
       params?: Partial<RequestParams>,
+      signal?: AbortSignal,
       ...args: any
     ): Promise<Response<ResponseItemT> | void> => {
       if (!isFunction(fetchFunction)) return { data: [] };
       const requestConfig = getRequestConfig();
-      const requestParams = {
-        searchQuery: (params && params.searchQuery) || searchQuery,
-        sort:
-          (params && params.sort) || requestConfig.defaultSort || state.sort,
-        page: (params && params.page) || state.page,
-        recordsPerPage: requestConfig.recordsPerPage,
-        ...params,
-      };
-      const response = await fetchFunction(requestParams, ...args);
-      if (response) {
-        totalRecordsRef.current = response.totalRecords || 0;
+      const requestParams = resolveAndGetRequestParams(
+        params,
+        { searchQuery, page, sort },
+        requestConfig
+      );
+      const response = await fetchFunction(requestParams, signal, ...args);
+      if (isInitialFetch()) {
+        endInitialFetch();
+      }
+      if (!isEmpty(response)) {
+        totalRecordsRef.current = response!.totalRecords || 0;
         isFunction(onAfterFetch) &&
           onAfterFetch({
-            ...response,
+            ...response!,
             params: requestParams,
           });
         return response;
@@ -209,7 +159,7 @@ const useQueryManager = <ResponseItemT>(
     },
     [fetchFunction, searchQuery, state.page, state.sort]
   );
-  // TODO MAKE RECORDS PER PAGE OR RATHER PAGE SIZE A PART OF STATE, ALSO RENAME
+
   const isLastPage = useCallback(() => {
     const totalRecords = totalRecordsRef.current;
     const { recordsPerPage } = getRequestConfig();
@@ -260,22 +210,16 @@ const useQueryManager = <ResponseItemT>(
   );
 
   const setSorting = useCallback((sortProperty: string) => {
-    const customSetter = customState?.setSort;
-    isFunction(customSetter)
-      ? customSetter(sortProperty)
-      : dispatch({
-          type: QueryManagerReducerActionTypes.SET_SORTING,
-          payload: sortProperty,
-        });
+    dispatch({
+      type: QueryManagerReducerActionTypes.SET_SORTING,
+      payload: sortProperty,
+    });
   }, []);
 
   const clearSorting = useCallback(() => {
-    const customSetter = customState?.setSort;
-    isFunction(customSetter)
-      ? customSetter("")
-      : dispatch({
-          type: QueryManagerReducerActionTypes.RESET_SORTING,
-        });
+    dispatch({
+      type: QueryManagerReducerActionTypes.RESET_SORTING,
+    });
   }, []);
 
   const endInitialFetch = () => {
@@ -283,60 +227,84 @@ const useQueryManager = <ResponseItemT>(
   };
 
   useEffect(() => {
+    const abortController = new AbortController();
+    const signal = abortController.signal;
     const requestConfig = getRequestConfig();
     const { isDisabled, fetchOnInit } = requestConfig;
+
     const pageChangeTriggeredByInput =
-      searchQuery != previousSearchQueryValueRef.current;
-    if (
-      !(
-        isDisabled ||
-        pageChangeTriggeredByInput ||
-        (isInitialFetchRef.current && !fetchOnInit)
-      )
-    ) {
-      (async () => {
-        await fetch();
-      })();
+      searchQuery !== previousSearchQueryValueRef.current;
+
+    const preventFetchOnPageChange =
+      isDisabled ||
+      pageChangeTriggeredByInput ||
+      (isInitialFetch() && !fetchOnInit) ||
+      isLoading;
+
+    if (!preventFetchOnPageChange) {
+      fetch({}, signal);
     }
+    return () => abortController.abort();
   }, [state.page]);
 
   useEffect(() => {
+    const abortController = new AbortController();
+    const signal = abortController.signal;
     const { isDisabled, fetchOnInputChange, preventFetchOnInputChange } =
       getRequestConfig();
-    if (
+
+    let timeoutId: NodeJS.Timeout | undefined;
+
+    const previousSearchQueryValue = previousSearchQueryValueRef.current;
+
+    const shouldPreventInputChange =
+      isFunction(preventFetchOnInputChange) &&
+      preventFetchOnInputChange(searchQuery);
+    const inputChanged = previousSearchQueryValue !== searchQuery;
+
+    const preventFetchOnChange =
       isDisabled ||
       !fetchOnInputChange ||
-      isInitialFetchRef.current ||
-      previousSearchQueryValueRef.current === searchQuery ||
-      // TODO HANDLE BETTER
-      (isFunction(preventFetchOnInputChange) &&
-        preventFetchOnInputChange(searchQuery))
-    ) {
-      return noop;
-    }
-    let timeoutId: NodeJS.Timeout | undefined;
-    if (!searchQuery && previousSearchQueryValueRef.current) {
-      fetch({ page: 1 });
-      previousSearchQueryValueRef.current = searchQuery;
-    }
-    if (searchQuery) {
-      timeoutId = setTimeout(async () => {
-        fetch({ page: 1 });
-        previousSearchQueryValueRef.current = searchQuery;
-      }, 700);
-    }
+      isInitialFetch() ||
+      !inputChanged ||
+      shouldPreventInputChange ||
+      isLoading;
 
-    if (timeoutId) {
-      return () => clearTimeout(timeoutId);
+    if (!preventFetchOnChange) {
+      // If the search query had a value before and is empty currently, dont debounce
+      const fetchImmediately = !searchQuery && previousSearchQueryValue;
+
+      previousSearchQueryValueRef.current = searchQuery;
+
+      if (fetchImmediately) {
+        fetch({ page: 1 }, signal);
+      } else {
+        timeoutId = setTimeout(async () => {
+          fetch({ page: 1 }, signal);
+          previousSearchQueryValueRef.current = searchQuery;
+        }, 700);
+      }
     }
+    const cleanup = () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      abortController.abort();
+    };
+
+    return cleanup;
   }, [searchQuery]);
 
   useEffect(() => {
+    const abortController = new AbortController();
+    const signal = abortController.signal;
     const { isDisabled } = getRequestConfig();
-    if (isDisabled || isInitialFetchRef.current) return;
-    (async () => {
-      await fetch();
-    })();
+
+    if (!isDisabled && !isInitialFetch()) {
+      fetch({}, signal);
+    }
+
+    return () => abortController.abort();
   }, [state.sort]);
 
   return {
