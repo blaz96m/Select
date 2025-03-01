@@ -21,6 +21,7 @@ const SelectValue = memo(
     isMultiValue,
     placeholder,
     inputValue,
+    customComponentRenderer,
     onClear,
     value,
   }: SelectValueContainerPropTypes) => {
@@ -31,7 +32,12 @@ const SelectValue = memo(
           <span className="select__placeholder">{placeholder}</span>
         )}
         {isMultiValue ? (
-          <MultiValue value={value} labelKey={labelKey} onClear={onClear} />
+          <MultiValue
+            value={value}
+            labelKey={labelKey}
+            onClear={onClear}
+            customComponentRenderer={customComponentRenderer}
+          />
         ) : (
           <SingleValue value={head(value)!} labelKey={labelKey} />
         )}
@@ -42,24 +48,18 @@ const SelectValue = memo(
 
 const SingleValue = ({ value, labelKey }: SelectSingleValueProps) => {
   const valueLabel = !isEmpty(value) ? value[labelKey] : "";
-  const context = useSelectContext();
-
-  const {
-    components: { SelectSingleValueElement: customComponent },
-  } = context;
 
   if (!isEmpty(value)) {
-    if (isFunction(customComponent)) {
-      return customComponent({
-        value: value || {},
-        labelKey,
-      });
-    }
     return <>{valueLabel}</>;
   }
 };
 
-const MultiValue = ({ value, labelKey, onClear }: SelectValueProps) => {
+const MultiValue = ({
+  value,
+  labelKey,
+  onClear,
+  customComponentRenderer,
+}: SelectValueProps) => {
   if (isEmpty(value)) {
     return;
   }
@@ -67,6 +67,7 @@ const MultiValue = ({ value, labelKey, onClear }: SelectValueProps) => {
     <>
       {map(value, (val) => (
         <SelectMultiValueElement
+          customComponentRenderer={customComponentRenderer}
           handleValueClear={onClear}
           valueList={value}
           key={val.id}

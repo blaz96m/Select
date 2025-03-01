@@ -114,7 +114,7 @@ const useQueryManager = <ResponseItemT>(
   const totalRecordsRef = useRef(0);
 
   if (requestConfigRef.current == null) {
-    requestConfigRef.current = setConfig<ResponseItemT>(config, fetchFunction);
+    requestConfigRef.current = setConfig<ResponseItemT>(config);
   }
 
   const getRequestConfig = () => requestConfigRef.current as RequestConfig;
@@ -125,7 +125,6 @@ const useQueryManager = <ResponseItemT>(
     state.searchQuery,
     customState?.searchQuery
   );
-
   const page = resolveStateValue(state.page, customState?.page);
 
   const sort = resolveStateValue(state.sort, customState?.sort);
@@ -136,8 +135,14 @@ const useQueryManager = <ResponseItemT>(
       signal?: AbortSignal,
       ...args: any
     ): Promise<Response<ResponseItemT> | void> => {
-      if (!isFunction(fetchFunction)) return { data: [] };
       const requestConfig = getRequestConfig();
+
+      if (requestConfig.isDisabled) return;
+
+      if (!isFunction(fetchFunction)) {
+        throw new Error("Fetch function not provided!");
+      }
+
       const requestParams = resolveAndGetRequestParams(
         params,
         { searchQuery, page, sort },
@@ -157,17 +162,17 @@ const useQueryManager = <ResponseItemT>(
         return response;
       }
     },
-    [fetchFunction, searchQuery, state.page, state.sort]
+    [fetchFunction, searchQuery, page, state.sort]
   );
 
   const isLastPage = useCallback(() => {
     const totalRecords = totalRecordsRef.current;
     const { recordsPerPage } = getRequestConfig();
     if (isNumber(totalRecords) && recordsPerPage) {
-      return state.page * recordsPerPage >= totalRecords;
+      return page * recordsPerPage >= totalRecords;
     }
     return false;
-  }, [state.page]);
+  }, [page]);
 
   const goToNextPage = useCallback(
     () => dispatch({ type: QueryManagerReducerActionTypes.GO_TO_NEXT_PAGE }),
@@ -245,7 +250,7 @@ const useQueryManager = <ResponseItemT>(
       fetch({}, signal);
     }
     return () => abortController.abort();
-  }, [state.page]);
+  }, [page]);
 
   useEffect(() => {
     const abortController = new AbortController();
@@ -274,10 +279,9 @@ const useQueryManager = <ResponseItemT>(
       // If the search query had a value before and is empty currently, dont debounce
       const fetchImmediately = !searchQuery && previousSearchQueryValue;
 
-      previousSearchQueryValueRef.current = searchQuery;
-
       if (fetchImmediately) {
         fetch({ page: 1 }, signal);
+        previousSearchQueryValueRef.current = searchQuery;
       } else {
         timeoutId = setTimeout(async () => {
           fetch({ page: 1 }, signal);

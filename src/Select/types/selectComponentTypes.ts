@@ -1,3 +1,4 @@
+import { ChangeEvent, RefObject } from "react";
 import {
   SelectOptionList,
   CustomOptionClickHandler,
@@ -19,6 +20,10 @@ import {
   ValueClearClickHandler,
   ClearIndicatorClickHanlder,
   CustomDropdownClickHandler,
+  SelectOptionFilter,
+  KeyDownHandler,
+  SelectKeyboardNavigationDirection,
+  CustomClassNames,
 } from "src/Select/types/selectGeneralTypes";
 
 import { StateSetter } from "src/Select/types/selectStateTypes";
@@ -34,7 +39,7 @@ export enum SelectComponents {
   INPUT = "INPUT",
 }
 
-type CustomSelectComponentRenderer<
+type CustomSelectComponent<
   ComponentPropsT extends SelectCustomComponentProps,
   InnerPropsT extends SelectComponentInnerProps = null
 > = InnerPropsT extends null
@@ -46,145 +51,33 @@ type CustomSelectComponentRenderer<
 
 type CustomComponentProps<T> = T;
 
-export type SelectOptionInnerProps = {
-  onClick: (...args: any) => void;
-  onMouseMove: (...args: any) => void;
-  "data-category": string;
-  ref: React.LegacyRef<HTMLDivElement>;
-  id: string;
-  className: string;
-};
-
-export type SelectInputInnerProps = {
-  onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  value: string;
-  ref: React.RefObject<HTMLInputElement>;
-  className: string;
-  disabled?: boolean;
-};
-
-export type SelectInputComponentHandlers = {
-  handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  handleKeyPress: (e: React.KeyboardEvent<HTMLInputElement>) => void;
-  inputValue: string;
-  innerRef: React.RefObject<HTMLInputElement>;
-  className: string;
-  isLoading?: boolean;
-};
-
-export type SelectDropdownIndicatorInnerProps = {
-  className: string;
-};
-
-export type SelectClearIndicatorInnerProps = {
-  onClick: (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => void;
-};
-
-export type BasicComponentInnerProps = {
-  className?: string;
-};
-
 export type SelectComponentInnerProps =
   | null
-  | BasicComponentInnerProps
   | SelectOptionInnerProps
   | SelectMultiValueInnerProps
   | SelectDropdownIndicatorInnerProps
   | SelectClearIndicatorInnerProps
-  | SelectInputInnerProps;
+  | SelectInputInnerProps
+  | SelectOptionListInnerProps
+  | SelectCategoryInnerProps;
 
 export type SelectCustomComponentProps =
-  | SelectOptionProps
-  | SelectSingleValueProps
-  | SelectMultiValueProps
-  | SelectDropdownIndicatorProps
-  | SelectClearIndicatorProps
-  | SelectInputProps
-  | SelectCategoryCustomComponentProps;
-
-export type SelectComponentHandlers =
-  | SelectOptionComponentHandlers
-  | SelectInputComponentHandlers;
-
-export type SelectOptionComponentHandlers = {
-  option: SelectOptionT;
-  isCategorized: boolean;
-  categoryKey?: keyof SelectOptionT;
-  handleOptionClick: (option: SelectOptionT, isSelected: boolean) => void;
-  handleMouseHover: (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => void;
-  className: string;
-  refCallback: (node: HTMLDivElement | null) => void;
-};
-
-export type SelectValueCustomComponentProps = {
-  valueLabel: string;
-} & SelectValueProps;
-
-export type SelectCategoryCustomComponentProps = Omit<
-  SelectCategoryProps,
-  "renderOption"
->;
-
-export type SelectSingleValueProps = Pick<SelectValueProps, "labelKey"> & {
-  value: SelectOptionT;
-};
-
-export type SelectMultiValueCustomComponentProps = {
-  valueLabel: string;
-  value: SelectOptionT;
-} & Omit<SelectValueProps, "value">;
-
-export type SelectMultiValueInnerProps = {
-  onClick: ValueClearClickHandler;
-  className: string;
-};
-
-export type CustomSelectOptionRenderer = CustomSelectComponentRenderer<
-  SelectOptionProps,
-  SelectOptionInnerProps
->;
-
-export type CustomSelectSingleValueRenderer =
-  CustomSelectComponentRenderer<SelectSingleValueProps>;
-
-export type CustomSelectMultiValueRenderer = CustomSelectComponentRenderer<
-  SelectMultiValueProps,
-  SelectMultiValueInnerProps
->;
-
-export type CustomSelectDropdownIndicatorRenderer =
-  CustomSelectComponentRenderer<
-    SelectDropdownIndicatorProps,
-    SelectDropdownIndicatorInnerProps
-  >;
-
-export type CustomSelectClearIndicatorRenderer = CustomSelectComponentRenderer<
-  SelectClearIndicatorProps,
-  SelectClearIndicatorInnerProps
->;
-
-export type CustomSelectInputRenderer = CustomSelectComponentRenderer<
-  SelectInputProps,
-  SelectInputInnerProps
->;
-
-export type CustomSelectCategoryRenderer = CustomSelectComponentRenderer<
-  SelectCategoryCustomComponentProps,
-  { className: string }
->;
+  | CustomSelectOptionComponentProps
+  | CustomSelectOptionListProps
+  | CustomSelectCategoryProps
+  | CustomSelectMultiValueProps
+  | CustomSelectDropdownIndicatorProps
+  | CustomSelectClearIndicatorProps
+  | CustomSelectInputComponentProps;
 
 export type SelectCustomComponents = {
-  SelectOptionElement?: CustomSelectOptionRenderer;
-  SelectMultiValueElement?: CustomSelectMultiValueRenderer;
-  SelectSingleValueElement?: CustomSelectSingleValueRenderer;
-  SelectDropdownIndicatorElement?: CustomSelectDropdownIndicatorRenderer;
-  SelectClearIndicatorElement?: CustomSelectClearIndicatorRenderer;
-  SelectCategoryElement?: CustomSelectCategoryRenderer;
-  SelectInputElement?: {
-    customComponent: CustomSelectInputRenderer;
-    renderContainer?: boolean;
-  };
+  SelectOptionElement?: CustomSelectOptionComponent;
+  SelectMultiValueElement?: CustomSelectMultiValueComponent;
+  SelectDropdownIndicatorElement?: CustomSelectDropdownIndicatorComponent;
+  SelectClearIndicatorElement?: CustomSelectClearIndicatorComponent;
+  SelectOptionListElement?: CustomOptionListComponent;
+  SelectCategoryElement?: CustomSelectCategoryComponent;
+  SelectInputElement?: CustomSelectInputComponent;
 };
 
 // #SELECT COMPONENT
@@ -194,51 +87,57 @@ export type SelectProps = {
   labelKey: keyof SelectOptionT;
   onChange: StateSetter<SelectOptionList>;
   isMultiValue: boolean;
-  usesAsync: boolean;
+  useAsync: boolean;
   fetchOnInputChange: boolean;
   removeSelectedOptionsFromList: boolean;
-  disableInputFetchTrigger: boolean;
   disableInputUpdate: boolean;
   isCategorized: boolean;
   fetchOnScroll: boolean;
+  disableInputEffect: boolean;
   clearInputOnIdicatorClick: boolean;
   lazyInit: boolean;
   hasInput: boolean;
+  updateSelectOptionsAfterFetch: boolean;
+  optionFilter?: SelectOptionFilter;
+  placeholder: string;
+  preventInputUpdate: CustomPreventInputUpdate;
   onOptionClick?: CustomOptionClickHandler;
   onAfterOptionClick?: CustomOptionClickHandler;
   onClearIndicatorClick?: CustomClearIndicatorClickHandler;
   onAfterClearIndicatorClick?: CustomClearIndicatorClickHandler;
   onDropdownClick?: CustomDropdownClickHandler;
   onAfterDropdownClick?: DropdownClickHandler;
-  onInputUpdate?: InputChangeHandler;
+  onInputChange?: InputChangeHandler;
   onAfterInputUpdate?: InputChangeHandler;
   onValueClear?: CustomValueClearClickHandler;
   onAfterValueClear?: CustomValueClearClickHandler;
   onScrollToBottom?: CustomScrollToBottomHandler;
   onAfterScrollToBottom?: CustomScrollToBottomHandler;
+  onKeyDown?: KeyDownHandler;
   closeDropdownOnSelect?: boolean;
-  updateSelectOptionsAfterFetch: boolean;
+  inputUpdateDebounceDuration?: number;
   inputValue?: string;
   categoryKey?: keyof SelectOptionT & string;
   clearInputOnSelect?: boolean;
   setInputValue?: StateSetter<string>;
   selectOptions?: SelectOptionList;
   setSelectOptions?: StateSetter<SelectOptionList>;
+  defaultSelectOptions?: SelectOptionList;
   isOptionDisabled?: (option: SelectOptionT) => boolean;
   inputFilterFunction?: (
     selectOptions: SelectOptionList,
     inputValue: string
   ) => SelectOptionList;
   isOpen?: boolean;
+  page?: number;
   setIsOpen?: StateSetter<boolean>;
-  inputUpdateDebounceDuration?: number;
-  placeholder: string;
-  preventInputUpdate: CustomPreventInputUpdate;
+  setPage?: StateSetter<number>;
   fetchFunction?: SelectFetchFunction;
   sortFunction?: SelectSorterFunction;
   onPageChange?: (page: number) => void;
   showClearIndicator?: boolean;
   isLoading?: boolean;
+  classNames: Partial<CustomClassNames>;
   categorizeFunction?: CustomSelectCategorizeFunction;
   recordsPerPage?: number;
 };
@@ -256,6 +155,7 @@ export type SelectOptionProps = {
   ) => void;
   getSelectOptionsMap: () => Map<string, HTMLDivElement>;
   isCategorized: boolean;
+  customComponentRenderer: CustomSelectOptionRenderer;
   isFocused: boolean;
   isSelected: boolean;
   isDisabled: boolean;
@@ -275,15 +175,96 @@ export type SelectOptionFromCategoryRenderer = (
   selectedOptions: SelectOptionList | null
 ) => JSX.Element;
 
+export type CustomSelectOptionComponentProps = {
+  clearValue: (optionId: keyof SelectOptionT) => void;
+  selectValue: (option: SelectOptionT) => void;
+  value: SelectOptionList;
+  clearInput: (optionId: keyof SelectOptionT) => void;
+  focusInput: () => void;
+  isDisabled: boolean;
+  handleOptionFocusOnSelectByClick: (
+    focusedOptionIdx: number,
+    focusedCategory: string,
+    direction?: SelectKeyboardNavigationDirection,
+    fallbackDirection?: SelectFocusNavigationFallbackDirection
+  ) => void;
+  closeDropdown: () => void;
+  resetFocus: () => void;
+  isFocused: boolean;
+  optionIndex: number;
+  isSelected: boolean;
+  option: SelectOptionT;
+  setFocusedOptionCategory: StateSetter<string>;
+  setFocusedOptionIndex: StateSetter<number>;
+};
+
+export type SelectOptionInnerProps = {
+  onClick: (...args: any) => void;
+  onMouseMove: (...args: any) => void;
+  "data-category": boolean;
+  "data-selected": boolean;
+  key: string;
+  ref: React.LegacyRef<HTMLDivElement>;
+  id: string;
+  className: string;
+};
+
+type CustomSelectOptionRenderer = (
+  selectOptionProps: Omit<SelectOptionProps, "customComponentRenderer"> & {
+    className: string;
+    refCallback: (node: HTMLDivElement) => void;
+  },
+  customComponent: CustomSelectOptionComponent
+) => JSX.Element;
+
+export type CustomSelectOptionComponent = CustomSelectComponent<
+  CustomSelectOptionComponentProps,
+  SelectOptionInnerProps
+>;
+
 // #OPTION LIST COMPONTENT
-export type OptionListProps = {
+export type SelectOptionListProps = {
   displayedOptions: SelectOptionList | CategorizedSelectOptions;
-  renderFunction: SelectCategoryRenderer | SelectOptionRenderer;
-  categoryKey: string;
+  renderFunction: SelectCategoryComponent | SelectOptionRenderer;
+  customComponentRenderer: CustomSelectOptionListRenderer;
   isCategorized?: boolean;
   isLoading?: boolean;
   handleScrollToBottom: () => void;
 };
+
+export type CustomSelectOptionListProps = {
+  handlePageChange: () => void;
+  page: number;
+  isLastPage: () => boolean | void;
+  fetchOnScrollToBottom: boolean | undefined;
+  displayedOptions: SelectOptionList | CategorizedSelectOptions;
+  isCategorized?: boolean;
+  isLoading?: boolean;
+  handleScrollToBottom: () => void;
+};
+
+export type SelectOptionListInnerProps = {
+  wrapperClassName: string;
+  ref: RefObject<HTMLDivElement>;
+  listClassName: string;
+};
+
+export type CustomOptionListComponent = CustomSelectComponent<
+  CustomSelectOptionListProps,
+  SelectOptionListInnerProps
+>;
+
+export type CustomSelectOptionListRenderer = (
+  selectOptionListProps: Omit<
+    SelectOptionListProps,
+    "customComponentRenderer"
+  > & {
+    listClassName: string;
+    wrapperClassName: string;
+    ref: RefObject<HTMLDivElement>;
+  },
+  customComponent: CustomOptionListComponent
+) => JSX.Element;
 
 // #CATEGORY COMPONENT
 
@@ -292,26 +273,96 @@ export type SelectCategoryProps = {
   categoryName: keyof SelectOptionT;
   selectedOptions: SelectOptionList | null;
   focusedOptionIdx: number | null;
+  customComponentRenderer: CustomSelectCategoryRenderer;
   renderOption: SelectOptionFromCategoryRenderer;
 };
 
-export type SelectCategoryRenderer = (category: SelectCategoryT) => JSX.Element;
+export type CustomSelectCategoryRenderer = (
+  selectOptionCategoryProps: Omit<
+    SelectCategoryProps,
+    "customComponentRenderer"
+  > & {
+    categoryHeaderClassName: string;
+    categoryListClassName: string;
+  },
+  customComponent: CustomSelectCategoryComponent
+) => JSX.Element;
+
+export type SelectCategoryComponent = (
+  category: SelectCategoryT
+) => JSX.Element;
+
+export type SelectCategoryInnerProps = {
+  categoryHeaderClassName: string;
+  categoryListClassName: string;
+};
+
+export type CustomSelectCategoryComponent = CustomSelectComponent<
+  CustomSelectCategoryProps,
+  SelectCategoryInnerProps
+>;
+
+export type CustomSelectCategoryProps = Omit<
+  SelectCategoryProps,
+  "customComponentRenderer"
+> & {
+  value: SelectOptionList;
+};
 
 // #INPUT COMPONENT
 
 export type SelectInputProps = {
   onInputChange: (inputValue: string) => void;
   inputValue: string;
+  handleKeyPress: KeyDownHandler;
+  hasInput: boolean;
+  handleOptionsSearchTrigger: () => void;
+  customComponentRenderer: CustomSelectInputRenderer;
+  preventInputUpdate: PreventInputUpdate;
+  isLoading?: boolean;
+};
+
+export type CustomSelectInputComponent = CustomSelectComponent<
+  CustomSelectInputComponentProps,
+  SelectInputInnerProps
+>;
+
+type CustomSelectInputRenderer = (
+  selectInputProps: Omit<
+    SelectInputProps,
+    "customComponentRenderer" | "hasInput"
+  > & {
+    className: string;
+    ref: RefObject<HTMLInputElement>;
+  },
+  customComponent: CustomSelectInputComponent
+) => JSX.Element;
+
+export type CustomSelectInputComponentProps = {
+  filterSearchedOptions: () => void;
+  selectOptions: SelectOptionList;
+  displayedOptions: SelectOptionList | CategorizedSelectOptions;
+  value: SelectOptionList;
+  handleInputChange: InputChangeHandler;
+  handleValueSelectOnKeyPress: () => void;
+  focusedOptionIndex: number | null;
+  focusedOptionCategory: keyof SelectOptionT;
+  focusPreviousOption: () => void;
   focusNextOption: (
     fallbackDirection?: SelectFocusNavigationFallbackDirection
   ) => void;
-  focusPreviousOption: () => void;
-  addOptionOnKeyPress: () => void;
-  hasInput: boolean;
-  handleOptionsSearchTrigger: () => void;
-  disableInputFetchTrigger: boolean;
-  preventInputUpdate: PreventInputUpdate;
-  isLoading?: boolean;
+  openDropdown: () => void;
+  closeDropdown: () => void;
+  clearAllValues: () => void;
+};
+
+export type SelectInputInnerProps = {
+  onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  onChange: (e: ChangeEvent<HTMLInputElement>) => void;
+  value: string;
+  ref: React.RefObject<HTMLInputElement>;
+  className: string;
+  disabled?: boolean;
 };
 
 // #VALUE COMPONENT
@@ -320,23 +371,114 @@ export type SelectMultiValueProps = {
   value: SelectOptionT;
   labelKey: keyof SelectOptionT;
   valueList: SelectOptionList;
+  customComponentRenderer: CustomSelectMultiValueRenderer;
   handleValueClear: ValueClearClickHandler;
 };
 
+export type CustomSelectMultiValueProps = Omit<
+  SelectMultiValueProps,
+  "customComponentRenderer"
+> & {
+  clearInput: () => void;
+  focusInput: () => void;
+  clearValue: (optionId: string) => void;
+  label: string;
+};
+
+export type SelectMultiValueInnerProps = {
+  className: string;
+  iconContainerClassName: string;
+  iconClassName: string;
+  onClick: ValueClearClickHandler;
+};
+
+export type CustomSelectMultiValueRenderer = (
+  selectMultiValueProps: Omit<
+    SelectMultiValueProps,
+    "customComponentRenderer"
+  > & {
+    className: string;
+    iconContainerClassName: string;
+    iconClassName: string;
+  },
+  customComponent: CustomSelectMultiValueComponent
+) => JSX.Element;
+
+export type CustomSelectMultiValueComponent = CustomSelectComponent<
+  CustomSelectMultiValueProps,
+  SelectMultiValueInnerProps
+>;
+
+export type SelectSingleValueProps = Pick<SelectValueProps, "labelKey"> & {
+  value: SelectOptionT;
+};
+
 export type SelectValueProps = {
+  customComponentRenderer: CustomSelectMultiValueRenderer;
   labelKey: keyof SelectOptionT;
   value: SelectOptionList;
   onClear: ValueClearClickHandler;
 };
 
-// #INDICATOR COMPONENTS
+// #DROPDOWN INDICATOR COMPONENT
 
 export type SelectDropdownIndicatorProps = {
   isOpen: boolean;
+  customComponentRenderer: CustomSelectDropdownIndicatorRenderer;
   isLoading?: boolean;
 };
 
+export type CustomSelectDropdownIndicatorProps = Omit<
+  SelectDropdownIndicatorProps,
+  "customComponentRenderer"
+>;
+
+export type CustomSelectDropdownIndicatorComponent = CustomSelectComponent<
+  CustomSelectDropdownIndicatorProps,
+  SelectDropdownIndicatorInnerProps
+>;
+
+export type CustomSelectDropdownIndicatorRenderer = (
+  selectDropdownIndicatorProps: Omit<
+    CustomSelectDropdownIndicatorProps,
+    "customComponentRenderer"
+  > & { className: string },
+  customComponent: CustomSelectDropdownIndicatorComponent
+) => JSX.Element;
+
+export type SelectDropdownIndicatorInnerProps = {
+  className: string;
+};
+
+// #CLEAR INDICATOR COMPONENT
+
 export type SelectClearIndicatorProps = {
   handleClearIndicatorClick: ClearIndicatorClickHanlder;
+  customComponentRenderer: CustomSelectClearIndicatorRenderer;
   isLoading: boolean | undefined;
 };
+
+export type CustomSelectClearIndicatorProps = {
+  isLoading: boolean | undefined;
+  value: SelectOptionList;
+  inputValue: string;
+  clearInputOnIdicatorClick: boolean;
+};
+
+export type SelectClearIndicatorInnerProps = {
+  onClick: (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => void;
+  className: string;
+};
+
+export type CustomSelectClearIndicatorComponent = CustomSelectComponent<
+  CustomSelectClearIndicatorProps,
+  SelectClearIndicatorInnerProps
+>;
+
+type CustomSelectClearIndicatorRenderer = (
+  selectClearIndicatorProps: Omit<
+    SelectClearIndicatorProps,
+    "customComponentRenderer"
+  > & { className: string },
+  customComponent: CustomSelectClearIndicatorComponent
+) => JSX.Element;

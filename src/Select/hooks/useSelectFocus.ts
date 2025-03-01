@@ -257,6 +257,8 @@ const useSelectFocus = (selectProps: SelectProps): SelectFocusApi => {
       handleOptionFocusOnSelectByClick,
       handleOptionFocusOnSelectByKeyPress,
       setFocusOnHover,
+      setFocusedOptionIndex,
+      setFocusedOptionCategory,
       resetFocus,
       isOptionFocused,
       handleOptionHover,

@@ -10,6 +10,7 @@ import { useSelectContext } from "src/Select/components/SelectProvider";
 const SelectClearIndicator = ({
   handleClearIndicatorClick,
   isLoading,
+  customComponentRenderer,
 }: SelectClearIndicatorProps) => {
   const context = useSelectContext();
   const {
@@ -25,13 +26,8 @@ const SelectClearIndicator = ({
   });
 
   if (isFunction(customComponent)) {
-    return customComponent(
-      {
-        isLoading,
-        handleClearIndicatorClick,
-      },
-      { onClick: handleClearIndicatorClick }
-    );
+    const props = { className, isLoading, handleClearIndicatorClick };
+    return customComponentRenderer(props, customComponent);
   }
   return (
     <div onClick={handleClearIndicatorClick} className={className}>

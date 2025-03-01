@@ -28,7 +28,7 @@ const useScrollManager = <T extends HTMLElement>(
   };
   const handleScroll = useCallback(
     (scrollEvent: WheelEvent) => {
-      if (!targetRef.current) return;
+      if (!targetRef.current || !captureEnabled) return;
       const isScrolledToBottom = isScrolledToEnd(targetRef);
       const isScrolledToTop = isScrolledToTheStart(targetRef);
 
@@ -55,6 +55,7 @@ const useScrollManager = <T extends HTMLElement>(
       bottomActions.onLeave,
       topActions.onArrive,
       topActions.onLeave,
+      captureEnabled,
     ]
   );
 
@@ -63,14 +64,15 @@ const useScrollManager = <T extends HTMLElement>(
   );
 
   useEffect(() => {
-    if (!captureEnabled || !targetRef.current) return;
-    const target = targetRef.current;
+    if (captureEnabled && targetRef.current) {
+      const target = targetRef.current;
 
-    target.addEventListener("wheel", throttledScrollHandler);
+      target.addEventListener("wheel", throttledScrollHandler);
 
-    return () => {
-      target.removeEventListener("wheel", throttledScrollHandler);
-    };
+      return () => {
+        target.removeEventListener("wheel", throttledScrollHandler);
+      };
+    }
   }, [captureEnabled, handleScroll]);
 };
 

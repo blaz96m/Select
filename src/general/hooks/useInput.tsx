@@ -13,6 +13,7 @@ import { isAsyncFunction } from "src/general/utils/general";
 const useInput = (
   onInputUpdate?: (inputValue: string, ...args: any) => void | number,
   cancelInputUpdate?: (
+    e: ChangeEvent<HTMLInputElement>,
     newValue: string,
     currInputValue?: string,
     ...args: any
@@ -27,14 +28,15 @@ const useInput = (
   const inputValue = !isNil(customInputState) ? customInputState : input;
 
   const shouldCancelInputUpdate = useCallback(
-    (newValue: string) =>
-      isFunction(cancelInputUpdate) && cancelInputUpdate(newValue, inputValue),
-    [customInputState, input, cancelInputUpdate]
+    (e: ChangeEvent<HTMLInputElement>, newValue: string) =>
+      isFunction(cancelInputUpdate) &&
+      cancelInputUpdate(e, newValue, inputValue),
+    [inputValue, cancelInputUpdate]
   );
 
   const onInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
-    if (shouldCancelInputUpdate(newValue)) {
+    if (shouldCancelInputUpdate(e, newValue)) {
       e.preventDefault();
       return;
     }

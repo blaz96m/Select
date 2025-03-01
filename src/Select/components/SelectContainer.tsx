@@ -3,17 +3,10 @@ import clsx from "clsx";
 
 export type SelectContainerProps = {
   children: React.ReactNode;
-  //dropdownContainerRef: React.RefObject<HTMLDivElement>
 };
-// DROPDOWN TOP REF - DROPDOWN TOP CONTAINER
 
 const SelectContainer = ({ children }: SelectContainerProps) => {
-  return (
-    <div className="select__container">
-      {/* Container Ref Here */}
-      {children}
-    </div>
-  );
+  return <div className="select__container">{children}</div>;
 };
 
 export default SelectContainer;

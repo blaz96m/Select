@@ -1,4 +1,4 @@
-import { SelectState } from "src/Select/types/selectTypes";
+import { SelectState } from "src/Select/types/selectStateTypes";
 
 export const DEFAULT_SELECT_PLACEHOLDER = "Please select a value";
 
@@ -8,8 +8,6 @@ export const INITIAL_STATE: SelectState = {
   selectOptions: [],
   inputValue: "",
   page: 1,
-  focusedCategory: "",
-  focusedOptionId: "",
 };
 
 export const OPTIONS_EMPTY_TEXT = "No Options Found";

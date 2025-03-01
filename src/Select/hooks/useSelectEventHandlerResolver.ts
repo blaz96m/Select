@@ -1,5 +1,5 @@
 import { isFunction, isNull, isNumber } from "lodash";
-import { useCallback } from "react";
+import { KeyboardEvent, useCallback } from "react";
 
 import {
   DefaultSelectEventHandlers,
@@ -21,17 +21,10 @@ import { SelectFocusState } from "src/Select/types/selectStateTypes";
 type SelectProps = {
   isLoading: boolean | undefined;
   clearInputOnIdicatorClick: boolean;
-  handlePageChange: () => void;
-  handlePageReset: () => void;
-  handleOptionFocusOnClick: (
-    focusedOptionIdx: number,
-    focusedCategory: string
-  ) => void;
   resetFocus: () => void;
 };
 
 const useSelectEventHandlerResolver = (
-  defaultEventHandlers: DefaultSelectEventHandlers,
   customEventHandlers: CustomSelectEventHandlers,
   eventHandlerFollowupFunctions: EventHandlerFollowupFunctions,
   selectApi: SelectApi,
@@ -39,12 +32,13 @@ const useSelectEventHandlerResolver = (
   selectProps: SelectProps
 ): SelectEventHandlers => {
   const {
-    onInputUpdate,
+    onInputChange,
     onOptionClick,
     onDropdownClick,
     onClearIndicatorClick,
     onValueClear,
     onScrollToBottom,
+    onKeyDown,
   } = customEventHandlers;
   const {
     onAfterInputUpdate,
@@ -57,38 +51,53 @@ const useSelectEventHandlerResolver = (
 
   const {
     clearInputOnSelect,
-
     displayedOptions,
     closeDropdownOnSelect,
     selectState,
-    selectStateUpdaters,
+    selectFocusState,
     selectFocusHandlers,
+    selectEventHandlers,
+    loadNextPage,
+    handlePageReset,
   } = selectApi;
+
+  const { loadNextPageAsync, fetchOnScrollToBottom } = selectAsyncApi;
+
+  const handlePageChange = fetchOnScrollToBottom
+    ? loadNextPageAsync
+    : loadNextPage;
+
+  const defaultEventHandlers = selectEventHandlers;
+
+  const {
+    resetFocus,
+    handleOptionFocusOnSelectByClick,
+    setFocusedOptionCategory,
+    setFocusedOptionIndex,
+  } = selectFocusHandlers;
+
+  const { focusedOptionCategory, focusedOptionIndex } = selectFocusState;
 
   const { value, isOpen, page, inputValue } = selectState;
 
-  const {
-    isLoading,
-    resetFocus,
-    handlePageReset,
-    handlePageChange,
-    handleOptionFocusOnClick,
-    clearInputOnIdicatorClick,
-  } = selectProps;
-
-  const { toggleDropdownVisibility } = selectStateUpdaters;
+  const { clearInputOnIdicatorClick } = selectProps;
 
   const handleInputChange = useCallback(
     (inputValue: string) => {
-      if (isFunction(onInputUpdate)) {
-        onInputUpdate(inputValue, value);
+      if (isFunction(onInputChange)) {
+        onInputChange(inputValue, value);
       } else {
         defaultEventHandlers.handleInputChange(inputValue);
         handlePageReset();
         isFunction(onAfterInputUpdate) && onAfterInputUpdate(inputValue, value);
       }
     },
-    [defaultEventHandlers.handleInputChange, onInputUpdate, onAfterInputUpdate]
+    [
+      defaultEventHandlers.handleInputChange,
+      onInputChange,
+      onAfterInputUpdate,
+      handlePageReset,
+    ]
   );
 
   const handleOptionClick = useCallback(
@@ -102,7 +111,7 @@ const useSelectEventHandlerResolver = (
         onOptionClick(option, isSelected);
         // Keep the focus logic due to its state being controlled.
         !closeDropdownOnSelect &&
-          handleOptionFocusOnClick(focusedOptionIdx, focusedCategory);
+          handleOptionFocusOnSelectByClick(focusedOptionIdx, focusedCategory);
         closeDropdownOnSelect && resetFocus();
       } else {
         defaultEventHandlers.handleOptionClick(
@@ -111,7 +120,7 @@ const useSelectEventHandlerResolver = (
           focusedOptionIdx,
           focusedCategory
         );
-        clearInputOnSelect && handlePageReset();
+        clearInputOnSelect && inputValue && handlePageReset();
 
         isFunction(onAfterOptionClick) &&
           onAfterOptionClick(option, isSelected);
@@ -121,6 +130,8 @@ const useSelectEventHandlerResolver = (
       onOptionClick,
       defaultEventHandlers.handleOptionClick,
       clearInputOnSelect,
+      closeDropdownOnSelect,
+      inputValue,
       resetFocus,
       handlePageReset,
       onAfterOptionClick,
@@ -159,6 +170,8 @@ const useSelectEventHandlerResolver = (
     [
       onClearIndicatorClick,
       onAfterClearIndicatorClick,
+      clearInputOnIdicatorClick,
+      handlePageReset,
       defaultEventHandlers.handleClearIndicatorClick,
     ]
   );
@@ -193,13 +206,35 @@ const useSelectEventHandlerResolver = (
     onScrollToBottom,
   ]);
 
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent<HTMLInputElement>) => {
+      if (isFunction(onKeyDown)) {
+        onKeyDown(
+          e,
+          {
+            focusedOptionCategory,
+            focusedOptionIndex,
+            setFocusedOptionCategory,
+            setFocusedOptionIndex,
+          },
+          displayedOptions
+        );
+      } else {
+        defaultEventHandlers.handleKeyDown(e);
+      }
+    },
+    [onKeyDown, focusedOptionCategory, focusedOptionIndex, displayedOptions]
+  );
+
   return {
     handleClearIndicatorClick,
     handleDropdownClick,
+    handleKeyDown,
     handleInputChange,
     handleOptionClick,
     handleScrollToBottom,
     handleValueClearClick,
+    handlePageChange,
   };
 };
 

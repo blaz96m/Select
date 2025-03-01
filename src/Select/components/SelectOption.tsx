@@ -17,36 +17,62 @@ import { isFunction, isNil } from "lodash";
 import {
   generateComponentInnerProps,
   getFocusedOptionIdx,
+  resolveClassNames,
 } from "src/Select/utils";
 import { useSelectContext } from "src/Select/components/SelectProvider";
 import { FALLBACK_CATEGORY_NAME } from "src/Select/utils/constants";
 
 const SelectOption = memo((props: SelectOptionProps) => {
+  const { customComponentRenderer, ...otherProps } = props;
+
   const {
-    labelKey,
     option,
-    optionIndex,
-    getSelectOptionsMap,
-    categoryKey,
-    isCategorized,
-    isSelected,
-    handleHover,
     isDisabled,
-    onClick,
     isFocused,
-  } = props;
+    isSelected,
+    categoryKey,
+    getSelectOptionsMap,
+    handleHover,
+    isCategorized,
+    labelKey,
+    onClick,
+    optionIndex,
+  } = otherProps;
 
   const context = useSelectContext();
 
   const {
     components: { SelectOptionElement: customComponent },
+    classNames: {
+      selectOption: customOptionClassName,
+      selectOptionDisabled: customOptionDisabledClassName,
+      selectOptionFocused: customOptionFocusedClassName,
+      selectOptionSelected: customOptionSelectedClassName,
+    },
   } = context;
 
+  const optionClassName = resolveClassNames(
+    "select__option",
+    customOptionClassName
+  );
+  const optionDisabledClassName = resolveClassNames(
+    "select__option--disabled",
+    customOptionDisabledClassName
+  );
+  const optionSelectedClassName = resolveClassNames(
+    "select__option--selected",
+    customOptionFocusedClassName
+  );
+  const optionFocusedClassName = resolveClassNames(
+    "select__option--focused",
+    customOptionSelectedClassName
+  );
+
   const className = clsx({
-    select__option: true,
-    "select__option--disabled": isDisabled,
-    "select__option--selected": isSelected,
-    "select__option--focused": isFocused,
+    [optionClassName]: true,
+    [optionDisabledClassName]: isDisabled,
+    [optionSelectedClassName]: isSelected,
+    [optionFocusedClassName]: isFocused,
   });
 
   const optionCategory = option[categoryKey!] || "";
@@ -56,26 +82,12 @@ const SelectOption = memo((props: SelectOptionProps) => {
     if (node) {
       selectOptionsMap.set(option.id, node);
     } else {
-      //TODO RETURN THIS INSTEAD OF ELSE
       selectOptionsMap.delete(option.id);
     }
   };
   if (isFunction(customComponent)) {
-    const innerProps = generateComponentInnerProps(
-      SelectComponents.SELECT_OPTION,
-      {
-        option,
-        handleOptionClick: () =>
-          onClick(option, isFocused, optionIndex, optionCategory),
-        handleMouseHover: (e: React.MouseEvent<HTMLDivElement, MouseEvent>) =>
-          handleHover(e, isFocused, optionIndex),
-        refCallback,
-        className,
-        isCategorized,
-        categoryKey,
-      }
-    );
-    return customComponent({ ...props }, innerProps as SelectOptionInnerProps);
+    const props = { ...otherProps, className, refCallback };
+    return customComponentRenderer(props, customComponent);
   }
 
   return (
@@ -88,14 +100,7 @@ const SelectOption = memo((props: SelectOptionProps) => {
         isCategorized ? option[categoryKey!] || FALLBACK_CATEGORY_NAME : ""
       }
       data-selected={isSelected}
-      ref={(node) => {
-        const selectOptionsMap = getSelectOptionsMap();
-        if (node) {
-          selectOptionsMap.set(option.id, node);
-        } else {
-          selectOptionsMap.delete(option.id);
-        }
-      }}
+      ref={refCallback}
       id={option.id}
       className={className}
       onClick={() => onClick(option, isSelected, optionIndex, optionCategory)}

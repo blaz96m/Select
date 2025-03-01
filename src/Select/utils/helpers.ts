@@ -23,9 +23,10 @@ import {
   CategorizedSelectOptions,
   SelectOptionT,
   SelectKeyboardNavigationDirection,
-  CustomClass,
+  CustomClassName,
   SelectFocusNavigationFallbackDirection,
   SelectCategoryFocusDetails,
+  SelectOptionFilter,
 } from "src/Select/types/selectGeneralTypes";
 
 import { StateSetter, SelectState } from "src/Select/types/selectStateTypes";
@@ -59,27 +60,23 @@ export const filterOptionListBySearchValue = (
   });
 };
 
-export const filterDataBySelectedValues = (
-  options: SelectOptionList | CategorizedSelectOptions,
-  value: SelectOptionList,
-  categoryKey: keyof SelectOptionT | string
-) => {
-  if (isEmpty(value)) {
-    return options;
-  }
-  if (!isEmpty(categoryKey)) {
-    const categories = cloneDeep(options as CategorizedSelectOptions);
-    return filterCategoriesBySelectedValues(categories, value, categoryKey);
-  }
-  return filterListBySelectedValues(options as SelectOptionList, value);
-};
-
 export const filterListBySelectedValues = (
   options: SelectOptionList,
-  value: SelectOptionList
+  value: SelectOptionList,
+  removeSelectedOptionsFromList: boolean,
+  customOptionFilter?: SelectOptionFilter
 ): SelectOptionList => {
   const valueIds = map(value, (val) => val.id);
-  return filter(options, (option) => !includes(valueIds, option.id));
+  return filter(options, (option) => {
+    isFunction(customOptionFilter) ? customOptionFilter(option) : true;
+    const secondShit = isFunction(customOptionFilter)
+      ? customOptionFilter(option)
+      : true;
+    return (
+      (removeSelectedOptionsFromList ? !includes(valueIds, option.id) : true) &&
+      (isFunction(customOptionFilter) ? customOptionFilter(option) : true)
+    );
+  });
 };
 
 export const isFocusedOptionIndexValid = (focusedOptionIdx: number | null) =>
@@ -526,12 +523,13 @@ const generateSelectInputInnerProps = (
   };
 };
 
-export const applyCustomClass = (
+export const resolveClassNames = (
   defaultClass: string,
-  customClass: CustomClass
+  customClass?: CustomClassName
 ) => {
-  const { className, override } = customClass;
-  return override ? className : `${defaultClass} ${className}`;
+  return customClass?.override
+    ? customClass?.className
+    : `${defaultClass} ${customClass?.className}`;
 };
 
 export const calculateSpaceAndDisplayOptionList = (

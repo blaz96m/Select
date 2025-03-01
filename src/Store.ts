@@ -1,12 +1,12 @@
 import type { Action, ThunkAction } from "@reduxjs/toolkit";
-import { configureStore, createReducer } from "@reduxjs/toolkit";
+import { configureStore, createAction, createReducer } from "@reduxjs/toolkit";
 
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import { SelectOptionList } from "./Select/types/selectGeneralTypes";
 import axiosClient from "./api/axios/axiosClient";
 import { getMovieList } from "./App";
-import { concat, isEmpty } from "lodash";
+import { concat, debounce, filter, includes, isEmpty, toLower } from "lodash";
 
 // Define the TS type for the counter slice's state
 export interface DropdownState {
@@ -15,6 +15,8 @@ export interface DropdownState {
   selectOptions: SelectOptionList;
   secondSelectOptions: SelectOptionList;
   yearFilta: string;
+  inputValue: string;
+  page: number;
 }
 
 // Define the initial value for the slice state
@@ -24,6 +26,8 @@ const initialState: DropdownState = {
   selectOptions: [],
   secondSelectOptions: [],
   yearFilta: "",
+  inputValue: "",
+  page: 1,
 };
 
 export const getShit = createAsyncThunk(
@@ -40,6 +44,13 @@ export const getShieet = createAsyncThunk(
   }
 );
 
+export const onInputUpdate = createAsyncThunk(
+  "dropdown/inp",
+  async (inputVal: string, { getState }) => {
+    const list = await getMovieList({ page: 1, searchQuery });
+  }
+);
+
 export const getSecondShieeet = createAsyncThunk(
   "dropdown/anotherFetch",
   async (params, { getState }) => {
@@ -53,6 +64,25 @@ export const getSecondShieeet = createAsyncThunk(
     const data = reselt.data;
     const totalRecords = data["total_results"];
     return { data: data.results as SelectOptionList, totalRecords };
+  }
+);
+
+const handler = async (inputValue: string, { getState, dispatch }) => {
+  const state = getState();
+  const dropdownOptions = state.dropdown.selectOptions;
+  const filteredOptions = filter(dropdownOptions, (option) => {
+    const opcija = toLower(option.title);
+    const inputVel = toLower(inputValue);
+    return opcija.includes(inputVel);
+  });
+  dispatch(setSelectOptions(filteredOptions));
+};
+
+const debouncedHandler = debounce(handler, 600);
+export const filterOptions = createAsyncThunk(
+  "dropdown/filterOptionsDebounce",
+  (inputVal: string, args) => {
+    return debouncedHandler(inputVal, args);
   }
 );
 
@@ -74,6 +104,12 @@ export const dropdownSlice = createSlice({
     setYearFilta: (state, action) => {
       state.yearFilta = action.payload;
     },
+    setInputValue: (state, action) => {
+      state.inputValue = action.payload;
+    },
+    setPage: (state, action) => {
+      state.page = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder.addCase(getShit.pending, (state) => {
@@ -90,6 +126,9 @@ export const dropdownSlice = createSlice({
     builder.addCase(getSecondShieeet.fulfilled, (state, action) => {
       state.secondSelectOptions = action.payload.data;
     });
+    builder.addCase(onInputUpdate.fulfilled, (state, action) => {
+      state.selectOptions = action.payload;
+    });
   },
 });
 
@@ -98,6 +137,8 @@ export const {
   setSelectOptions,
   setSecondSelectOption,
   setYearFilta,
+  setInputValue,
+  setPage,
 } = dropdownSlice.actions;
 
 export const store = configureStore({

@@ -77,34 +77,25 @@ import { SelectProps } from "src/Select/types/selectComponentTypes";
 import "../styles/_select.scss";
 
 import { useSelectEventHandlerResolver } from "src/Select/hooks";
+import { useSelectCustomComponentsHandler } from "src/general/hooks";
 
 type SelectComponentProps = SelectProps & {
   selectApi: SelectApi;
   selectAsyncApi: SelectAsyncApi;
-  selectStateUpdaters: SelectStateUpdaters;
   defaultSelectEventHandlers: DefaultSelectEventHandlers;
   customSelectEventHandlers: CustomSelectEventHandlers;
   eventHandlerFollowups: EventHandlerFollowupFunctions;
-  handlePageChange: () => void;
-  isInitialFetch: () => boolean;
-  handlePageReset: () => void;
-  selectState: SelectState;
 };
 
 const Select = ({
   isMultiValue,
   isLoading,
-  selectState,
   isOptionDisabled,
   selectApi,
   selectAsyncApi,
   defaultSelectEventHandlers,
   customSelectEventHandlers,
   eventHandlerFollowups,
-  handlePageChange,
-  handlePageReset,
-  // TODO HANDLE THIS PROP
-  disableInputFetchTrigger = false,
   clearInputOnIdicatorClick = true,
   hasInput = true,
   removeSelectedOptionsFromList = true,
@@ -120,7 +111,10 @@ const Select = ({
     getSelectOptionsMap,
     selectFocusHandlers,
     selectFocusState,
+    selectState,
   } = selectApi;
+
+  const { fetchOnScrollToBottom } = selectAsyncApi;
 
   const { inputRef, selectListContainerRef } = selectDomRefs;
 
@@ -130,7 +124,6 @@ const Select = ({
     focusNextOption,
     focusPreviousOption,
     resetFocus,
-    handleOptionFocusOnSelectByClick,
     isOptionFocused,
     handleOptionHover,
   } = selectFocusHandlers;
@@ -138,7 +131,6 @@ const Select = ({
   const { focusedOptionCategory, focusedOptionIndex } = selectFocusState;
 
   const selectEventHandlers = useSelectEventHandlerResolver(
-    defaultSelectEventHandlers,
     customSelectEventHandlers,
     eventHandlerFollowups,
     selectApi,
@@ -146,10 +138,19 @@ const Select = ({
     {
       isLoading,
       clearInputOnIdicatorClick,
-      handlePageChange,
-      handlePageReset,
-      handleOptionFocusOnClick: handleOptionFocusOnSelectByClick,
       resetFocus,
+    }
+  );
+
+  const customComponentRenderers = useSelectCustomComponentsHandler(
+    selectApi,
+    selectAsyncApi,
+    selectEventHandlers,
+    {
+      isCategorized,
+      categoryKey,
+      fetchOnScrollToBottom,
+      clearInputOnIdicatorClick,
     }
   );
 
@@ -160,9 +161,8 @@ const Select = ({
     handleOptionClick,
     handleScrollToBottom,
     handleValueClearClick,
+    handleKeyDown,
   } = selectEventHandlers;
-
-  const { handleValueSelectOnKeyPress } = defaultSelectEventHandlers;
 
   const handleOptionRender = useCallback(
     (
@@ -177,6 +177,9 @@ const Select = ({
           key={option.id}
           option={option}
           onClick={handleOptionClick}
+          customComponentRenderer={
+            customComponentRenderers.handleCustomOptionRender
+          }
           optionIndex={index}
           getSelectOptionsMap={getSelectOptionsMap}
           handleHover={handleOptionHover}
@@ -252,6 +255,9 @@ const Select = ({
           key={categoryName}
           categoryName={categoryName}
           focusedOptionIdx={focusedOptionIdx}
+          customComponentRenderer={
+            customComponentRenderers.handleCustomCategoryRender
+          }
           categoryOptions={categoryOptions}
           selectedOptions={
             !isEmpty(selectedOptionsInCategory)
@@ -272,33 +278,46 @@ const Select = ({
           <Select.Value
             labelKey={labelKey}
             isMultiValue={isMultiValue}
+            customComponentRenderer={
+              customComponentRenderers.handleCustomMultiValueRenderer
+            }
             placeholder={placeholder}
             inputValue={inputValue}
             onClear={handleValueClearClick}
             value={value}
           />
-
-          <Select.Input
-            onInputChange={handleInputChange}
-            inputValue={inputValue}
-            focusNextOption={focusNextOption}
-            focusPreviousOption={focusPreviousOption}
-            addOptionOnKeyPress={handleValueSelectOnKeyPress}
-            handleOptionsSearchTrigger={selectApi.handleOptionsSearchTrigger}
-            preventInputUpdate={selectApi.preventInputUpdate}
-            disableInputFetchTrigger={disableInputFetchTrigger}
-            isLoading={isLoading}
-            ref={inputRef}
-            hasInput={hasInput}
-          />
+          {hasInput && (
+            <Select.Input
+              onInputChange={handleInputChange}
+              inputValue={inputValue}
+              handleKeyPress={handleKeyDown}
+              customComponentRenderer={
+                customComponentRenderers.handleCustomInputRender
+              }
+              handleOptionsSearchTrigger={selectApi.handleOptionsSearchTrigger}
+              preventInputUpdate={selectApi.preventInputUpdate}
+              isLoading={isLoading}
+              ref={inputRef}
+              hasInput={hasInput}
+            />
+          )}
         </Select.ValueSection>
         <Select.IndicatorSection
           isLoading={isLoading}
           spinner={<Select.Spinner />}
         >
-          <Select.DropdownIndicator isOpen={isOpen} isLoading={isLoading} />
+          <Select.DropdownIndicator
+            isOpen={isOpen}
+            isLoading={isLoading}
+            customComponentRenderer={
+              customComponentRenderers.handleCustomDrodpownIndicatorRender
+            }
+          />
           {showClearIndicator && (
             <Select.ClearIndicator
+              customComponentRenderer={
+                customComponentRenderers.handleCustomClearIndicatorRender
+              }
               handleClearIndicatorClick={handleClearIndicatorClick}
               isLoading={isLoading}
             />
@@ -307,9 +326,11 @@ const Select = ({
       </Select.Top>
       {isOpen && (
         <Select.OptionList
-          categoryKey={categoryKey}
           handleScrollToBottom={handleScrollToBottom}
           ref={selectListContainerRef}
+          customComponentRenderer={
+            customComponentRenderers.handleCustomOptionListRender
+          }
           displayedOptions={displayedOptions}
           isLoading={isLoading}
           renderFunction={isCategorized ? renderCategory : renderOptionFromList}

@@ -3,51 +3,60 @@ import { isElement, isEmpty, isFunction, isNumber, map, some } from "lodash";
 
 import { SelectCategoryProps } from "src/Select/types/selectComponentTypes";
 import { useSelectContext } from "src/Select/components/SelectProvider";
+import { resolveClassNames } from "../utils";
 
-const SelectCategory = memo(
-  ({
+const SelectCategory = memo((props: SelectCategoryProps) => {
+  const context = useSelectContext();
+
+  const { customComponentRenderer, ...otherProps } = props;
+
+  const {
     categoryOptions,
     categoryName,
     selectedOptions,
     renderOption,
     focusedOptionIdx,
-  }: SelectCategoryProps) => {
-    const context = useSelectContext();
+  } = otherProps;
 
-    const {
-      components: { SelectCategoryElement: customComponent },
-    } = context;
+  const {
+    components: { SelectCategoryElement: customComponent },
+    classNames: {
+      selectCategoryHeader: customCategoryHeaderClass,
+      selectCategoryList: customCategoryListClass,
+    },
+  } = context;
 
-    if (isEmpty(categoryOptions)) return;
+  const categoryHeaderClassName = resolveClassNames(
+    "select__category__name",
+    customCategoryHeaderClass
+  );
+  const categoryListClassName = resolveClassNames(
+    "select__category__options-list",
+    customCategoryListClass
+  );
 
-    return (
-      <div>
-        {isFunction(customComponent) ? (
-          customComponent(
-            {
-              categoryName,
-              categoryOptions,
-              selectedOptions,
-              focusedOptionIdx,
-            },
-            { className: "select__category__name" }
-          )
-        ) : (
-          <p className="select__category__name">{categoryName}</p>
-        )}
-        <ul className="select__category__options-list">
-          {map(categoryOptions, (option, index) => {
-            return renderOption(
-              option,
-              index,
-              focusedOptionIdx,
-              selectedOptions
-            );
-          })}
-        </ul>
-      </div>
-    );
+  if (isEmpty(categoryOptions)) return;
+
+  if (isFunction(customComponent)) {
+    const props = {
+      ...otherProps,
+      categoryHeaderClassName,
+      categoryListClassName,
+    };
+    return customComponentRenderer(props, customComponent);
   }
-);
+
+  return (
+    <div>
+      <p className={categoryHeaderClassName}>{categoryName}</p>
+
+      <ul className={categoryListClassName}>
+        {map(categoryOptions, (option, index) => {
+          return renderOption(option, index, focusedOptionIdx, selectedOptions);
+        })}
+      </ul>
+    </div>
+  );
+});
 
 export default SelectCategory;

@@ -5,7 +5,7 @@ export const REQUEST_CONFIG_DEFAULT_VALUES: RequestConfig = {
   fetchOnInit: true,
   defaultSort: "",
   recordsPerPage: 15,
-  fetchOnInputChange: false,
+  fetchOnInputChange: true,
 };
 
 export const INITIAL_STATE = {

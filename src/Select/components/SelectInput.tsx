@@ -14,7 +14,10 @@ import {
   SelectInputProps,
 } from "src/Select/types/selectComponentTypes";
 import { useInput } from "src/general/hooks";
-import { generateComponentInnerProps } from "src/Select/utils";
+import {
+  generateComponentInnerProps,
+  resolveClassNames,
+} from "src/Select/utils";
 import clsx from "clsx";
 
 import { useSelectContext } from "src/Select/components/SelectProvider";
@@ -25,39 +28,32 @@ const SelectInput = memo(
       inputValue,
       handleOptionsSearchTrigger,
       onInputChange,
-      focusNextOption,
-      focusPreviousOption,
+      handleKeyPress,
       preventInputUpdate,
+      customComponentRenderer,
       hasInput,
-      addOptionOnKeyPress,
       isLoading,
     } = props;
 
     const innerRef = useRef<HTMLInputElement>(null);
 
     const selectContext = useSelectContext();
+    console.log(selectContext);
     const {
-      components: { SelectInputElement: customComponentProperties },
+      components: { SelectInputElement: customComponent },
+      classNames: {
+        selectInputContainer: customContainerClass,
+        selectInputValue: customClass,
+      },
     } = selectContext;
 
-    const className = clsx({
-      select__input: true,
-      hidden: !hasInput,
-    });
+    const className = resolveClassNames("select__input", customClass);
+    const containerClassName = resolveClassNames(
+      "select__input__wrapper",
+      customContainerClass
+    );
 
     useImperativeHandle(ref, () => innerRef.current!, []);
-    /*
-    useImperativeHandle(
-      ref,
-      () => ({
-        ...innerRef.current!,
-        focusInput: () => {
-          debugger;
-          innerRef.current?.focus();
-        },
-      }),
-      []
-    );*/
 
     const [_, handleInputChange] = useInput(
       onInputChange,
@@ -66,52 +62,27 @@ const SelectInput = memo(
       inputValue
     );
 
-    const handleKeyPress = (e: KeyboardEvent<HTMLInputElement>) => {
-      switch (e.code) {
-        case "ArrowUp":
-          focusPreviousOption();
-          break;
-        case "ArrowDown":
-          focusNextOption();
-          break;
-        case "Enter":
-          addOptionOnKeyPress();
-          break;
-      }
-    };
-
-    if (isFunction(customComponentProperties?.customComponent)) {
-      const inputInnerProps = generateComponentInnerProps(
-        SelectComponents.INPUT,
-        {
-          handleInputChange,
-          className,
-          inputValue,
-          innerRef,
-          handleKeyPress,
-          isLoading,
-        }
-      );
-      return customComponentProperties.renderContainer ? (
-        <div className="select__input__wrapper">
-          {customComponentProperties.customComponent(
-            { ...props },
-            inputInnerProps as SelectInputInnerProps
-          )}
-        </div>
-      ) : (
-        customComponentProperties.customComponent(
-          { ...props },
-          inputInnerProps as SelectInputInnerProps
-        )
-      );
+    if (isFunction(customComponent)) {
+      const props = {
+        inputValue,
+        className,
+        ref: innerRef,
+        handleOptionsSearchTrigger,
+        onInputChange,
+        handleKeyPress,
+        preventInputUpdate,
+      };
+      return customComponentRenderer(props, customComponent);
     }
 
     return (
-      <div className="select__input__wrapper">
+      <div className={containerClassName}>
         <input
           className={className}
-          onChange={handleInputChange}
+          onChange={(e) => {
+            e.stopPropagation();
+            handleInputChange(e);
+          }}
           value={inputValue}
           disabled={isLoading}
           onKeyDown={handleKeyPress}

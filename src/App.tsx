@@ -7,13 +7,21 @@ import {
   SelectDropdownIndicatorInnerProps,
   SelectInputInnerProps,
   SelectClearIndicatorInnerProps,
-  SelectCategoryCustomComponentProps,
   BasicComponentInnerProps,
   SelectOptionList,
 } from "./components/Select/types/selectTypes";
 import "src/style.scss";
 import { SelectOptionProps } from "./components/Select/SelectOption";
-import { filter, isEmpty, split, toLower } from "lodash";
+import {
+  debounce,
+  filter,
+  includes,
+  isEmpty,
+  reduce,
+  split,
+  toLower,
+  trim,
+} from "lodash";
 import { SelectMultiValueProps } from "./components/Select/SelectMultiValueElement";
 import { SelectValueProps } from "./components/Select/SelectValue";
 import { SelectDropdownIndicatorProps } from "./components/Select/SelectDropdownIndicator";
@@ -29,11 +37,15 @@ import { SelectCategoryProps } from "./Select/components/SelectCategory";
 import axiosClient from "./api/axios/axiosClient";
 import { Select } from "./Select/components";
 import {
+  filterOptions,
   getSecondShieeet,
   getShieet,
   getShit,
+  onInputUpdate,
   selectDropdownState,
+  setInputValue,
   setIsOpen,
+  setPage,
   setSelectOptions,
   setYearFilta,
   store,
@@ -41,10 +53,12 @@ import {
 import { useSelect } from "./Select/hooks";
 import { Provider, useDispatch, useSelector } from "react-redux";
 import { RootState } from "@reduxjs/toolkit/query";
+import { CategorizedSelectOptions } from "./Select/types/selectGeneralTypes";
+import { SelectCategoryCustomComponentProps } from "./Select/types/selectComponentTypes";
 
 export const getMovieList = async (
   { page = 1, searchQuery = "a" },
-  signal: AbortSignal
+  signal?: AbortSignal
 ) => {
   try {
     const reselt = await axiosClient.get(
@@ -58,24 +72,35 @@ export const getMovieList = async (
   }
 };
 
+let categoryCount = 1;
+const items = Array.from({ length: 5000 }, (_, i) => {
+  let category = `Category-${categoryCount}`;
+  if (i % 5 === 0) {
+    categoryCount++;
+  }
+  return {
+    id: i,
+    name: `Option-${i}`,
+    details: `A movie about ${i}`,
+    category,
+    test: { 1: [1, 2, 3], 2: [2, 3, 4] },
+    xy: {
+      a: { a: "a", b: "b", c: "c" },
+      b: { a: "a", b: "b", c: "c" },
+      c: { a: "a", b: "b", c: "c" },
+    },
+    languages: ["en", "fr", "de", "sp"],
+  };
+});
+
 function App() {
-  let currCategoryCount = 1;
-  const options = Array.from({ length: 100 }, (val, index) => {
-    if ((index + 1) % 5 === 0) {
-      currCategoryCount += 1;
-    }
-    return {
-      id: `${index}`,
-      name: `Select Value - ${index + 1}`,
-      category: `Category-${currCategoryCount}`,
-    };
-  });
   const [value, setValue] = useState<SelectOptionList>([]);
   const [val2, setValue2] = useState<SelectOptionList>([]);
   const [currLabel, setCurrLabel] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [count, setCount] = useState(0);
   const [message, setMessage] = useState("");
+  const [lenft, setLenft] = useState("None");
 
   //const [isOpen, setIsOpen] = useState(false);
 
@@ -95,29 +120,6 @@ function App() {
     },
     []
   );
-
-  let categoryCount = 1;
-  const items = Array.from({ length: 100 }, (_, i) => {
-    let category = `Category-${categoryCount}`;
-    if (i % 3 === 0) {
-      categoryCount++;
-    }
-    return {
-      id: i,
-      name: `Option-${i}`,
-      details: `A movie about ${i}`,
-      category,
-      test: { 1: [1, 2, 3], 2: [2, 3, 4] },
-      xy: {
-        a: { a: "a", b: "b", c: "c" },
-        b: { a: "a", b: "b", c: "c" },
-        c: { a: "a", b: "b", c: "c" },
-      },
-      languages: ["en", "fr", "de", "sp"],
-    };
-  });
-
-  items;
 
   const SelectCheckBox = (
     componentProps: SelectOptionProps,
@@ -169,7 +171,7 @@ function App() {
   };
 
   const CustomCategoryComponent = (
-    componentProps: SelectCategoryCustomComponentProps,
+    componentProps: SelectCategoryCustomComponentProps
     innerProps: BasicComponentInnerProps
   ) => {
     const { className } = innerProps;
@@ -219,12 +221,25 @@ function App() {
   };
 
   const isOpen = useSelector((state: any) => state.dropdown.isOpen);
-  const isLoadingSt = useSelector((state: any) => state.dropdown.loading);
+
+  const inputValue = useSelector((state: any) => state.dropdown.inputValue);
+
+  const updateInputValue = (value: string) => dispatch(setInputValue(value));
+
+  const page = useSelector((state: any) => state.dropdown.page);
+
   const secondOptions = useSelector(
     (state: any) => state.dropdown.secondSelectOptions
   );
   const selectOptions = useSelector(
     (state: any) => state.dropdown.selectOptions
+  );
+
+  const onAfterScrollToBottom = useCallback(
+    (options: CategorizedSelectOptions, page) => {
+      setLenft((prev) => prev + 20);
+    },
+    []
   );
   const dispatch = useDispatch();
 
@@ -240,44 +255,99 @@ function App() {
     dispatch(setIsOpen(!isOpen));
   };
 
-  const onFetchFunc = async (req, signal) => {
+  const onFetchFunc = useCallback(async (req, signal) => {
     const res = await dispatch(getShit(req, signal));
     return res.payload;
-  };
+  }, []);
 
   const secondOnFetch = async (req, signal) => {
     const res = await dispatch(getSecondShieeet(req, signal));
     return res.payload;
   };
 
+  const customOptionFiltaBejbi = useCallback((option: SelectOptionT) => {
+    return option.id % 2 !== 0;
+  }, []);
+
+  const inputValuePreventer = useCallback(
+    (newInput: string, currInput: string) => {
+      const currInputLetters = split(trim(currInput), "");
+      const lastKey = trim(newInput).slice(-1);
+      const res = includes(currInputLetters, lastKey);
+      return includes(currInputLetters, lastKey);
+    },
+    []
+  );
+
+  const onInputChange = useCallback(
+    (inputValue: string, value: SelectOptionList) => {
+      dispatch(setInputValue(inputValue));
+      dispatch(filterOptions(inputValue));
+    },
+    []
+  );
+
+  const onValueClear = (
+    e: React.MouseEvent<HTMLDivElement, MouseEvent>,
+    option: SelectOptionT
+  ) => {
+    e.stopPropagation();
+    const updatedValue = filter(
+      value,
+      (val: SelectOptionT) => val.id !== option.id
+    );
+    setValue(updatedValue);
+  };
+
+  const onAfterValueClear = (
+    e: React.MouseEvent<HTMLDivElement, MouseEvent>,
+    option: SelectOptionT
+  ) => {
+    setLenft(option.title);
+  };
+
+  const settPage = useCallback((page: number) => {
+    dispatch(setPage(page));
+  }, []);
+
   return (
     <>
-      <button onClick={() => setCount((count) => count + 1)}>Next</button>
-      <button onClick={() => setCount((count) => count - 1)}>Prev</button>
-      {message && <div>Selected Item: {message}</div>}
-      <div>Count: {count}</div>
-      <div>Selected Value: {currLabel}</div>
+      <div>ClearedValue: {lenft}</div>
       <Select
-        fetchFunction={onFetchFunc}
+        fetchFunction={getMovieList}
+        useAsync={true}
         isMultiValue={true}
         closeDropdownOnSelect={false}
         value={value}
         labelKey="title"
-        clearInputOnSelect={false}
+        //onValueClear={onValueClear}
+        //onAfterValueClear={onAfterValueClear}
+        clearInputOnSelect={true}
         categoryKey="original_language"
         isCategorized={true}
+        inputValue={inputValue}
+        setInputValue={updateInputValue}
+        //page={page}
+        //setPage={settPage}
         //isOpen={isOpen}
         //onDropdownClick={onDropdownClick}
         //setIsOpen={chenge}
         setSelectOptions={setOptions}
         selectOptions={selectOptions}
+        //defaultSelectOptions={items}
+        disableInputEffect={true}
         onChange={setValue}
+        recordsPerPage={20}
         removeSelectedOptionsFromList={false}
         onOptionSelect={onOptionClick}
         fetchOnScroll={true}
-        isLoading={isLoadingSt}
+        isLoading={isLoading}
         lazyInit={true}
         inputFilterFunction={customFilter}
+        classNames={{
+          selectOptionSelected: { className: "red", override: false },
+          selectOptionFocused: { className: "orange", override: false },
+        }}
         /*
         customComponents={{
           SelectOptionElement: SelectCheckBox,

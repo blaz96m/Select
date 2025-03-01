@@ -1,5 +1,8 @@
 // #OPTION TYPES
 
+import { ChangeEvent, KeyboardEvent, RefObject } from "react";
+import { StateSetter } from "./selectStateTypes";
+
 export type SelectOptionT = {
   id: string;
   [key: string]: any;
@@ -45,18 +48,22 @@ export type OptionHoverHandler = (
   optionIndex: number
 ) => void;
 
+export type KeyDownHandler = (e: KeyboardEvent<HTMLInputElement>) => void;
+
 export type SelectEventHandlers = {
   handleValueClearClick: ValueClearClickHandler;
   handleOptionClick: OptionClickHandler;
+  handleKeyDown: KeyDownHandler;
   handleClearIndicatorClick: ClearIndicatorClickHanlder;
   handleDropdownClick: DropdownClickHandler;
   handleInputChange: InputChangeHandler;
   handleScrollToBottom: () => void;
+  handlePageChange: () => void;
 };
 
 export type DefaultSelectEventHandlers = Omit<
   SelectEventHandlers,
-  "handleScrollToBottom" | "handleValueClearClick"
+  "handleScrollToBottom" | "handleValueClearClick" | "handlePageChange"
 > & {
   handleValueClearClick: (
     e: React.MouseEvent<HTMLDivElement, MouseEvent>,
@@ -90,13 +97,30 @@ export type CustomScrollToBottomHandler = (
 
 export type CustomDropdownClickHandler = (isOpen: boolean) => void;
 
+export type CustomKeyDownHandler = (
+  e: KeyboardEvent<HTMLInputElement>,
+  {
+    focusedOptionIndex,
+    focusedOptionCategory,
+    setFocusedOptionCategory,
+    setFocusedOptionIndex,
+  }: {
+    focusedOptionIndex: number | null;
+    focusedOptionCategory: keyof SelectOptionT;
+    setFocusedOptionIndex: StateSetter<number>;
+    setFocusedOptionCategory: StateSetter<string>;
+  },
+  selectOptions: SelectOptionList | CategorizedSelectOptions
+) => void;
+
 export type CustomSelectEventHandlers = {
-  onInputUpdate?: InputChangeHandler;
+  onInputChange?: InputChangeHandler;
   onValueClear?: CustomValueClearClickHandler;
   onOptionClick?: CustomOptionClickHandler;
   onClearIndicatorClick?: CustomClearIndicatorClickHandler;
   onDropdownClick?: CustomDropdownClickHandler;
   onScrollToBottom?: CustomScrollToBottomHandler;
+  onKeyDown?: CustomKeyDownHandler;
 };
 
 export type EventHandlerFollowupFunctions = {
@@ -111,11 +135,15 @@ export type EventHandlerFollowupFunctions = {
 // # OTHER FUNCTION TYPES
 
 export type CustomPreventInputUpdate = (
-  newInputValue: string,
+  e: ChangeEvent<HTMLInputElement>,
+  updatedInputValue: string,
   currInputValue: string
 ) => boolean;
 
-export type PreventInputUpdate = (newInputValue: string) => boolean;
+export type PreventInputUpdate = (
+  e: ChangeEvent<HTMLInputElement>,
+  updatedInputValue: string
+) => boolean;
 
 export type SelectFetchFunction = (
   params: {
@@ -130,8 +158,10 @@ export type CustomSelectCategorizeFunction = (
 ) => CategorizedSelectOptions;
 
 export type SelectSorterFunction = (
-  options: SelectOptionList | CategorizedSelectOptions
-) => SelectOptionList | CategorizedSelectOptions;
+  options: SelectOptionList
+) => SelectOptionList;
+
+export type SelectOptionFilter = (option: SelectOptionT) => boolean;
 
 export type SelectCategorizeFuntion = (
   options: SelectOptionList
@@ -147,7 +177,6 @@ export type SelectKeyboardNavigationDirection = "next" | "previous";
 
 export type SelectDomRefs = {
   selectListContainerRef: React.RefObject<HTMLDivElement>;
-  selectOptionRef: React.RefObject<HTMLDivElement>;
   inputRef: React.RefObject<HTMLInputElement>;
   selectOptionsRef: React.MutableRefObject<Map<string, HTMLDivElement> | null>;
 };
@@ -162,4 +191,33 @@ export type SelectCategoryFocusDetails = {
   focusedOptionIdx: number;
 };
 
-export type CustomClass = { className: string; override?: boolean };
+export type CustomClassName = { className: string; override?: boolean };
+
+export type CustomClassNames = {
+  selectContainer: CustomClassName;
+  selectTopContainer: CustomClassName;
+  selectSingleValue: CustomClassName;
+  selectMultiValue: CustomClassName;
+  selectMultiValueIconContainer: CustomClassName;
+  selectMultiValueIcon: CustomClassName;
+  selectInputContainer: CustomClassName;
+  selectInputValue: CustomClassName;
+  selectClearIndicator: CustomClassName;
+  selectClearIndicatorDisabled: CustomClassName;
+  selectDropdownIndicator: CustomClassName;
+  selectDropdownIndicatorDisabled: CustomClassName;
+  selectOptionList: CustomClassName;
+  selectOptionListWrapper: CustomClassName;
+  selectOptionListEmpty: CustomClassName;
+  selectCategoryHeader: CustomClassName;
+  selectCategoryList: CustomClassName;
+  selectOption: CustomClassName;
+  selectOptionFocused: CustomClassName;
+  selectOptionDisabled: CustomClassName;
+  selectOptionSelected: CustomClassName;
+};
+
+export type CustomRefs = {
+  inputRef: RefObject<HTMLInputElement>;
+  optionListRef: RefObject<HTMLDivElement>;
+};

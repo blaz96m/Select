@@ -33,10 +33,12 @@ const useSelectStateResolver = (
     inputValue: defaultInputState,
     selectOptions: defaultOptionState,
     isOpen: defaultIsOpen,
+    page: defaultPage,
     value,
   } = selectState;
 
-  const { customInputValue, customSelectOptions, customIsOpen } = customState;
+  const { customInputValue, customSelectOptions, customIsOpen, customPage } =
+    customState;
 
   // #STATE RESOLVERS
   const inputValue = resolveStateValue(defaultInputState, customInputValue);
@@ -45,6 +47,7 @@ const useSelectStateResolver = (
     customSelectOptions
   );
   const isOpen = resolveStateValue(defaultIsOpen, customIsOpen);
+  const page = resolveStateValue(defaultPage, customPage);
 
   // #STATE UPDATER RESOLVERS
   const {
@@ -52,6 +55,7 @@ const useSelectStateResolver = (
     customSetInputValue,
     customSetSelectOptions,
     setValue,
+    customSetPage,
   } = customStateSetters;
 
   // #isOpen Resolvers
@@ -131,7 +135,6 @@ const useSelectStateResolver = (
 
   const customAddSelectOptions = useCallback(
     (optionsToAdd: SelectOptionList) => {
-      console.log("TO ADD ", optionsToAdd);
       const updatedSelectedOptions = concat(selectOptions, optionsToAdd);
       customSetSelectOptions!(updatedSelectedOptions);
     },
@@ -165,26 +168,28 @@ const useSelectStateResolver = (
     [value]
   );
 
-  const clearAllValues = useCallback(() => {
-    if (!isEmpty(value)) {
-      setValue([]);
-    }
-  }, [value]);
+  const clearAllValues = useCallback(() => setValue([]), []);
 
   // #page Resolvers
 
   const loadNextPage = useCallback(
-    () => dispatch({ type: SelectReducerActionTypes.GO_TO_NEXT_PAGE }),
-    []
+    () =>
+      isFunction(customSetPage)
+        ? customSetPage(page + 1)
+        : dispatch({ type: SelectReducerActionTypes.GO_TO_NEXT_PAGE }),
+    [page]
   );
 
   const resetPage = useCallback(
-    () => dispatch({ type: SelectReducerActionTypes.RESET_PAGE }),
+    () =>
+      isFunction(customSetPage)
+        ? customSetPage(1)
+        : dispatch({ type: SelectReducerActionTypes.RESET_PAGE }),
     []
   );
 
   return {
-    selectState: { ...selectState, isOpen, selectOptions, inputValue },
+    selectState: { ...selectState, isOpen, selectOptions, inputValue, page },
     selectStateUpdaters: {
       clearAllValues,
       selectValue,

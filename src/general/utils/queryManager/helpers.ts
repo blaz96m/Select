@@ -12,12 +12,9 @@ type DefaultRequestParams = {
   page: "page";
 };
 
-export const setConfig = <T>(
-  propValues?: Partial<RequestConfig>,
-  fetchFunction?: (...args: any) => Promise<Response<T> | void>
-) => {
+export const setConfig = <T>(propValues?: Partial<RequestConfig>) => {
   const config = REQUEST_CONFIG_DEFAULT_VALUES;
-  if (!isFunction(fetchFunction) || !propValues) {
+  if (propValues?.isDisabled) {
     config.isDisabled = true;
     return config;
   }

@@ -20,8 +20,6 @@ export type SelectState = {
   isOpen: boolean;
   inputValue: string;
   page: number;
-  focusedOptionId: string;
-  focusedCategory?: keyof SelectOptionT;
 };
 
 export type SelectStateUpdaters = {
@@ -52,9 +50,9 @@ export type SelectApi = {
   handleOptionsSearchTrigger: () => void;
   onDropdownExpand: () => void;
   usesInputAsync: boolean;
+  isLastPage: () => boolean;
   preventInputUpdate: PreventInputUpdate;
   selectEventHandlers: DefaultSelectEventHandlers;
-  fetchOnScrollToBottom: boolean | undefined;
   displayedOptions: SelectOptionList | CategorizedSelectOptions;
   getOriginalOptions: () => SelectOptionList;
   setOriginalOptions: (options: SelectOptionList) => void;
@@ -71,8 +69,8 @@ export type SelectApi = {
 export type SelectAsyncApi = {
   isLastPage: () => boolean;
   isInitialFetch: () => boolean;
+  fetchOnScrollToBottom: boolean | undefined;
   loadNextPageAsync: () => void;
-  handlePageResetAsync: () => void;
 };
 
 export type SelectFocusHandlers = {
@@ -83,14 +81,16 @@ export type SelectFocusHandlers = {
   handleOptionFocusOnSelectByClick: (
     focusedOptionIdx: number,
     focusedCategory: string,
-    direction: SelectKeyboardNavigationDirection,
-    fallbackDirection: SelectFocusNavigationFallbackDirection
+    direction?: SelectKeyboardNavigationDirection,
+    fallbackDirection?: SelectFocusNavigationFallbackDirection
   ) => void;
   handleOptionFocusOnSelectByKeyPress: (
     direction: SelectKeyboardNavigationDirection,
     fallbackDirection: SelectFocusNavigationFallbackDirection
   ) => void;
   handleOptionHover: OptionHoverHandler;
+  setFocusedOptionIndex: StateSetter<number>;
+  setFocusedOptionCategory: StateSetter<string>;
   setFocusOnHover: (optionIdx: number, optionCategory: string) => void;
   isOptionFocused: (option: SelectOptionT, optionIdx: number) => boolean;
   getFocusedOption: () => SelectOptionT | void;
@@ -107,10 +107,12 @@ export type CustomStateSetters = {
   customSetInputValue: StateSetter<string> | undefined;
   customSetSelectOptions: StateSetter<SelectOptionList> | undefined;
   customSetIsOpen: StateSetter<boolean> | undefined;
+  customSetPage: StateSetter<number> | undefined;
 };
 
 export type CustomState = {
   customInputValue: string | undefined;
   customSelectOptions: SelectOptionList | undefined;
   customIsOpen: boolean | undefined;
+  customPage: number | undefined;
 };
