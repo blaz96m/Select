@@ -30,7 +30,11 @@ const SelectClearIndicator = ({
     return customComponentRenderer(props, customComponent);
   }
   return (
-    <div onClick={handleClearIndicatorClick} className={className}>
+    <div
+      data-testid="select-clear-indicator"
+      onClick={handleClearIndicatorClick}
+      className={className}
+    >
       <FontAwesomeIcon icon={faClose} />
     </div>
   );

@@ -112,6 +112,7 @@ const useQueryManager = <ResponseItemT>(
 } => {
   const [state, dispatch] = useReducer(queryManagerReducer, INITIAL_STATE);
   const requestConfigRef = useRef<RequestConfig | null>(null);
+  const isInputDebounceInProgress = useRef<Boolean>(false);
   const previousSearchQueryValueRef = useRef("");
   const isInitialFetchRef = useRef(true);
   const totalRecordsRef = useRef(0);
@@ -121,6 +122,7 @@ const useQueryManager = <ResponseItemT>(
   }
 
   const getRequestConfig = () => requestConfigRef.current as RequestConfig;
+  const isInputDebouncing = () => isInputDebounceInProgress.current;
   const getTotalRecords = useCallback(() => totalRecordsRef.current, []);
   const isInitialFetch = useCallback(() => isInitialFetchRef.current, []);
 
@@ -162,6 +164,7 @@ const useQueryManager = <ResponseItemT>(
             ...response!,
             params: requestParams,
           });
+        previousSearchQueryValueRef.current = searchQuery;
         return response;
       }
     },
@@ -238,7 +241,6 @@ const useQueryManager = <ResponseItemT>(
   };
 
   useEffect(() => {
-    debugger;
     const abortController = new AbortController();
     const signal = abortController.signal;
     const requestConfig = getRequestConfig();
@@ -255,8 +257,6 @@ const useQueryManager = <ResponseItemT>(
 
     if (!preventFetchOnPageChange) {
       fetch({}, signal);
-    } else if (pageChangeTriggeredByInput) {
-      previousSearchQueryValueRef.current = searchQuery;
     }
     return () => abortController.abort();
   }, [page]);
@@ -293,19 +293,11 @@ const useQueryManager = <ResponseItemT>(
       const fetchImmediately = !searchQuery && previousSearchQueryValue;
 
       if (fetchImmediately) {
-        if (page === 1) {
-          previousSearchQueryValueRef.current = searchQuery;
-        } else {
-          resetPage();
-        }
+        resetPage();
         fetch({ page: 1 }, signal);
       } else {
         timeoutId = setTimeout(async () => {
-          if (page === 1) {
-            previousSearchQueryValueRef.current = searchQuery;
-          } else {
-            resetPage();
-          }
+          resetPage();
           fetch({ page: 1 }, signal);
         }, inputFetchDeboubceDuration);
       }

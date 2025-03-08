@@ -1,5 +1,5 @@
 import { isFunction, isNull, isNumber } from "lodash";
-import { KeyboardEvent, useCallback } from "react";
+import { KeyboardEvent, useCallback, useRef } from "react";
 
 import {
   DefaultSelectEventHandlers,
@@ -17,6 +17,7 @@ import {
   SelectAsyncApi,
 } from "src/Select/types/selectStateTypes";
 import { SelectFocusState } from "src/Select/types/selectStateTypes";
+import { useThrottle } from "src/general/hooks";
 
 type SelectProps = {
   isLoading: boolean | undefined;
@@ -59,6 +60,7 @@ const useSelectEventHandlerResolver = (
     selectEventHandlers,
     loadNextPage,
     selectDomRefs,
+    getSelectOptionsMap,
   } = selectApi;
 
   const { loadNextPageAsync, fetchOnScrollToBottom } = selectAsyncApi;
@@ -93,23 +95,13 @@ const useSelectEventHandlerResolver = (
   );
 
   const handleOptionClick = useCallback(
-    (
-      option: SelectOptionT,
-      isSelected: boolean,
-      focusedOptionIdx: number,
-      focusedCategory: string
-    ) => {
+    (option: SelectOptionT, isSelected: boolean) => {
       if (isFunction(onOptionClick)) {
         onOptionClick(option, isSelected);
         // Keep the focus logic due to its state being controlled.
         closeDropdownOnSelect && resetFocus();
       } else {
-        defaultEventHandlers.handleOptionClick(
-          option,
-          isSelected,
-          focusedOptionIdx,
-          focusedCategory
-        );
+        defaultEventHandlers.handleOptionClick(option, isSelected);
 
         isFunction(onAfterOptionClick) &&
           onAfterOptionClick(option, isSelected);
@@ -180,6 +172,7 @@ const useSelectEventHandlerResolver = (
     if (isFunction(onScrollToBottom))
       return onScrollToBottom(displayedOptions, page);
     handlePageChange();
+
     isFunction(onAfterScrollToBottom) &&
       onAfterScrollToBottom(displayedOptions, page + 1);
   }, [

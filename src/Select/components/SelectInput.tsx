@@ -15,23 +15,25 @@ import {
 } from "src/Select/types/selectComponentTypes";
 import { useInput } from "src/general/hooks";
 import { resolveClassNames, resolveRefs } from "src/Select/utils";
-import clsx from "clsx";
 
 import { useSelectContext } from "src/Select/components/SelectProvider";
 
 const SelectInput = memo(
   forwardRef<HTMLInputElement, SelectInputProps>((props, ref) => {
     const {
-      inputValue,
-      handleOptionsSearchTrigger,
+      customComponentRenderer,
       onInputChange,
       handleKeyPress,
-      preventInputUpdate,
-      customComponentRenderer,
-      isLoading,
+      ...otherProps
     } = props;
 
-    console.log();
+    const {
+      inputValue,
+      handleOptionsFilter,
+      preventInputUpdate,
+      debounceInputUpdate,
+      isLoading,
+    } = otherProps;
 
     const selectContext = useSelectContext();
     const {
@@ -58,17 +60,19 @@ const SelectInput = memo(
     const [_, handleInputChange] = useInput(
       onInputChange,
       preventInputUpdate,
-      handleOptionsSearchTrigger,
+      debounceInputUpdate,
+      handleOptionsFilter,
       inputValue
     );
 
     if (isFunction(customComponent)) {
       const props = {
+        ...otherProps,
         inputValue,
         className,
         containerClassName,
         ref: resolvedRef,
-        handleOptionsSearchTrigger,
+        handleOptionsFilter,
         onInputChange,
         handleKeyPress,
         preventInputUpdate,
@@ -81,10 +85,7 @@ const SelectInput = memo(
         <input
           data-testid="select-input"
           className={className}
-          onChange={(e) => {
-            e.stopPropagation();
-            handleInputChange(e);
-          }}
+          onChange={handleInputChange}
           value={inputValue}
           disabled={isLoading}
           onKeyDown={handleKeyPress}

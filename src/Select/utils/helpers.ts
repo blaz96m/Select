@@ -66,10 +66,6 @@ export const filterListBySelectedValues = (
 ): SelectOptionList => {
   const valueIds = map(value, (val) => val.id);
   return filter(options, (option) => {
-    isFunction(customOptionFilter) ? customOptionFilter(option) : true;
-    const secondShit = isFunction(customOptionFilter)
-      ? customOptionFilter(option)
-      : true;
     return (
       (removeSelectedOptionsFromList ? !includes(valueIds, option.id) : true) &&
       (isFunction(customOptionFilter) ? customOptionFilter(option) : true)
@@ -442,9 +438,19 @@ export const isFocusedOptionInViewport = (
     optionOfsetTop > 0
   );
 };
+
+export const isOptionListInViewPort = (
+  listContainerRef: HTMLDivElement | null
+) => {
+  if (listContainerRef) {
+    const listContainerRect = listContainerRef.getBoundingClientRect();
+    const clientHeight = window.innerHeight;
+    return clientHeight >= listContainerRect.bottom;
+  }
+};
 export const scrollToTarget = (
   target: HTMLDivElement,
-  options: ScrollIntoViewOptions = { behavior: "smooth", block: "center" }
+  options: ScrollIntoViewOptions = { behavior: "auto", block: "nearest" }
 ) => {
   if (!target) return;
   target.scrollIntoView(options);
@@ -479,12 +485,20 @@ export const resolveRefs = <T>(
   return !isEmpty(customRef) ? customRef : defaultRef;
 };
 
-export const calculateSpaceAndDisplayOptionList = (
-  selectOptionListRef: HTMLDivElement
+export const scrollToOptionList = (
+  selectOptionListRef: HTMLDivElement,
+  selectTopRef: HTMLDivElement
 ) => {
   if (selectOptionListRef) {
     const optionListElement = selectOptionListRef;
-    const optionListElementHeight = optionListElement.scrollHeight;
+    const optionListElementHeight = optionListElement.clientHeight;
     const optionListRect = optionListElement.getBoundingClientRect();
+    const selectContainerRect =
+      optionListElement.parentElement?.getBoundingClientRect();
+    const clientHeight = window.innerHeight;
+    const spaceBottomAmount = window.innerHeight - optionListRect.bottom;
+    const spaceTopAmount = selectContainerRect;
+
+    const hasSpaceOnBottom = spaceBottomAmount >= clientHeight;
   }
 };

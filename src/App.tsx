@@ -1,4 +1,11 @@
-import { useState, memo, useCallback, useRef } from "react";
+import {
+  useState,
+  memo,
+  useCallback,
+  useRef,
+  ChangeEvent,
+  KeyboardEvent,
+} from "react";
 import {
   SelectOptionInnerProps,
   SelectMultiValueInnerProps,
@@ -57,6 +64,7 @@ import {
   CustomSelectOptionComponentProps,
 } from "./Select/types/selectComponentTypes";
 import { M } from "node_modules/vite/dist/node/types.d-aGj9QkWt";
+import { C } from "vitest/dist/chunks/reporters.QZ837uWx.js";
 
 export const getMovieList = async (
   { page = 1, searchQuery = "a" },
@@ -66,6 +74,7 @@ export const getMovieList = async (
     const reselt = await axiosClient.get(
       `/search/movie?query=${searchQuery || "a"}&page=${page}`
     );
+    console.log(reselt);
     const data = reselt.data;
     const totalRecords = data["total_results"];
     return { data: data.results as SelectOptionList, totalRecords };
@@ -158,7 +167,7 @@ function App() {
       setValue,
       value,
     } = componentProps;
-    const { onClick, ...otherProps } = innerProps!;
+    const { onClick, key, ...otherProps } = innerProps!;
 
     const customeOnKlek = () => {
       const valsLol = isMultiValue
@@ -177,8 +186,9 @@ function App() {
         {...otherProps}
         onClick={customeOnKlek}
         className={`${className} select__check`}
+        key={option.id}
       >
-        <input type="checkbox" checked={isSelected} />
+        <input type="checkbox" defaultChecked={isSelected} />
         <p>{option[labelKey]}</p>
       </div>
     );
@@ -330,7 +340,60 @@ function App() {
     inputProps: CustomSelectInputComponentProps,
     innerProps: SelectInputInnerProps
   ) => {
-    const {} = inputProps;
+    const {
+      focusNextOption,
+      focusPreviousOption,
+      handleValueSelectOnKeyPress,
+      clearAllValues,
+      handleInputChange,
+      closeDropdown,
+      debounceInputUpdate,
+      displayedOptions,
+      filterSearchedOptions,
+      focusedOptionCategory,
+      focusedOptionIndex,
+      setInputValue,
+      value: val,
+      getOriginalOptions,
+      handleOptionsFilter,
+      inputValue,
+      openDropdown,
+      preventInputUpdate,
+      selectOptionListRef,
+      selectOptions,
+      setSelectOptions,
+      isLoading,
+    } = inputProps;
+
+    const cusOnKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+      switch (e.code) {
+        case "ArrowUp":
+          focusPreviousOption();
+          break;
+        case "ArrowDown":
+          focusNextOption();
+          break;
+        case "Enter":
+          handleValueSelectOnKeyPress();
+      }
+    };
+
+    const cheng = (e: any) => {
+      if (!preventInputUpdate(e, e.target.value)) {
+        setInputValue(e.target.value);
+        const options = getOriginalOptions();
+        const trimmedSearchValue = trim(toLower(e.target.value));
+        const filteredOptions = filter(options, (option) => {
+          const trimmedOptionLabel = trim(toLower(option["name"]));
+          return includes(trimmedOptionLabel, trimmedSearchValue);
+        });
+        setSelectOptions(filteredOptions);
+      }
+      /*
+      setInputValue(e.target.value)
+      handleOptionsFilter(e.target.value);
+      */
+    };
 
     const { className, containerClassName, onChange, onKeyDown, ref, value } =
       innerProps;
@@ -341,11 +404,11 @@ function App() {
           className={className}
           onChange={(e) => {
             e.stopPropagation();
-            onChange(e);
+            cheng(e);
           }}
           value={value}
           disabled={isLoading}
-          onKeyDown={onKeyDown}
+          onKeyDown={cusOnKeyDown}
           ref={ref}
         />
       </div>
@@ -388,51 +451,19 @@ function App() {
       <div>ClearedValue: {lenft}</div>
       <Select
         fetchFunction={getMovieList}
+        value={value}
+        //defaultSelectOptions={items}
+        onChange={setValue}
         useAsync={true}
         isMultiValue={true}
-        closeDropdownOnSelect={false}
-        value={value}
-        labelKey="title"
-        onValueClear={onValueClear}
-        //onAfterValueClear={onAfterValueClear}
-        clearInputOnSelect={false}
-        categoryKey="original_language"
-        isCategorized={true}
-        inputValue={inputValue}
-        setInputValue={updateInputValue}
-        //page={page}
-        //setPage={settPage}
-        isOpen={customIsOpen}
-        //onDropdownClick={onDropdownClick}
-        setIsOpen={setCustomIsOpen}
-        //setSelectOptions={setOptions}
-        //selectOptions={selectOptions}
-        //defaultSelectOptions={items}
-        disableInputEffect={false}
-        onChange={setValue}
-        recordsPerPage={20}
-        removeSelectedOptionsFromList={false}
-        onOptionSelect={onOptionClick}
-        fetchOnScroll={true}
+        hasInput={true}
         isLoading={isLoading}
+        labelKey={"title"}
+        categoryKey={"original_language"}
+        isCategorized={true}
+        recordsPerPage={20}
+        fetchOnScroll={true}
         lazyInit={true}
-        inputFilterFunction={customFilter}
-        refs={{
-          inputRef: customInputRef,
-          optionListRef: customOptionListRef,
-        }}
-        classNames={{
-          selectOptionSelected: { className: "red", override: false },
-          selectOptionFocused: { className: "orange", override: false },
-        }}
-        customComponents={{
-          SelectOptionElement: SelectCheckBox,
-          SelectInputElement: CustomInputComponent,
-          //SelectMultiValueElement: CustomMultiVal,
-          //SelectSingleValueElement: CustomSingleVal,
-          //SelectDropdownIndicatorElement: CustomDropdownIndicator,
-          //SelectClearIndicatorElement: ClearIndikator,
-        }}
       />
     </>
   );

@@ -97,6 +97,8 @@ const Select = ({
   selectAsyncApi,
   customSelectEventHandlers,
   eventHandlerFollowups,
+  debounceInputUpdate = false,
+  clearValueOnInputChange = true,
   clearInputOnIdicatorClick = true,
   hasInput = true,
   removeSelectedOptionsFromList = true,
@@ -150,6 +152,7 @@ const Select = ({
     {
       isMultiValue,
       isCategorized,
+      clearValueOnInputChange,
       categoryKey,
       fetchOnScrollToBottom,
       clearInputOnIdicatorClick,
@@ -298,16 +301,16 @@ const Select = ({
           {hasInput && (
             <Select.Input
               onInputChange={handleInputChange}
+              debounceInputUpdate={debounceInputUpdate}
               inputValue={inputValue}
               handleKeyPress={handleKeyDown}
               customComponentRenderer={
                 customComponentRenderers.handleCustomInputRender
               }
-              handleOptionsSearchTrigger={selectApi.handleOptionsSearchTrigger}
+              handleOptionsFilter={selectApi.handleOptionsFilter}
               preventInputUpdate={selectApi.preventInputUpdate}
               isLoading={isLoading}
               ref={inputRef}
-              hasInput={hasInput}
             />
           )}
         </Select.ValueSection>

@@ -1,5 +1,12 @@
 import { filter, find, isEmpty, isFunction, trim } from "lodash";
-import { useCallback, useEffect, Dispatch, SetStateAction } from "react";
+import {
+  useCallback,
+  useEffect,
+  Dispatch,
+  SetStateAction,
+  useState,
+  useLayoutEffect,
+} from "react";
 import {
   SelectOptionT,
   SelectFetchFunction,
@@ -9,6 +16,7 @@ import { SelectApi, SelectAsyncApi } from "src/Select/types/selectStateTypes";
 import { useQueryManager } from "src/general/hooks";
 import { ResponseDetails } from "src/general/hooks/useQueryManager";
 import { QueryManagerState } from "src/general/stores/queryManagerReducer";
+import { isOptionListInViewPort } from "../utils";
 
 type SelectAsyncState = Pick<QueryManagerState, "searchQuery" | "page">;
 
@@ -18,8 +26,7 @@ const useSelectAsync = (
     updateSelectOptionsAfterFetch: boolean;
     fetchFunction: SelectFetchFunction | undefined;
     useAsync: boolean;
-    inputUpdateDebounceDuration: number;
-    debounceInputUpdate: boolean;
+    inputUpdateDebounceDuration?: number;
     isLoading: boolean | undefined;
     recordsPerPage?: number;
     fetchOnInputChange?: boolean;
@@ -31,9 +38,8 @@ const useSelectAsync = (
     fetchFunction,
     fetchOnInputChange,
     isLazyInit,
-    recordsPerPage,
+    recordsPerPage = 15,
     inputUpdateDebounceDuration,
-    debounceInputUpdate,
     fetchOnScroll,
     isLoading,
     useAsync,
@@ -44,11 +50,11 @@ const useSelectAsync = (
     getOriginalOptions,
     selectDomRefs,
     setOriginalOptions,
-    onDropdownExpand,
     selectFocusHandlers,
+    selectState,
+    selectStateUpdaters,
+    focusInput,
   } = selectApi;
-
-  const { selectState, selectStateUpdaters, focusInput } = selectApi;
 
   const { setInputValue, loadNextPage, setPage } = selectStateUpdaters;
 
@@ -69,15 +75,14 @@ const useSelectAsync = (
           selectStateUpdaters.addOptions(klinData);
       } else {
         const originalOptions = getOriginalOptions();
+        const selectOptionListNode =
+          selectDomRefs.selectListContainerRef.current;
         if (isEmpty(originalOptions) && updateSelectOptionsAfterFetch) {
           // Set the original options only once in case the user wants to use frontend pagination, will not work properly if fetch on scroll is enabled
           setOriginalOptions(data);
         }
-        if (
-          selectDomRefs.selectListContainerRef.current &&
-          selectDomRefs.selectListContainerRef.current.scrollTop
-        ) {
-          selectDomRefs.selectListContainerRef.current.scroll({ top: 0 });
+        if (selectOptionListNode && selectOptionListNode.scrollTop) {
+          selectOptionListNode.scroll({ top: 0 });
         }
         updateSelectOptionsAfterFetch &&
           selectStateUpdaters.setSelectOptions(data);
@@ -105,8 +110,8 @@ const useSelectAsync = (
   const { isLastPage, fetch, isInitialFetch } = queryManagerApi;
 
   const loadNextPageAsync = useCallback(() => {
-    !isLastPage() && loadNextPage();
-  }, [isLastPage, loadNextPage]);
+    !isLastPage() && !isLoading && loadNextPage();
+  }, [isLastPage, loadNextPage, isLoading]);
 
   useEffect(() => {
     const abortController = new AbortController();
@@ -123,22 +128,6 @@ const useSelectAsync = (
     fetchOnScrollToBottom,
     loadNextPageAsync,
   };
-
-  useEffect(() => {
-    if (page === 1 && !isEmpty(selectOptions)) {
-      resetFocus();
-    }
-
-    if (isLazyInit && !isLoading && isOpen) {
-      onDropdownExpand();
-    }
-  }, [selectOptions]);
-
-  useEffect(() => {
-    if (isOpen) {
-      focusInput();
-    }
-  }, [isLoading]);
 
   return { selectAsyncApi, selectAsyncState: queryManagerState };
 };

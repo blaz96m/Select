@@ -49,8 +49,7 @@ export type SelectApi = {
   selectStateUpdaters: SelectStateUpdaters;
   selectFocusState: SelectFocusState;
   selectFocusHandlers: SelectFocusHandlers;
-  handleOptionsSearchTrigger: (inputValue: string) => void;
-  onDropdownExpand: () => void;
+  handleOptionsFilter: (inputValue: string) => void;
   usesInputAsync: boolean;
   onOptionSelect: (isSelected: boolean, option: SelectOptionT) => void;
   isLastPage: () => boolean;

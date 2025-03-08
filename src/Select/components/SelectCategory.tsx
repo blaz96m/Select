@@ -27,9 +27,10 @@ const SelectCategory = memo((props: SelectCategoryProps) => {
   } = context;
 
   const categoryHeaderClassName = resolveClassNames(
-    "select__category__name",
+    "select__category__header",
     customCategoryHeaderClass
   );
+
   const categoryListClassName = resolveClassNames(
     "select__category__options-list",
     customCategoryListClass
@@ -48,9 +49,10 @@ const SelectCategory = memo((props: SelectCategoryProps) => {
 
   return (
     <div>
-      <p className={categoryHeaderClassName}>{categoryName}</p>
-
-      <ul className={categoryListClassName}>
+      <div className={categoryHeaderClassName}>
+        <p className="select__category__label">{categoryName}</p>
+      </div>
+      <ul data-testid="select-category-list" className={categoryListClassName}>
         {map(categoryOptions, (option, index) => {
           return renderOption(option, index, focusedOptionIdx, selectedOptions);
         })}

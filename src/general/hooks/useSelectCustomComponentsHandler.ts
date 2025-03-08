@@ -24,6 +24,7 @@ import {
   SelectMultiValueProps,
   SelectOptionProps,
   CustomSelectOptionComponentProps,
+  CustomSelectInputComponentProps,
 } from "src/Select/types/selectComponentTypes";
 import {
   SelectEventHandlers,
@@ -38,6 +39,7 @@ type SelectProps = {
   fetchOnScrollToBottom: boolean | undefined;
   clearInputOnIdicatorClick: boolean;
   isMultiValue: boolean;
+  clearValueOnInputChange: boolean;
 };
 
 const useSelectCustomComponentsHandler = (
@@ -61,6 +63,7 @@ const useSelectCustomComponentsHandler = (
     onOptionSelect,
     clearInputOnSelect,
     selectDomRefs,
+    getOriginalOptions,
   } = selectApi;
 
   const { isLastPage: isLastPageAsync } = selectAsyncApi;
@@ -76,9 +79,9 @@ const useSelectCustomComponentsHandler = (
     clearValue,
     setValue,
     clearInput,
+    setSelectOptions,
+    setInputValue,
   } = selectStateUpdaters;
-
-  const { inputRef } = selectDomRefs;
 
   const {
     categoryKey,
@@ -86,6 +89,7 @@ const useSelectCustomComponentsHandler = (
     fetchOnScrollToBottom,
     clearInputOnIdicatorClick,
     isMultiValue,
+    clearValueOnInputChange,
   } = selectProps;
 
   const { handleInputChange, handlePageChange } = selectEventHandlers;
@@ -107,13 +111,19 @@ const useSelectCustomComponentsHandler = (
       },
       customComponent: CustomSelectInputComponent
     ) => {
-      const customInputComponentProps = {
+      const { selectListContainerRef } = selectDomRefs;
+      const customInputComponentProps: CustomSelectInputComponentProps = {
+        ...selectInputProps,
         filterSearchedOptions,
         selectOptions,
         displayedOptions,
         handleValueSelectOnKeyPress,
         focusedOptionIndex,
+        setSelectOptions,
+        getOriginalOptions,
+        setInputValue,
         handleInputChange,
+        selectOptionListRef: selectListContainerRef,
         focusedOptionCategory,
         focusPreviousOption,
         focusNextOption,
@@ -154,8 +164,6 @@ const useSelectCustomComponentsHandler = (
       filterSearchedOptions,
       selectOptions,
       handleValueSelectOnKeyPress,
-      focusedOptionIndex,
-      focusedOptionCategory,
       handleInputChange,
     ]
   );
@@ -187,12 +195,10 @@ const useSelectCustomComponentsHandler = (
         resetFocus,
       };
 
-      const optionCategory = option[categoryKey!] || "";
-
       const innerProps = {
         ref: refCallback,
         id: option.id,
-        onClick: () => onClick(option, isSelected, optionIndex, optionCategory),
+        onClick: () => onClick(option, isSelected),
         className,
         "data-selected": isSelected,
         "data-category": isCategorized
@@ -354,6 +360,7 @@ const useSelectCustomComponentsHandler = (
         inputValue,
         isLoading,
         clearInputOnIdicatorClick,
+        clearValueOnInputChange,
         value,
       };
       const innerProps: SelectClearIndicatorInnerProps = {

@@ -65,6 +65,32 @@ const useSelectFocus = (selectProps: SelectProps): SelectFocusApi => {
     setFocusedOptionCategory(focusedCategory);
   };
 
+  const onAfterFocusChange = useCallback(
+    (
+      focusDetails: SelectCategoryFocusDetails | number | null,
+      scrollToFocusedOption = true
+    ) => {
+      if (
+        focusDetails ||
+        (isNumber(focusDetails) && isFocusedOptionIndexValid(focusDetails))
+      ) {
+        let focusedOptionId;
+        if (isObject(focusDetails)) {
+          const { focusedCategory, focusedOptionIdx } = focusDetails;
+          const focusedOption = (displayedOptions as CategorizedSelectOptions)[
+            focusedCategory
+          ][focusedOptionIdx];
+          focusedOptionId = focusedOption.id;
+        } else {
+          focusedOptionId = (displayedOptions as SelectOptionList)[focusDetails]
+            .id;
+        }
+        scrollToFocusedOption && handleScrollToFocusedOption(focusedOptionId);
+      }
+    },
+    [displayedOptions]
+  );
+
   const handleOptionFocusChange = useCallback(
     (
       direction: SelectKeyboardNavigationDirection,
@@ -96,10 +122,10 @@ const useSelectFocus = (selectProps: SelectProps): SelectFocusApi => {
           );
           setFocusedOptionIndex(focusDetails);
         }
-        onFocusChange(focusDetails, scrollToFocusedOption);
+        onAfterFocusChange(focusDetails, scrollToFocusedOption);
       }
     },
-    [displayedOptions, isCategorized]
+    [onAfterFocusChange, isCategorized]
   );
 
   const focusNextOption = useCallback(
@@ -187,32 +213,6 @@ const useSelectFocus = (selectProps: SelectProps): SelectFocusApi => {
       return (displayedOptions as SelectOptionList)[focusedOptionIndex];
     }
   }, [displayedOptions, focusedOptionCategory, focusedOptionIndex]);
-
-  const onFocusChange = useCallback(
-    (
-      focusDetails: SelectCategoryFocusDetails | number | null,
-      scrollToFocusedOption = true
-    ) => {
-      if (
-        focusDetails ||
-        (isNumber(focusDetails) && isFocusedOptionIndexValid(focusDetails))
-      ) {
-        let focusedOptionId;
-        if (isObject(focusDetails)) {
-          const { focusedCategory, focusedOptionIdx } = focusDetails;
-          const focusedOption = (displayedOptions as CategorizedSelectOptions)[
-            focusedCategory
-          ][focusedOptionIdx];
-          focusedOptionId = focusedOption.id;
-        } else {
-          focusedOptionId = (displayedOptions as SelectOptionList)[focusDetails]
-            .id;
-        }
-        scrollToFocusedOption && handleScrollToFocusedOption(focusedOptionId);
-      }
-    },
-    [displayedOptions]
-  );
 
   const handleOptionHover = useCallback(
     (

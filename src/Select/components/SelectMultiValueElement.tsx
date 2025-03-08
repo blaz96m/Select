@@ -31,7 +31,7 @@ const SelectMultiValueElement = (props: SelectMultiValueProps) => {
   );
   const iconClassName = resolveClassNames(
     "select__value--icon",
-    customMultiValueIconContainerClass
+    customMultiValueIconClass
   );
   const valueLabel = value[labelKey];
 
@@ -45,10 +45,11 @@ const SelectMultiValueElement = (props: SelectMultiValueProps) => {
     return customComponentRenderer(props, customComponent);
   }
   return (
-    <div className={className}>
+    <div data-testid="select-multi-value" className={className}>
       <span>{valueLabel}</span>
       <div
         className={iconContainerClassName}
+        data-testid="select-multi-value-clear"
         onClick={(e: React.MouseEvent<HTMLDivElement, MouseEvent>) =>
           handleValueClear(e, value)
         }

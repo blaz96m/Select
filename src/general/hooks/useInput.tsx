@@ -18,6 +18,7 @@ const useInput = (
     currInputValue?: string,
     ...args: any
   ) => boolean,
+  inputEffectTriggerEnabled = true,
   inputEffectTriggerFunction?: (...args: any) => any,
   customInputState?: string
 ): [string, (e: ChangeEvent<HTMLInputElement>) => void] => {
@@ -46,23 +47,25 @@ const useInput = (
   };
 
   useEffect(() => {
-    let timeoutId: number | undefined;
-    if (isInitialRef.current) {
-      isInitialRef.current = false;
-    } else {
-      if (isFunction(inputEffectTriggerFunction)) {
-        if (isAsyncFunction(inputEffectTriggerFunction)) {
-          (async () => {
-            timeoutId = await inputEffectTriggerFunction(inputValue);
-          })();
-        } else {
-          timeoutId = inputEffectTriggerFunction(inputValue);
+    if (inputEffectTriggerEnabled) {
+      let timeoutId: number | undefined;
+      if (isInitialRef.current) {
+        isInitialRef.current = false;
+      } else {
+        if (isFunction(inputEffectTriggerFunction)) {
+          if (isAsyncFunction(inputEffectTriggerFunction)) {
+            (async () => {
+              timeoutId = await inputEffectTriggerFunction(inputValue);
+            })();
+          } else {
+            timeoutId = inputEffectTriggerFunction(inputValue);
+          }
         }
       }
-    }
 
-    if (isNumber(timeoutId)) {
-      return () => clearTimeout(timeoutId);
+      if (isNumber(timeoutId)) {
+        return () => clearTimeout(timeoutId);
+      }
     }
   }, [inputValue]);
 

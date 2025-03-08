@@ -15,9 +15,7 @@ const SelectValueSection = memo(
           "is-multi": isMultiValue,
         })}
       >
-        <div className="select__values__container">
-          <ul className="select__value__list">{children}</ul>
-        </div>
+        <ul className="select__value__list">{children}</ul>
       </div>
     );
   }

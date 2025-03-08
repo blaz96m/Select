@@ -89,20 +89,19 @@ export type SelectProps = {
   onChange: StateSetter<SelectOptionList>;
   isMultiValue: boolean;
   useAsync: boolean;
-  fetchOnInputChange: boolean;
+  fetchOnInputChange?: boolean;
   removeSelectedOptionsFromList: boolean;
-  disableInputUpdate: boolean;
   isCategorized: boolean;
   fetchOnScroll: boolean;
   disableInputEffect: boolean;
   customComponents: Partial<SelectCustomComponents>;
-  clearInputOnIdicatorClick: boolean;
+  clearInputOnIdicatorClick?: boolean;
   lazyInit: boolean;
-  hasInput: boolean;
-  updateSelectOptionsAfterFetch: boolean;
+  hasInput?: boolean;
+  updateSelectOptionsAfterFetch?: boolean;
   optionFilter?: SelectOptionFilter;
-  placeholder: string;
-  preventInputUpdate: CustomPreventInputUpdate;
+  placeholder?: string;
+  preventInputUpdate?: CustomPreventInputUpdate;
   onOptionClick?: CustomOptionClickHandler;
   onAfterOptionClick?: CustomOptionClickHandler;
   onClearIndicatorClick?: CustomClearIndicatorClickHandler;
@@ -117,8 +116,9 @@ export type SelectProps = {
   onAfterScrollToBottom?: CustomScrollToBottomHandler;
   onKeyDown?: KeyDownHandler;
   closeDropdownOnSelect?: boolean;
+  clearValueOnInputChange?: boolean;
   debounceInputUpdate?: boolean;
-  inputUpdateDebounceDuration: number;
+  inputUpdateDebounceDuration?: number;
   inputValue?: string;
   categoryKey?: keyof SelectOptionT & string;
   clearInputOnSelect?: boolean;
@@ -321,8 +321,9 @@ export type CustomSelectCategoryProps = Omit<
 export type SelectInputProps = {
   onInputChange: (inputValue: string) => void;
   inputValue: string;
+  debounceInputUpdate: boolean;
   handleKeyPress: KeyDownHandler;
-  handleOptionsSearchTrigger: (inputValue: string) => void;
+  handleOptionsFilter: (inputValue: string) => void;
   customComponentRenderer: CustomSelectInputRenderer;
   preventInputUpdate: PreventInputUpdate;
   isLoading?: boolean;
@@ -334,10 +335,7 @@ export type CustomSelectInputComponent = CustomSelectComponent<
 >;
 
 type CustomSelectInputRenderer = (
-  selectInputProps: Omit<
-    SelectInputProps,
-    "customComponentRenderer" | "hasInput"
-  > & {
+  selectInputProps: Omit<SelectInputProps, "customComponentRenderer"> & {
     className: string;
     containerClassName: string;
     ref: RefObject<HTMLInputElement>;
@@ -345,11 +343,18 @@ type CustomSelectInputRenderer = (
   customComponent: CustomSelectInputComponent
 ) => JSX.Element;
 
-export type CustomSelectInputComponentProps = {
+export type CustomSelectInputComponentProps = Omit<
+  SelectInputProps,
+  "customComponentRenderer" | "handleKeyPress" | "onInputChange"
+> & {
   filterSearchedOptions: (inputValue: string) => void;
   selectOptions: SelectOptionList;
   displayedOptions: SelectOptionList | CategorizedSelectOptions;
   value: SelectOptionList;
+  selectOptionListRef: RefObject<HTMLDivElement>;
+  setInputValue: StateSetter<string>;
+  getOriginalOptions: () => SelectOptionList;
+  setSelectOptions: (options: SelectOptionList) => void;
   handleInputChange: InputChangeHandler;
   handleValueSelectOnKeyPress: () => void;
   focusedOptionIndex: number | null;
@@ -469,6 +474,7 @@ export type SelectClearIndicatorProps = {
 export type CustomSelectClearIndicatorProps = {
   isLoading: boolean | undefined;
   value: SelectOptionList;
+  clearValueOnInputChange: boolean;
   inputValue: string;
   clearInputOnIdicatorClick: boolean;
 };

@@ -72,8 +72,6 @@ const SelectOption = memo((props: SelectOptionProps) => {
     [optionFocusedClassName]: isFocused,
   });
 
-  const optionCategory = option[categoryKey!] || "";
-
   const refCallback = (node: HTMLDivElement | null) => {
     const selectOptionsMap = getSelectOptionsMap();
     if (node) {
@@ -102,7 +100,7 @@ const SelectOption = memo((props: SelectOptionProps) => {
       ref={refCallback}
       id={option.id}
       className={className}
-      onClick={() => onClick(option, isSelected, optionIndex, optionCategory)}
+      onClick={() => onClick(option, isSelected)}
     >
       {option[labelKey]}
     </div>

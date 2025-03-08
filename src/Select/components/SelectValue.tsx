@@ -50,7 +50,7 @@ const SingleValue = ({ value, labelKey }: SelectSingleValueProps) => {
   const valueLabel = !isEmpty(value) ? value[labelKey] : "";
 
   if (!isEmpty(value)) {
-    return <>{valueLabel}</>;
+    return <div data-testid="select-single-value">{valueLabel}</div>;
   }
 };
 

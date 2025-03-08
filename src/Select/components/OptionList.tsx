@@ -2,8 +2,10 @@ import {
   MutableRefObject,
   ReactNode,
   RefObject,
+  Suspense,
   forwardRef,
   memo,
+  useEffect,
   useImperativeHandle,
   useRef,
 } from "react";
@@ -15,6 +17,7 @@ import {
   map,
   each,
   every,
+  debounce,
 } from "lodash";
 import {
   SelectOptionList,
@@ -45,6 +48,8 @@ const OptionList = memo(
 
     const selectContext = useSelectContext();
 
+    const selectPositionStyle = {};
+
     const {
       components: { SelectOptionListElement: customComponent },
       classNames: {
@@ -54,6 +59,9 @@ const OptionList = memo(
       },
       refs: { optionListRef: customOptionListRef },
     } = selectContext;
+
+    const innerRef = useRef<HTMLDivElement>(null);
+    const resolvedRef = resolveRefs(innerRef, customOptionListRef);
 
     const optionListClassName = resolveClassNames(
       "select__options__list",
@@ -74,17 +82,18 @@ const OptionList = memo(
       customContainerClass
     );
 
-    const bottomScrollActions = { onArrive: handleScrollToBottom };
+    const wrapperClassNames = clsx({
+      [wrapperClassName]: true,
+      "select__options__wrapper--empty": isEmpty(displayedOptions),
+    });
 
-    const innerRef = useRef<HTMLDivElement>(null);
-    const resolvedRef = resolveRefs(innerRef, customOptionListRef);
+    const bottomScrollActions = { onArrive: handleScrollToBottom };
 
     useImperativeHandle(ref, () => resolvedRef.current!);
     useScrollManager<HTMLDivElement>(
       resolvedRef,
       bottomScrollActions,
       {},
-      true,
       isLoading
     );
 
@@ -101,7 +110,7 @@ const OptionList = memo(
     return (
       <div
         data-testid="select-option-list"
-        className={wrapperClassName}
+        className={wrapperClassNames}
         ref={resolvedRef}
       >
         <ul className={listClassName}>

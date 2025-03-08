@@ -21,7 +21,7 @@ export const isScrolledToEnd = (
   }
   const target = el.current;
   const remainingScrollSpace = getRemainingScrollSpace(target, isHorizontal);
-  return remainingScrollSpace <= 1;
+  return remainingScrollSpace <= 30;
 };
 
 export const getRemainingScrollSpace = (

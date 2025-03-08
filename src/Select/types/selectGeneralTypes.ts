@@ -37,9 +37,7 @@ export type ValueClearClickHandler = (
 
 export type OptionClickHandler = (
   option: SelectOptionT,
-  isFocused: boolean,
-  focusedOptionIdx: number,
-  focusedCategory: string
+  isFocused: boolean
 ) => void;
 
 export type OptionHoverHandler = (
