@@ -1,4 +1,5 @@
 export { default as SelectContainer } from "./SelectContainer";
+export { default as SelectLoader } from "./SelectLoader";
 export { default as SelectInput } from "./SelectInput";
 export { default as SelectValue } from "./SelectValue";
 export { default as OptionList } from "./OptionList";

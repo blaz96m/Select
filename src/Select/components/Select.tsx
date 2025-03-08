@@ -39,6 +39,7 @@ import {
   SelectDropdownIndicator,
   SelectClearIndicator,
   SelectCategory,
+  SelectLoader,
 } from "src/Select/components";
 import {
   filterOptionListBySearchValue,
@@ -355,12 +356,12 @@ const Select = ({
 
 Select.Container = SelectContainer;
 Select.Top = SelectTopSection;
-Select.ValueSection = memo(SelectValueSection);
-Select.IndicatorSection = memo(SelectIndicatorSection);
-Select.Spinner = Spinner;
-Select.Value = memo(SelectValue);
-Select.Input = memo(SelectInput);
-Select.DropdownIndicator = memo(SelectDropdownIndicator);
-Select.ClearIndicator = memo(SelectClearIndicator);
-Select.OptionList = memo(OptionList);
+Select.ValueSection = SelectValueSection;
+Select.IndicatorSection = SelectIndicatorSection;
+Select.Spinner = SelectLoader;
+Select.Value = SelectValue;
+Select.Input = SelectInput;
+Select.DropdownIndicator = SelectDropdownIndicator;
+Select.ClearIndicator = SelectClearIndicator;
+Select.OptionList = OptionList;
 export default Select;

@@ -79,6 +79,7 @@ export type SelectCustomComponents = {
   SelectOptionListElement: CustomOptionListComponent;
   SelectCategoryElement: CustomSelectCategoryComponent;
   SelectInputElement: CustomSelectInputComponent;
+  SelectLoaderElement: () => JSX.Element;
 };
 
 // #SELECT COMPONENT
