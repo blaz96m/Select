@@ -25,6 +25,8 @@ export default [
         { allowShortCircuit: true, allowTernary: true },
       ],
 
+      "react/react-in-jsx-scope": "off",
+
       "no-unused-vars": [
         "warning",
         {

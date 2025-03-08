@@ -1,4 +1,4 @@
-import React, { memo } from "react";
+import { memo } from "react";
 import { isEmpty, isFunction, map } from "lodash";
 
 import { SelectCategoryProps } from "src/Select/types/selectComponentTypes";

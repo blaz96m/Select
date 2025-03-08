@@ -5,7 +5,6 @@ import clsx from "clsx";
 import { useSelectContext } from "src/Select/components/SelectProvider";
 import { SelectDropdownIndicatorProps } from "src/Select/types/selectComponentTypes";
 import { resolveClassNames } from "src/Select/utils";
-import React from "react";
 
 export const SelectDropdownIndicator = ({
   isOpen,

@@ -1,4 +1,4 @@
-import React, { useContext, createContext, useMemo, memo } from "react";
+import { useContext, createContext, useMemo, memo } from "react";
 import {
   SelectCustomClassNames,
   CustomSelectEventHandlers,

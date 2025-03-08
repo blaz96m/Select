@@ -1,4 +1,3 @@
-import React from "react";
 import { SelectClearIndicatorProps } from "src/Select/types/selectComponentTypes";
 import { faClose } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";

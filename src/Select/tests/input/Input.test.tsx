@@ -15,7 +15,6 @@ import {
 } from "../utils/testingUtils";
 
 import { every, head, toLower } from "lodash";
-import React from "react";
 
 describe("Select Input", () => {
   it("Select Input is not rendered if the hasInputProp is false", () => {

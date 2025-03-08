@@ -2,10 +2,11 @@ import { UserConfig, defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tsconfigPaths from "vite-tsconfig-paths";
 import { resolve } from "path";
+import { analyzer } from "vite-bundle-analyzer";
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [tsconfigPaths(), react()],
+  plugins: [tsconfigPaths(), react(), analyzer()],
   test: {
     environment: "jsdom",
     globals: true,
@@ -17,6 +18,7 @@ export default defineConfig({
       name: "select-ui",
       fileName: "select-ui",
     },
+
     rollupOptions: {
       external: ["react", "react-dom", "react/jsx-runtime"],
       output: {

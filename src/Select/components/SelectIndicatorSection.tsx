@@ -1,8 +1,8 @@
-import React, { ReactNode } from "react";
+import { ReactNode, JSX } from "react";
 
 type IndicatorSectionProps = {
   children: ReactNode;
-  spinner: React.JSX.Element;
+  spinner: JSX.Element;
   isLoading?: boolean;
 };
 

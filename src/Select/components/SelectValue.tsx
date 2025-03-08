@@ -5,7 +5,7 @@ import {
   SelectValueProps,
 } from "src/Select/types/selectComponentTypes";
 import SelectMultiValueElement from "./SelectMultiValueElement";
-import React, { memo } from "react";
+import { memo } from "react";
 
 type SelectValueContainerPropTypes = SelectValueProps & {
   isMultiValue: boolean;

@@ -1,5 +1,4 @@
 import { ChangeEvent, MouseEvent, RefObject } from "react";
-import { jsx } from "react/jsx-runtime";
 import {
   SelectOptionList,
   CustomOptionClickHandler,

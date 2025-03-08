@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { DefaultSelectProps } from "src/Select/tests/utils/testingUtils";
 import { SelectOptionList } from "src/Select/types/selectGeneralTypes";
 

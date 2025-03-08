@@ -12,7 +12,6 @@ import {
   defaultSelectProps,
 } from "../utils/testingUtils";
 import { head } from "lodash";
-import React from "react";
 
 const DEFAULT_RECORDS_PER_PAGE = 10;
 

@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import React, { ReactNode, memo } from "react";
+import { ReactNode, memo } from "react";
 
 type ValueSectionProps = {
   children: ReactNode;

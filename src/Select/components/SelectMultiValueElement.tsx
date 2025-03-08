@@ -1,10 +1,10 @@
-import React from "react";
 import { SelectMultiValueProps } from "src/Select/types/selectComponentTypes";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTimes } from "@fortawesome/free-solid-svg-icons";
 import { isFunction } from "lodash";
 import { useSelectContext } from "src/Select/components/SelectProvider";
 import { resolveClassNames } from "../utils";
+import { MouseEvent } from "react";
 
 const SelectMultiValueElement = (props: SelectMultiValueProps) => {
   const { customComponentRenderer, ...otherProps } = props;
@@ -50,9 +50,7 @@ const SelectMultiValueElement = (props: SelectMultiValueProps) => {
       <div
         className={iconContainerClassName}
         data-testid="select-multi-value-clear"
-        onClick={(e: React.MouseEvent<HTMLDivElement>) =>
-          handleValueClear(e, value)
-        }
+        onClick={(e: MouseEvent<HTMLDivElement>) => handleValueClear(e, value)}
       >
         <FontAwesomeIcon className={iconClassName} icon={faTimes} />
       </div>

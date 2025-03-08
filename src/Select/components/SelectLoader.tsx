@@ -1,4 +1,3 @@
-import React from "react";
 import { useSelectContext } from ".";
 import { isFunction } from "lodash";
 

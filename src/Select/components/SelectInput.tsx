@@ -1,4 +1,4 @@
-import React, { memo, forwardRef, useRef, useImperativeHandle } from "react";
+import { memo, forwardRef, useRef, useImperativeHandle } from "react";
 import { isFunction } from "lodash";
 
 import { SelectInputProps } from "src/Select/types/selectComponentTypes";

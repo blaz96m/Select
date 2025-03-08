@@ -1,7 +1,7 @@
-import React from "react";
+import { ReactNode } from "react";
 
 export type SelectContainerProps = {
-  children: React.ReactNode;
+  children: ReactNode;
 };
 
 const SelectContainer = ({ children }: SelectContainerProps) => {

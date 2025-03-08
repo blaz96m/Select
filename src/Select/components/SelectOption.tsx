@@ -1,4 +1,4 @@
-import React, { memo, MouseEvent } from "react";
+import { memo, MouseEvent } from "react";
 import clsx from "clsx";
 import { SelectOptionProps } from "src/Select/types/selectComponentTypes";
 import { isFunction } from "lodash";
@@ -77,7 +77,7 @@ const SelectOption = memo((props: SelectOptionProps) => {
 
   return (
     <div
-      onMouseMove={(e: React.MouseEvent<HTMLDivElement>) =>
+      onMouseMove={(e: MouseEvent<HTMLDivElement>) =>
         handleHover(e, isFocused, optionIndex)
       }
       key={option.id}

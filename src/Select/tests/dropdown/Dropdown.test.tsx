@@ -14,7 +14,6 @@ import {
 } from "../utils/testingUtils";
 import { head } from "lodash";
 import {} from "vitest/dist/chunks/suite.qtkXWc6R.js";
-import React from "react";
 
 const DEFAULT_RECORDS_PER_PAGE = 20;
 

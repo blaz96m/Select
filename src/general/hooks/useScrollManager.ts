@@ -7,7 +7,6 @@ import {
   isScrollingDown,
   isScrollingUp,
 } from "src/general/utils/dom";
-import { useThrottle } from "src/general/hooks";
 
 type ScrollActions = {
   onArrive?: ((...args: any) => void) | null;

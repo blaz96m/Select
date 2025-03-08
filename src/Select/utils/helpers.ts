@@ -10,12 +10,9 @@ import {
   has,
   each,
   findIndex,
-  head,
   last,
   first,
   isNumber,
-  cloneDeep,
-  isNil,
   isFunction,
 } from "lodash";
 import {
@@ -30,11 +27,6 @@ import {
 } from "src/Select/types/selectGeneralTypes";
 
 import { StateSetter, SelectState } from "src/Select/types/selectStateTypes";
-import {
-  SelectComponents,
-  SelectOptionInnerProps,
-  SelectInputInnerProps,
-} from "src/Select/types/selectComponentTypes";
 import { getObjectKeys } from "../../utils/data-types/objects/helpers";
 import { FALLBACK_CATEGORY_NAME, INITIAL_STATE } from "./constants";
 import { RefObject } from "react";
@@ -243,31 +235,6 @@ const getFocusedOptionIdxOnCategoryChange = (
   direction: SelectKeyboardNavigationDirection,
   categoryOptions: SelectOptionList
 ) => (direction === "next" ? 0 : categoryOptions.length - 1);
-
-const getFocusedCategoryOptionIdx = (
-  focusedOptionIdx: number,
-  focusedCategoryOptions: SelectOptionList,
-  direction: SelectKeyboardNavigationDirection,
-  fallbackDirection: SelectFocusNavigationFallbackDirection,
-  checkFallback?: boolean
-) => {
-  const nextCategoryOptionIdxInDirection = getNextOptionIdxInDirection(
-    focusedOptionIdx,
-    focusedCategoryOptions,
-    direction
-  );
-  if (isFocusedOptionIndexValid(nextCategoryOptionIdxInDirection)) {
-    return nextCategoryOptionIdxInDirection;
-  }
-  return checkFallback &&
-    (fallbackDirection === "next" || fallbackDirection === "previous")
-    ? getNextOptionIdxInDirection(
-        focusedOptionIdx,
-        focusedCategoryOptions,
-        fallbackDirection!
-      )
-    : null;
-};
 
 const getFallbackCategoryOptionIdx = (
   focusedOptionIdx: number,
@@ -483,22 +450,4 @@ export const resolveRefs = <T>(
   customRef?: RefObject<T>
 ) => {
   return !isEmpty(customRef) ? customRef : defaultRef;
-};
-
-export const scrollToOptionList = (
-  selectOptionListRef: HTMLDivElement,
-  selectTopRef: HTMLDivElement
-) => {
-  if (selectOptionListRef) {
-    const optionListElement = selectOptionListRef;
-    const optionListElementHeight = optionListElement.clientHeight;
-    const optionListRect = optionListElement.getBoundingClientRect();
-    const selectContainerRect =
-      optionListElement.parentElement?.getBoundingClientRect();
-    const clientHeight = window.innerHeight;
-    const spaceBottomAmount = window.innerHeight - optionListRect.bottom;
-    const spaceTopAmount = selectContainerRect;
-
-    const hasSpaceOnBottom = spaceBottomAmount >= clientHeight;
-  }
 };

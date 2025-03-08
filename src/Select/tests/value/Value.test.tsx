@@ -12,7 +12,6 @@ import {
   defaultSelectProps,
 } from "../utils/testingUtils";
 import { head } from "lodash";
-import React from "react";
 
 describe("Select Value", () => {
   it("Select value shows up when clicking an option", async () => {
