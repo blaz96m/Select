@@ -127,6 +127,8 @@ const OptionList = memo(
                 key as number
               );
             })
+          ) : isLoading ? (
+            <div>Loading...</div>
           ) : (
             <div>{OPTIONS_EMPTY_TEXT}</div>
           )}
