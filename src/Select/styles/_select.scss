@@ -78,7 +78,13 @@ $blue-light: #c3e5fd;
   &__category {
     border-bottom: 1px solid #e6e6e6;
     padding-bottom: 0.6rem;
+
+    &__options-list {
+      margin: 0;
+      padding: 0;
+    }
     &__label {
+      margin: 0;
       user-select: none;
       cursor: pointer;
       padding: 0.45rem 1rem;
@@ -169,6 +175,8 @@ $blue-light: #c3e5fd;
     }
 
     &__list {
+      padding: 0;
+      margin: 0;
       height: 100%;
       width: 100%;
       display: flex;
@@ -205,6 +213,8 @@ $blue-light: #c3e5fd;
     }
 
     &__list {
+      margin: 0;
+      padding: 0;
       min-height: inherit;
       &--empty {
         display: flex;
