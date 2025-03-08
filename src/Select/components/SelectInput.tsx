@@ -1,18 +1,7 @@
-import {
-  useCallback,
-  memo,
-  KeyboardEvent,
-  forwardRef,
-  useRef,
-  useImperativeHandle,
-} from "react";
-import { hasIn, isEmpty, isFunction, trim } from "lodash";
+import React, { memo, forwardRef, useRef, useImperativeHandle } from "react";
+import { isFunction } from "lodash";
 
-import {
-  SelectComponents,
-  SelectInputInnerProps,
-  SelectInputProps,
-} from "src/Select/types/selectComponentTypes";
+import { SelectInputProps } from "src/Select/types/selectComponentTypes";
 import { useInput } from "src/general/hooks";
 import { resolveClassNames, resolveRefs } from "src/Select/utils";
 

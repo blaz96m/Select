@@ -1,43 +1,23 @@
-import { clear, time } from "console";
-import { sign } from "crypto";
-import { stat } from "fs";
-import {
-  isEmpty,
-  isFunction,
-  isNumber,
-  partial,
-  merge,
-  isNil,
-  defaults,
-  noop,
-  trim,
-} from "lodash";
+import { isEmpty, isFunction, isNumber } from "lodash";
 import {
   useCallback,
   useReducer,
   useRef,
   useEffect,
-  MutableRefObject,
   Dispatch,
   SetStateAction,
 } from "react";
-import {
-  INITIAL_STATE,
-  REQUEST_CONFIG_DEFAULT_VALUES,
-} from "src/general/utils/queryManager/constants";
+import { INITIAL_STATE } from "src/general/utils/queryManager/constants";
 import {
   queryManagerReducer,
   QueryManagerReducerActionTypes,
   QueryManagerState,
-  QueryManagerActions,
 } from "src/general/stores/queryManagerReducer";
 import { resolveStateValue } from "src/general/utils/general";
 import {
   resolveAndGetRequestParams,
   setConfig,
 } from "src/general/utils/queryManager/helpers";
-import { setPage } from "src/Store";
-import { resolveStateSetters } from "src/Select/utils";
 
 type CustomStateSetters = {
   setSearchQuery: Dispatch<SetStateAction<string>> | ((value: string) => void);
@@ -112,17 +92,15 @@ const useQueryManager = <ResponseItemT>(
 } => {
   const [state, dispatch] = useReducer(queryManagerReducer, INITIAL_STATE);
   const requestConfigRef = useRef<RequestConfig | null>(null);
-  const isInputDebounceInProgress = useRef<Boolean>(false);
   const previousSearchQueryValueRef = useRef("");
   const isInitialFetchRef = useRef(true);
   const totalRecordsRef = useRef(0);
 
   if (requestConfigRef.current == null) {
-    requestConfigRef.current = setConfig<ResponseItemT>(config);
+    requestConfigRef.current = setConfig(config);
   }
 
   const getRequestConfig = () => requestConfigRef.current as RequestConfig;
-  const isInputDebouncing = () => isInputDebounceInProgress.current;
   const getTotalRecords = useCallback(() => totalRecordsRef.current, []);
   const isInitialFetch = useCallback(() => isInitialFetchRef.current, []);
 

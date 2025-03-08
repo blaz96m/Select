@@ -1,23 +1,14 @@
-import { isFunction, isNull, isNumber } from "lodash";
-import { KeyboardEvent, useCallback, useRef } from "react";
+import { isFunction } from "lodash";
+import { KeyboardEvent, MouseEvent, useCallback } from "react";
 
 import {
-  DefaultSelectEventHandlers,
   EventHandlerFollowupFunctions,
   CustomSelectEventHandlers,
   SelectEventHandlers,
-  SelectFetchFunction,
   SelectOptionT,
 } from "src/Select/types/selectGeneralTypes";
 
-import {
-  SelectState,
-  SelectStateUpdaters,
-  SelectApi,
-  SelectAsyncApi,
-} from "src/Select/types/selectStateTypes";
-import { SelectFocusState } from "src/Select/types/selectStateTypes";
-import { useThrottle } from "src/general/hooks";
+import { SelectApi, SelectAsyncApi } from "src/Select/types/selectStateTypes";
 
 type SelectProps = {
   isLoading: boolean | undefined;
@@ -59,13 +50,9 @@ const useSelectEventHandlerResolver = (
     selectFocusHandlers,
     selectEventHandlers,
     loadNextPage,
-    selectDomRefs,
-    getSelectOptionsMap,
   } = selectApi;
 
   const { loadNextPageAsync, fetchOnScrollToBottom } = selectAsyncApi;
-
-  const { inputRef } = selectDomRefs;
 
   const handlePageChange = fetchOnScrollToBottom
     ? loadNextPageAsync
@@ -135,7 +122,7 @@ const useSelectEventHandlerResolver = (
   ]);
 
   const handleClearIndicatorClick = useCallback(
-    (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    (e: MouseEvent<HTMLDivElement>) => {
       if (isFunction(onClearIndicatorClick))
         return onClearIndicatorClick(e, inputValue, value);
 
@@ -153,12 +140,9 @@ const useSelectEventHandlerResolver = (
   );
 
   const handleValueClearClick = useCallback(
-    (
-      e: React.MouseEvent<HTMLDivElement, MouseEvent>,
-      option: SelectOptionT
-    ) => {
+    (e: MouseEvent<HTMLDivElement>, option: SelectOptionT) => {
       if (isFunction(onValueClear)) return onValueClear(e, option);
-      defaultEventHandlers.handleValueClearClick(e, option.id);
+      defaultEventHandlers.handleValueClearClick(e, String(option.id));
       isFunction(onAfterValueClear) && onAfterValueClear(e, option);
     },
     [

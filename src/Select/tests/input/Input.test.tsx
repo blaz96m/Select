@@ -1,14 +1,10 @@
 import {
-  findByTestId,
   fireEvent,
   getAllByTestId,
   queryByAttribute,
   render,
-  screen,
-  waitFor,
 } from "@testing-library/react";
-import Select from "src/Select/components/Select";
-import SelectTestApp from "src/SelectTestApp";
+import SelectTestApp from "src/tests/SelectTestApp";
 import { describe, expect, it, vi, vitest } from "vitest";
 import {
   SELECT_INPUT_TESTID,
@@ -18,7 +14,8 @@ import {
   defaultSelectProps,
 } from "../utils/testingUtils";
 
-import { defaults, every, head, toLower } from "lodash";
+import { every, head, toLower } from "lodash";
+import React from "react";
 
 describe("Select Input", () => {
   it("Select Input is not rendered if the hasInputProp is false", () => {

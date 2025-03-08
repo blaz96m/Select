@@ -1,7 +1,6 @@
-import { isFunction, merge } from "lodash";
+import { merge } from "lodash";
 import {
   RequestConfig,
-  Response,
   RequestParams,
 } from "src/general/hooks/useQueryManager";
 import { REQUEST_CONFIG_DEFAULT_VALUES } from "src/general/utils/queryManager/constants";
@@ -12,7 +11,7 @@ type DefaultRequestParams = {
   page: "page";
 };
 
-export const setConfig = <T>(propValues?: Partial<RequestConfig>) => {
+export const setConfig = (propValues?: Partial<RequestConfig>) => {
   const config = REQUEST_CONFIG_DEFAULT_VALUES;
   if (propValues?.isDisabled) {
     config.isDisabled = true;

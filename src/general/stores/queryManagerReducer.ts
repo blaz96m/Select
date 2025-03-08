@@ -1,5 +1,3 @@
-import { trim } from "lodash";
-
 export enum QueryManagerReducerActionTypes {
   SET_SEARCH_QUERY = "SET_SEARCH_QUERY",
   CLEAR_SEARCH_QUERY = "CLEAR_SEARCH_QUERY",

@@ -50,7 +50,7 @@ const SelectMultiValueElement = (props: SelectMultiValueProps) => {
       <div
         className={iconContainerClassName}
         data-testid="select-multi-value-clear"
-        onClick={(e: React.MouseEvent<HTMLDivElement, MouseEvent>) =>
+        onClick={(e: React.MouseEvent<HTMLDivElement>) =>
           handleValueClear(e, value)
         }
       >

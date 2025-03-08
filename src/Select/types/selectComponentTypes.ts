@@ -1,4 +1,5 @@
-import { ChangeEvent, RefObject } from "react";
+import { ChangeEvent, MouseEvent, RefObject } from "react";
+import { jsx } from "react/jsx-runtime";
 import {
   SelectOptionList,
   CustomOptionClickHandler,
@@ -22,9 +23,9 @@ import {
   CustomDropdownClickHandler,
   SelectOptionFilter,
   KeyDownHandler,
-  SelectKeyboardNavigationDirection,
   SelectCustomClassNames,
   SelectCustomRefs,
+  OptionHoverHandler,
 } from "src/Select/types/selectGeneralTypes";
 
 import { StateSetter } from "src/Select/types/selectStateTypes";
@@ -44,11 +45,11 @@ type CustomSelectComponent<
   ComponentPropsT extends SelectCustomComponentProps,
   InnerPropsT extends SelectComponentInnerProps = null
 > = InnerPropsT extends null
-  ? (componentProps: CustomComponentProps<ComponentPropsT>) => JSX.Element
+  ? (componentProps: CustomComponentProps<ComponentPropsT>) => React.JSX.Element
   : (
       componentProps: CustomComponentProps<ComponentPropsT>,
       innerProps: InnerPropsT
-    ) => JSX.Element;
+    ) => React.JSX.Element;
 
 type CustomComponentProps<T> = T;
 
@@ -79,7 +80,7 @@ export type SelectCustomComponents = {
   SelectOptionListElement: CustomOptionListComponent;
   SelectCategoryElement: CustomSelectCategoryComponent;
   SelectInputElement: CustomSelectInputComponent;
-  SelectLoaderElement: () => JSX.Element;
+  SelectLoaderElement: () => React.JSX.Element;
 };
 
 // #SELECT COMPONENT
@@ -91,11 +92,11 @@ export type SelectProps = {
   isMultiValue: boolean;
   useAsync: boolean;
   fetchOnInputChange?: boolean;
-  removeSelectedOptionsFromList: boolean;
+  removeSelectedOptionsFromList?: boolean;
   isCategorized: boolean;
   fetchOnScroll: boolean;
-  disableInputEffect: boolean;
-  customComponents: Partial<SelectCustomComponents>;
+  disableInputEffect?: boolean;
+  customComponents?: Partial<SelectCustomComponents>;
   clearInputOnIdicatorClick?: boolean;
   lazyInit: boolean;
   hasInput?: boolean;
@@ -141,8 +142,8 @@ export type SelectProps = {
   onPageChange?: (page: number) => void;
   showClearIndicator?: boolean;
   isLoading?: boolean;
-  classNames: Partial<SelectCustomClassNames>;
-  refs: Partial<SelectCustomRefs>;
+  classNames?: Partial<SelectCustomClassNames>;
+  refs?: Partial<SelectCustomRefs>;
   categorizeFunction?: CustomSelectCategorizeFunction;
   recordsPerPage?: number;
 };
@@ -153,11 +154,7 @@ export type SelectOptionProps = {
   labelKey: keyof SelectOptionT;
   option: SelectOptionT;
   optionIndex: number;
-  handleHover: (
-    e: React.MouseEvent<HTMLDivElement, MouseEvent>,
-    isFocused: boolean,
-    optionIndex: number
-  ) => void;
+  handleHover: OptionHoverHandler;
   getSelectOptionsMap: () => Map<string, HTMLDivElement>;
   isCategorized: boolean;
   customComponentRenderer: CustomSelectOptionRenderer;
@@ -171,14 +168,14 @@ export type SelectOptionProps = {
 export type SelectOptionRenderer = (
   option: SelectOptionT,
   index: number
-) => JSX.Element;
+) => React.JSX.Element;
 
 export type SelectOptionFromCategoryRenderer = (
   option: SelectOptionT,
   index: number,
   focusedOptionIdx: number | null,
   selectedOptions: SelectOptionList | null
-) => JSX.Element;
+) => React.JSX.Element;
 
 export type CustomSelectOptionComponentProps = Omit<
   SelectOptionProps,
@@ -211,9 +208,9 @@ export type SelectOptionInnerProps = {
   onMouseMove: (...args: any) => void;
   "data-category": boolean;
   "data-selected": boolean;
-  key: string;
+  key: string | number;
   ref: React.LegacyRef<HTMLDivElement>;
-  id: string;
+  id: string | number;
   className: string;
 };
 
@@ -223,7 +220,7 @@ type CustomSelectOptionRenderer = (
     refCallback: (node: HTMLDivElement) => void;
   },
   customComponent: CustomSelectOptionComponent
-) => JSX.Element;
+) => React.JSX.Element;
 
 export type CustomSelectOptionComponent = CustomSelectComponent<
   CustomSelectOptionComponentProps,
@@ -272,7 +269,7 @@ export type CustomSelectOptionListRenderer = (
     ref: RefObject<HTMLDivElement>;
   },
   customComponent: CustomOptionListComponent
-) => JSX.Element;
+) => React.JSX.Element;
 
 // #CATEGORY COMPONENT
 
@@ -294,11 +291,11 @@ export type CustomSelectCategoryRenderer = (
     categoryListClassName: string;
   },
   customComponent: CustomSelectCategoryComponent
-) => JSX.Element;
+) => React.JSX.Element;
 
 export type SelectCategoryComponent = (
   category: SelectCategoryT
-) => JSX.Element;
+) => React.JSX.Element;
 
 export type SelectCategoryInnerProps = {
   categoryHeaderClassName: string;
@@ -342,7 +339,7 @@ type CustomSelectInputRenderer = (
     ref: RefObject<HTMLInputElement>;
   },
   customComponent: CustomSelectInputComponent
-) => JSX.Element;
+) => React.JSX.Element;
 
 export type CustomSelectInputComponentProps = Omit<
   SelectInputProps,
@@ -416,7 +413,7 @@ export type CustomSelectMultiValueRenderer = (
     iconClassName: string;
   },
   customComponent: CustomSelectMultiValueComponent
-) => JSX.Element;
+) => React.JSX.Element;
 
 export type CustomSelectMultiValueComponent = CustomSelectComponent<
   CustomSelectMultiValueProps,
@@ -453,12 +450,14 @@ export type CustomSelectDropdownIndicatorComponent = CustomSelectComponent<
 >;
 
 export type CustomSelectDropdownIndicatorRenderer = (
+  /* eslint-disable-next-line*/
   selectDropdownIndicatorProps: Omit<
     CustomSelectDropdownIndicatorProps,
     "customComponentRenderer"
   > & { className: string },
+  /* eslint-disable-next-line*/
   customComponent: CustomSelectDropdownIndicatorComponent
-) => JSX.Element;
+) => React.JSX.Element;
 
 export type SelectDropdownIndicatorInnerProps = {
   className: string;
@@ -481,7 +480,7 @@ export type CustomSelectClearIndicatorProps = {
 };
 
 export type SelectClearIndicatorInnerProps = {
-  onClick: (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => void;
+  onClick: (e: MouseEvent<HTMLDivElement>) => void;
   className: string;
 };
 
@@ -496,4 +495,4 @@ type CustomSelectClearIndicatorRenderer = (
     "customComponentRenderer"
   > & { className: string },
   customComponent: CustomSelectClearIndicatorComponent
-) => JSX.Element;
+) => React.JSX.Element;

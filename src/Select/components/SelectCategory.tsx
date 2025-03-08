@@ -1,5 +1,5 @@
 import React, { memo } from "react";
-import { isElement, isEmpty, isFunction, isNumber, map, some } from "lodash";
+import { isEmpty, isFunction, map } from "lodash";
 
 import { SelectCategoryProps } from "src/Select/types/selectComponentTypes";
 import { useSelectContext } from "src/Select/components/SelectProvider";

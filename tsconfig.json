@@ -9,7 +9,8 @@
     "jsx": "react-jsx",
     "baseUrl": "./",
     "paths": {
-      "src/*": ["./src/*"]
+      "src/*": ["./src/*"],
+      "select-ui": ["./src/main.ts"]
     }
   }
 }

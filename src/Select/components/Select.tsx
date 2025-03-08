@@ -1,32 +1,7 @@
-import React, {
-  useCallback,
-  useReducer,
-  useRef,
-  useEffect,
-  Dispatch,
-  useMemo,
-  SetStateAction,
-  memo,
-} from "react";
-import {
-  filter,
-  hasIn,
-  noop,
-  map,
-  create,
-  isEmpty,
-  isFunction,
-  isNil,
-  slice,
-  find,
-  includes,
-  join,
-  some,
-  split,
-} from "lodash";
+import React, { useCallback } from "react";
+import { filter, isEmpty, isFunction, some } from "lodash";
 
 import { DEFAULT_SELECT_PLACEHOLDER } from "src/Select/utils/constants";
-import { Spinner } from "src/components/Spinner";
 import {
   SelectContainer,
   SelectInput,
@@ -41,37 +16,16 @@ import {
   SelectCategory,
   SelectLoader,
 } from "src/Select/components";
-import {
-  filterOptionListBySearchValue,
-  initializeState,
-} from "src/Select/utils";
 
 import {
-  CustomPreventInputUpdate,
-  CustomSelectCategorizeFunction,
-  DefaultSelectEventHandlers,
-  InputChangeHandler,
   SelectCategoryT,
   CustomSelectEventHandlers,
   SelectOptionList,
   SelectOptionT,
-  SelectSorterFunction,
-  CustomOptionClickHandler,
-  CustomValueClearClickHandler,
-  CustomClearIndicatorClickHandler,
-  DropdownClickHandler,
-  CustomScrollToBottomHandler,
   EventHandlerFollowupFunctions,
-  SelectFetchFunction,
 } from "src/Select/types/selectGeneralTypes";
 
-import {
-  SelectState,
-  StateSetter,
-  SelectApi,
-  SelectStateUpdaters,
-  SelectAsyncApi,
-} from "src/Select/types/selectStateTypes";
+import { SelectApi, SelectAsyncApi } from "src/Select/types/selectStateTypes";
 
 import { SelectProps } from "src/Select/types/selectComponentTypes";
 
@@ -124,13 +78,8 @@ const Select = ({
 
   const { isOpen, inputValue, value } = selectState;
 
-  const {
-    focusNextOption,
-    focusPreviousOption,
-    resetFocus,
-    isOptionFocused,
-    handleOptionHover,
-  } = selectFocusHandlers;
+  const { resetFocus, isOptionFocused, handleOptionHover } =
+    selectFocusHandlers;
 
   const { focusedOptionCategory, focusedOptionIndex } = selectFocusState;
 

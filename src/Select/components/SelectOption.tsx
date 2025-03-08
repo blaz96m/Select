@@ -1,20 +1,8 @@
-import {
-  Dispatch,
-  SetStateAction,
-  forwardRef,
-  memo,
-  useCallback,
-  useEffect,
-  useState,
-} from "react";
+import React, { memo, MouseEvent } from "react";
 import clsx from "clsx";
-import {
-  SelectComponents,
-  SelectOptionInnerProps,
-  SelectOptionProps,
-} from "src/Select/types/selectComponentTypes";
-import { isFunction, isNil } from "lodash";
-import { getFocusedOptionIdx, resolveClassNames } from "src/Select/utils";
+import { SelectOptionProps } from "src/Select/types/selectComponentTypes";
+import { isFunction } from "lodash";
+import { resolveClassNames } from "src/Select/utils";
 import { useSelectContext } from "src/Select/components/SelectProvider";
 import { FALLBACK_CATEGORY_NAME } from "src/Select/utils/constants";
 
@@ -36,6 +24,8 @@ const SelectOption = memo((props: SelectOptionProps) => {
   } = otherProps;
 
   const context = useSelectContext();
+
+  const optionId = String(option.id);
 
   const {
     components: { SelectOptionElement: customComponent },
@@ -75,9 +65,9 @@ const SelectOption = memo((props: SelectOptionProps) => {
   const refCallback = (node: HTMLDivElement | null) => {
     const selectOptionsMap = getSelectOptionsMap();
     if (node) {
-      selectOptionsMap.set(option.id, node);
+      selectOptionsMap.set(optionId, node);
     } else {
-      selectOptionsMap.delete(option.id);
+      selectOptionsMap.delete(optionId);
     }
   };
   if (isFunction(customComponent)) {
@@ -87,7 +77,7 @@ const SelectOption = memo((props: SelectOptionProps) => {
 
   return (
     <div
-      onMouseMove={(e: React.MouseEvent<HTMLDivElement, MouseEvent>) =>
+      onMouseMove={(e: React.MouseEvent<HTMLDivElement>) =>
         handleHover(e, isFocused, optionIndex)
       }
       key={option.id}
@@ -98,7 +88,7 @@ const SelectOption = memo((props: SelectOptionProps) => {
       data-testid="select-option"
       data-focused={isFocused}
       ref={refCallback}
-      id={option.id}
+      id={optionId}
       className={className}
       onClick={() => onClick(option, isSelected)}
     >

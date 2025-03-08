@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef } from "react";
-import { isFunction, noop } from "lodash";
+import { isFunction } from "lodash";
 import { RefObject } from "react";
 import {
   isScrolledToTheStart,
@@ -98,12 +98,6 @@ const useScrollManager = <T extends HTMLElement>(
       captureEnabled,
       preventScroll,
     ]
-  );
-
-  const disableScroll = (e: WheelEvent) => e.preventDefault();
-
-  const throttledScrollHandler = useThrottle((e: WheelEvent) =>
-    handleScroll(e)
   );
 
   useEffect(() => {

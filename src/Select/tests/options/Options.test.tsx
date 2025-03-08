@@ -1,23 +1,18 @@
 import {
-  findByTestId,
   fireEvent,
   getAllByTestId,
-  getByLabelText,
-  getByText,
-  queryByAttribute,
   render,
-  screen,
   waitFor,
 } from "@testing-library/react";
-import Select from "src/Select/components/Select";
-import SelectTestApp from "src/SelectTestApp";
-import { describe, expect, it, vi, vitest } from "vitest";
+import SelectTestApp from "src/tests/SelectTestApp";
+import { describe, expect, it } from "vitest";
 import {
   SELECT_OPTION_TESTID,
   SELECT_TOP_TESTID,
   defaultSelectProps,
 } from "../utils/testingUtils";
-import { defaults, every, head, toLower } from "lodash";
+import { head } from "lodash";
+import React from "react";
 
 const DEFAULT_RECORDS_PER_PAGE = 10;
 

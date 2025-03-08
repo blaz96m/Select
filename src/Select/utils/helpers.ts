@@ -58,7 +58,7 @@ export const filterOptionListBySearchValue = (
   });
 };
 
-export const filterListBySelectedValues = (
+export const filterOptionList = (
   options: SelectOptionList,
   value: SelectOptionList,
   removeSelectedOptionsFromList: boolean,

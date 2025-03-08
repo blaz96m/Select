@@ -7,6 +7,7 @@ import {
   ChangeEvent,
   KeyboardEvent,
   useLayoutEffect,
+  MouseEvent,
 } from "react";
 import {
   SelectOptionList,
@@ -15,50 +16,27 @@ import {
   CustomPreventInputUpdate,
   CustomSelectCategorizeFunction,
   SelectSorterFunction,
-  SelectFetchFunction,
   SelectKeyboardNavigationDirection,
   SelectFocusNavigationFallbackDirection,
   SelectOptionFilter,
 } from "src/Select/types/selectGeneralTypes";
 
 import {
-  SelectState,
-  SelectStateUpdaters,
   SelectApi,
   CustomState,
   CustomStateSetters,
 } from "src/Select/types/selectStateTypes";
-import {
-  cloneDeep,
-  filter,
-  has,
-  isEmpty,
-  isFunction,
-  isNil,
-  isNumber,
-  isObject,
-  reduce,
-  slice,
-  trim,
-} from "lodash";
+import { isEmpty, isFunction, isNil, isNumber, slice, trim } from "lodash";
 import {
   categorizeOptions,
-  filterListBySelectedValues,
+  filterOptionList,
   filterOptionListBySearchValue,
   initializeState,
-  isFocusedOptionInViewport,
   isFocusedOptionIndexValid,
   isOptionListInViewPort,
-  scrollToTarget,
 } from "src/Select/utils";
-import {
-  FALLBACK_CATEGORY_NAME,
-  NO_CATEGORY_KEY,
-} from "src/Select/utils/constants";
-import {
-  SelectReducerDispatch,
-  selectReducer,
-} from "src/Select/stores/selectReducer";
+import { NO_CATEGORY_KEY } from "src/Select/utils/constants";
+import { selectReducer } from "src/Select/stores/selectReducer";
 import { useSelectFocus, useSelectStateResolver } from "src/Select/hooks";
 
 const useSelect = (selectProps: {
@@ -88,8 +66,11 @@ const useSelect = (selectProps: {
   recordsPerPage?: number;
   isLoading: boolean | undefined;
   isCategorized: boolean;
+
   inputFilterFunction?: (
+    /* eslint-disable-next-line*/
     selectOptions: SelectOptionList,
+    /* eslint-disable-next-line*/
     inputValue: string
   ) => SelectOptionList;
 }): SelectApi => {
@@ -187,7 +168,6 @@ const useSelect = (selectProps: {
   const partitionedOptions = useMemo((): SelectOptionList | null => {
     const options = selectState.selectOptions;
     if (!useAsync && recordsPerPage && !isEmpty(selectState.selectOptions)) {
-      // console.log("CALLED PRARTITION COMPUTE");
       return slice(options, 0, selectState.page * recordsPerPage);
     }
     return options;
@@ -195,8 +175,7 @@ const useSelect = (selectProps: {
 
   const filteredOptions = useMemo((): SelectOptionList => {
     const options = partitionedOptions || selectOptions;
-    //console.log("CALLED FILTER COMPUTE");
-    return filterListBySelectedValues(
+    return filterOptionList(
       options,
       value,
       removeSelectedOptionsFromList,
@@ -205,7 +184,6 @@ const useSelect = (selectProps: {
   }, [partitionedOptions, value, removeSelectedOptionsFromList]);
 
   const sortedOptions = useMemo((): SelectOptionList => {
-    // console.log("CALLED SORT COMPUTE");
     return isFunction(sortFunction)
       ? sortFunction(filteredOptions)
       : filteredOptions;
@@ -214,7 +192,6 @@ const useSelect = (selectProps: {
   const categorizedOptions = useMemo((): CategorizedSelectOptions | null => {
     if (isCategorized && !categoryKey) throw new Error(NO_CATEGORY_KEY);
     const options = sortedOptions;
-    //console.log("CALLED CATEGORY  COMPUTE");
     const res = isCategorized
       ? isFunction(customCategorizeFunction)
         ? customCategorizeFunction(options)
@@ -288,10 +265,6 @@ const useSelect = (selectProps: {
 
   // #EVENT HANDLERS
 
-  const onDropdownCollapse = useCallback(() => {
-    resetFocus();
-  }, [resetFocus]);
-
   const onOptionSelect = useCallback(
     (isSelected: boolean, option: SelectOptionT) => {
       return isSelected && !removeSelectedOptionsFromList
@@ -324,7 +297,7 @@ const useSelect = (selectProps: {
       : (displayedOptions as SelectOptionList)[focusedOptionIndex!];
 
     const selectOptionsMap = getSelectOptionsMap();
-    const targetOptionNode = selectOptionsMap.get(targetOption.id);
+    const targetOptionNode = selectOptionsMap.get(String(targetOption.id));
     if (targetOptionNode) {
       const isOptionSelected = targetOptionNode.dataset.selected! === "true";
       onOptionSelect(isOptionSelected, targetOption);
@@ -369,7 +342,7 @@ const useSelect = (selectProps: {
     (originalOptionsRef.current = options);
 
   const handleClearIndicatorClick = useCallback(
-    (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    (e: MouseEvent<HTMLDivElement>) => {
       if (isLoading) return;
       e.stopPropagation();
       !isEmpty(value) && clearAllValues();
@@ -395,7 +368,6 @@ const useSelect = (selectProps: {
   }, [isLoading, isOpen, toggleDropdownVisibility, resetFocus]);
 
   const clearSelectOptionFilter = useCallback(() => {
-    console.log("CALLED RESET BRUH");
     const originalOptions = getOriginalOptions();
     setSelectOptions(originalOptions);
     onAfterOptionFilter("");
@@ -405,7 +377,6 @@ const useSelect = (selectProps: {
     (option: SelectOptionT, isSelected: boolean) => {
       if (isLoading) return;
       onOptionSelect(isSelected, option);
-      console.log(clearInputOnSelect);
       clearInputOnSelect && clearInput();
 
       if (!closeDropdownOnSelect) {
@@ -435,7 +406,7 @@ const useSelect = (selectProps: {
   );
 
   const handleValueClearClick = (
-    e: React.MouseEvent<HTMLDivElement, MouseEvent>,
+    e: MouseEvent<HTMLDivElement>,
     optionId: string
   ) => {
     e.stopPropagation();

@@ -1,12 +1,11 @@
-import { map, isEmpty, isFunction, head } from "lodash";
+import { map, isEmpty, head } from "lodash";
 import { ValueClearClickHandler } from "src/Select/types/selectGeneralTypes";
 import {
   SelectSingleValueProps,
   SelectValueProps,
 } from "src/Select/types/selectComponentTypes";
 import SelectMultiValueElement from "./SelectMultiValueElement";
-import { memo } from "react";
-import { useSelectContext } from "src/Select/components/SelectProvider";
+import React, { memo } from "react";
 
 type SelectValueContainerPropTypes = SelectValueProps & {
   isMultiValue: boolean;

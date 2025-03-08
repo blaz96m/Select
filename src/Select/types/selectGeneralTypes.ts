@@ -1,10 +1,10 @@
 // #OPTION TYPES
 
-import { ChangeEvent, KeyboardEvent, RefObject } from "react";
+import { ChangeEvent, KeyboardEvent, MouseEvent, RefObject } from "react";
 import { StateSetter } from "./selectStateTypes";
 
 export type SelectOptionT = {
-  id: string;
+  id: string | number;
   [key: string]: any;
 };
 
@@ -27,11 +27,13 @@ export type InputChangeHandler = (
 export type DropdownClickHandler = () => void;
 
 export type ClearIndicatorClickHanlder = (
-  e: React.MouseEvent<HTMLDivElement, MouseEvent>
+  e: MouseEvent<HTMLDivElement>
 ) => void;
 
 export type ValueClearClickHandler = (
-  e: React.MouseEvent<HTMLDivElement, MouseEvent>,
+  /* eslint-disable-next-line*/
+  e: React.MouseEvent<HTMLDivElement>,
+  /* eslint-disable-next-line*/
   option: SelectOptionT
 ) => void;
 
@@ -41,7 +43,7 @@ export type OptionClickHandler = (
 ) => void;
 
 export type OptionHoverHandler = (
-  e: React.MouseEvent<HTMLDivElement, MouseEvent>,
+  e: MouseEvent<HTMLDivElement>,
   isFocused: boolean,
   optionIndex: number
 ) => void;
@@ -64,7 +66,7 @@ export type DefaultSelectEventHandlers = Omit<
   "handleScrollToBottom" | "handleValueClearClick" | "handlePageChange"
 > & {
   handleValueClearClick: (
-    e: React.MouseEvent<HTMLDivElement, MouseEvent>,
+    e: MouseEvent<HTMLDivElement>,
     optionId: string
   ) => void;
   handleValueSelectOnKeyPress: () => void;
@@ -73,7 +75,7 @@ export type DefaultSelectEventHandlers = Omit<
 // # CUSTOM EVENT HANDLERS
 
 export type CustomValueClearClickHandler = (
-  e: React.MouseEvent<HTMLDivElement, MouseEvent>,
+  e: MouseEvent<HTMLDivElement>,
   option: SelectOptionT
 ) => void;
 
@@ -83,7 +85,7 @@ export type CustomOptionClickHandler = (
 ) => void;
 
 export type CustomClearIndicatorClickHandler = (
-  e: React.MouseEvent<HTMLDivElement, MouseEvent>,
+  e: MouseEvent<HTMLDivElement>,
   inputValue: string,
   value: SelectOptionList
 ) => void;

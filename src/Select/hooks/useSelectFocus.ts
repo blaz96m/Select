@@ -1,5 +1,5 @@
-import { first, head, isEmpty, isNull, isNumber, isObject, last } from "lodash";
-import { Ref, RefObject, useCallback, useState } from "react";
+import { isEmpty, isNumber, isObject } from "lodash";
+import { MouseEvent, RefObject, useCallback, useState } from "react";
 import {
   CategorizedSelectOptions,
   SelectFocusNavigationFallbackDirection,
@@ -85,7 +85,8 @@ const useSelectFocus = (selectProps: SelectProps): SelectFocusApi => {
           focusedOptionId = (displayedOptions as SelectOptionList)[focusDetails]
             .id;
         }
-        scrollToFocusedOption && handleScrollToFocusedOption(focusedOptionId);
+        scrollToFocusedOption &&
+          handleScrollToFocusedOption(String(focusedOptionId));
       }
     },
     [displayedOptions]
@@ -216,7 +217,7 @@ const useSelectFocus = (selectProps: SelectProps): SelectFocusApi => {
 
   const handleOptionHover = useCallback(
     (
-      e: React.MouseEvent<HTMLDivElement, MouseEvent>,
+      e: MouseEvent<HTMLDivElement>,
       isFocused: boolean,
       optionIndex: number
     ) => {

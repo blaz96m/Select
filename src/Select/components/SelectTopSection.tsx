@@ -1,5 +1,4 @@
-import { isFunction } from "lodash";
-import { ReactNode, memo } from "react";
+import React, { ReactNode, memo } from "react";
 import { DropdownClickHandler } from "src/Select/types/selectGeneralTypes";
 import { useSelectContext } from ".";
 import { resolveClassNames } from "src/Select/utils/helpers";

@@ -1,24 +1,5 @@
-import {
-  MutableRefObject,
-  ReactNode,
-  RefObject,
-  Suspense,
-  forwardRef,
-  memo,
-  useEffect,
-  useImperativeHandle,
-  useRef,
-} from "react";
-import {
-  isEmpty,
-  isFunction,
-  isNull,
-  isNumber,
-  map,
-  each,
-  every,
-  debounce,
-} from "lodash";
+import React, { forwardRef, memo, useImperativeHandle, useRef } from "react";
+import { isEmpty, isFunction, map } from "lodash";
 import {
   SelectOptionList,
   SelectOptionT,
@@ -33,7 +14,6 @@ import clsx from "clsx";
 import { OPTIONS_EMPTY_TEXT } from "src/Select/utils/constants";
 import { useSelectContext } from ".";
 import { resolveClassNames, resolveRefs } from "../utils";
-import { getObjectKeys } from "src/utils/data-types/objects/helpers";
 
 const OptionList = memo(
   forwardRef<HTMLDivElement, SelectOptionListProps>((props, ref) => {
@@ -47,8 +27,6 @@ const OptionList = memo(
     } = otherProps;
 
     const selectContext = useSelectContext();
-
-    const selectPositionStyle = {};
 
     const {
       components: { SelectOptionListElement: customComponent },

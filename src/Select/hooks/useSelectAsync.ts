@@ -1,12 +1,5 @@
-import { filter, find, isEmpty, isFunction, trim } from "lodash";
-import {
-  useCallback,
-  useEffect,
-  Dispatch,
-  SetStateAction,
-  useState,
-  useLayoutEffect,
-} from "react";
+import { filter, find, isEmpty } from "lodash";
+import { useCallback, useEffect } from "react";
 import {
   SelectOptionT,
   SelectFetchFunction,
@@ -16,7 +9,6 @@ import { SelectApi, SelectAsyncApi } from "src/Select/types/selectStateTypes";
 import { useQueryManager } from "src/general/hooks";
 import { ResponseDetails } from "src/general/hooks/useQueryManager";
 import { QueryManagerState } from "src/general/stores/queryManagerReducer";
-import { isOptionListInViewPort } from "../utils";
 
 type SelectAsyncState = Pick<QueryManagerState, "searchQuery" | "page">;
 
@@ -50,17 +42,13 @@ const useSelectAsync = (
     getOriginalOptions,
     selectDomRefs,
     setOriginalOptions,
-    selectFocusHandlers,
     selectState,
     selectStateUpdaters,
-    focusInput,
   } = selectApi;
 
   const { setInputValue, loadNextPage, setPage } = selectStateUpdaters;
 
   const { inputValue, selectOptions, isOpen, page } = selectState;
-
-  const { resetFocus } = selectFocusHandlers;
 
   const updateSelectOptions = useCallback(
     async (response: ResponseDetails<SelectOptionT>) => {

@@ -1,12 +1,4 @@
-import {
-  useContext,
-  createContext,
-  useMemo,
-  memo,
-  useRef,
-  useReducer,
-  useCallback,
-} from "react";
+import React, { useContext, createContext, useMemo, memo } from "react";
 import {
   SelectCustomClassNames,
   CustomSelectEventHandlers,
@@ -41,13 +33,13 @@ const arePropsEqual = (oldProps: SelectProps, newProps: SelectProps) => {
   });
 };
 
-type SelectContext = {
+type SelectContextT = {
   components: Partial<SelectCustomComponents>;
   classNames: Partial<SelectCustomClassNames>;
   refs: Partial<SelectCustomRefs>;
 };
 
-const SelectContext = createContext<SelectContext>({
+const SelectContext = createContext<SelectContextT>({
   components: {},
   classNames: {},
   refs: {},
@@ -157,7 +149,7 @@ export const SelectProvider = memo(
       fetchFunction,
     });
 
-    const data: SelectContext = useMemo(
+    const data: SelectContextT = useMemo(
       () => ({
         components: customComponents,
         classNames,

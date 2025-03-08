@@ -1,4 +1,10 @@
-import { ChangeEvent, KeyboardEvent, RefObject, useCallback } from "react";
+import {
+  ChangeEvent,
+  KeyboardEvent,
+  MouseEvent,
+  RefObject,
+  useCallback,
+} from "react";
 import {
   SelectClearIndicatorInnerProps,
   CustomOptionListComponent,
@@ -205,7 +211,7 @@ const useSelectCustomComponentsHandler = (
           ? option[categoryKey!] || FALLBACK_CATEGORY_NAME
           : "",
         key: option.id,
-        onMouseMove: (e: React.MouseEvent<HTMLDivElement, MouseEvent>) =>
+        onMouseMove: (e: MouseEvent<HTMLDivElement>) =>
           handleHover(e, isFocused, optionIndex),
       };
 
@@ -310,7 +316,7 @@ const useSelectCustomComponentsHandler = (
           className,
           iconClassName,
           iconContainerClassName,
-          onClick: (e: React.MouseEvent<HTMLDivElement, MouseEvent>) =>
+          onClick: (e: MouseEvent<HTMLDivElement>) =>
             handleValueClear(e, value),
         };
 

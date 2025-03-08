@@ -1,5 +1,3 @@
-import { SelectProps } from "src/Select/types/selectComponentTypes";
-
 export type DefaultSelectProps = {
   useAsync: boolean;
   isMultiValue: boolean;

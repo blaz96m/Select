@@ -1,9 +1,8 @@
 import React from "react";
-
 import { SelectClearIndicatorProps } from "src/Select/types/selectComponentTypes";
 import { faClose } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { isEmpty, isFunction } from "lodash";
+import { isFunction } from "lodash";
 import clsx from "clsx";
 import { useSelectContext } from "src/Select/components/SelectProvider";
 

@@ -1,15 +1,6 @@
-import {
-  findByTestId,
-  fireEvent,
-  getAllByTestId,
-  queryByAttribute,
-  render,
-  screen,
-  waitFor,
-} from "@testing-library/react";
-import Select from "src/Select/components/Select";
-import SelectTestApp from "src/SelectTestApp";
-import { describe, expect, it, vi, vitest } from "vitest";
+import { fireEvent, render, waitFor } from "@testing-library/react";
+import SelectTestApp from "src/tests/SelectTestApp";
+import { describe, expect, it } from "vitest";
 import {
   MULTI_VALUE_CLEAR_TESTID,
   MULTI_VALUE_TESTID,
@@ -20,9 +11,8 @@ import {
   SINGLE_VALUE_TESTID,
   defaultSelectProps,
 } from "../utils/testingUtils";
-import { defaults, every, head, toLower } from "lodash";
-
-const DEFAULT_RECORDS_PER_PAGE = 20;
+import { head } from "lodash";
+import React from "react";
 
 describe("Select Value", () => {
   it("Select value shows up when clicking an option", async () => {
