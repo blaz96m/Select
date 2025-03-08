@@ -46,29 +46,27 @@ const useInput = (
   };
 
   useEffect(() => {
+    let timeoutId: number | undefined;
     if (isInitialRef.current) {
       isInitialRef.current = false;
-      return;
-    }
-    let timeoutId: number | undefined;
-    // TODO ADD STATE RESOLVER
-    const inputState = !isNil(customInputState) ? customInputState : input;
-    if (!isFunction(inputEffectTriggerFunction)) {
-      return;
-    }
-    if (isAsyncFunction(inputEffectTriggerFunction)) {
-      (async () => {
-        timeoutId = await inputEffectTriggerFunction(inputState);
-      })();
     } else {
-      timeoutId = inputEffectTriggerFunction(inputState);
+      if (isFunction(inputEffectTriggerFunction)) {
+        if (isAsyncFunction(inputEffectTriggerFunction)) {
+          (async () => {
+            timeoutId = await inputEffectTriggerFunction(inputValue);
+          })();
+        } else {
+          timeoutId = inputEffectTriggerFunction(inputValue);
+        }
+      }
     }
+
     if (isNumber(timeoutId)) {
       return () => clearTimeout(timeoutId);
     }
-  }, [input, customInputState]);
+  }, [inputValue]);
 
-  return [input, onInputChange];
+  return [inputValue, onInputChange];
 };
 
 export default useInput;

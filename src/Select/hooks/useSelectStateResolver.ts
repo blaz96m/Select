@@ -188,11 +188,19 @@ const useSelectStateResolver = (
     []
   );
 
+  const setPage = useCallback(
+    (page: number) =>
+      dispatch({ type: SelectReducerActionTypes.SET_PAGE, payload: page }),
+
+    []
+  );
+
   return {
     selectState: { ...selectState, isOpen, selectOptions, inputValue, page },
     selectStateUpdaters: {
       clearAllValues,
       selectValue,
+      setValue,
       setInputValue,
       toggleDropdownVisibility,
       clearValue,
@@ -202,6 +210,7 @@ const useSelectStateResolver = (
       closeDropdown,
       setSelectOptions,
       resetPage,
+      setPage,
       loadNextPage,
     },
   };

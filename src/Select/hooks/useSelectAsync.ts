@@ -18,6 +18,8 @@ const useSelectAsync = (
     updateSelectOptionsAfterFetch: boolean;
     fetchFunction: SelectFetchFunction | undefined;
     useAsync: boolean;
+    inputUpdateDebounceDuration: number;
+    debounceInputUpdate: boolean;
     isLoading: boolean | undefined;
     recordsPerPage?: number;
     fetchOnInputChange?: boolean;
@@ -30,6 +32,8 @@ const useSelectAsync = (
     fetchOnInputChange,
     isLazyInit,
     recordsPerPage,
+    inputUpdateDebounceDuration,
+    debounceInputUpdate,
     fetchOnScroll,
     isLoading,
     useAsync,
@@ -41,16 +45,16 @@ const useSelectAsync = (
     selectDomRefs,
     setOriginalOptions,
     onDropdownExpand,
+    selectFocusHandlers,
   } = selectApi;
 
-  const { selectState, selectStateUpdaters, selectFocusHandlers, focusInput } =
-    selectApi;
+  const { selectState, selectStateUpdaters, focusInput } = selectApi;
 
-  const { resetFocus } = selectFocusHandlers;
-
-  const { setInputValue, loadNextPage } = selectStateUpdaters;
+  const { setInputValue, loadNextPage, setPage } = selectStateUpdaters;
 
   const { inputValue, selectOptions, isOpen, page } = selectState;
+
+  const { resetFocus } = selectFocusHandlers;
 
   const updateSelectOptions = useCallback(
     async (response: ResponseDetails<SelectOptionT>) => {
@@ -85,12 +89,13 @@ const useSelectAsync = (
   const { queryManagerState, queryManagerApi } = useQueryManager<SelectOptionT>(
     fetchFunction,
     updateSelectOptions,
-    { searchQuery: inputValue, setSearchQuery: setInputValue, page },
+    { searchQuery: inputValue, setSearchQuery: setInputValue, page, setPage },
     isLoading,
     {
       fetchOnInit: !isLazyInit,
       isDisabled: !useAsync,
       recordsPerPage,
+      inputFetchDeboubceDuration: inputUpdateDebounceDuration,
       fetchOnInputChange,
     }
   );
@@ -120,14 +125,20 @@ const useSelectAsync = (
   };
 
   useEffect(() => {
-    // Focus input after options load, used for async operations since the input will be disabled if the loading state is provided
-    if (isOpen && isFunction(fetchFunction)) {
-      focusInput();
+    if (page === 1 && !isEmpty(selectOptions)) {
+      resetFocus();
     }
+
     if (isLazyInit && !isLoading && isOpen) {
       onDropdownExpand();
     }
   }, [selectOptions]);
+
+  useEffect(() => {
+    if (isOpen) {
+      focusInput();
+    }
+  }, [isLoading]);
 
   return { selectAsyncApi, selectAsyncState: queryManagerState };
 };

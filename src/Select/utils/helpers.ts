@@ -33,13 +33,11 @@ import { StateSetter, SelectState } from "src/Select/types/selectStateTypes";
 import {
   SelectComponents,
   SelectOptionInnerProps,
-  SelectOptionComponentHandlers,
-  SelectInputComponentHandlers,
   SelectInputInnerProps,
-  SelectComponentHandlers,
 } from "src/Select/types/selectComponentTypes";
 import { getObjectKeys } from "../../utils/data-types/objects/helpers";
 import { FALLBACK_CATEGORY_NAME, INITIAL_STATE } from "./constants";
+import { RefObject } from "react";
 
 export const initializeState = (
   selectOptions: SelectOptionList | undefined
@@ -461,75 +459,24 @@ export const resolveStateSetters = <T = void>(
     return customStateSetterHandler;
   return defaultStateSetterFunction;
 };
-export const generateComponentInnerProps = (
-  componentType: keyof typeof SelectComponents,
-  props: SelectComponentHandlers
-) => {
-  switch (componentType) {
-    case SelectComponents.SELECT_OPTION:
-      return generateSelectOptionInnerProps(
-        props as SelectOptionComponentHandlers
-      );
-    case SelectComponents.INPUT:
-      return generateSelectInputInnerProps(
-        props as SelectInputComponentHandlers
-      );
-  }
-};
-
-const generateSelectOptionInnerProps = (
-  props: SelectOptionComponentHandlers
-): SelectOptionInnerProps => {
-  const {
-    handleMouseHover,
-    handleOptionClick,
-    option,
-    isCategorized,
-    categoryKey,
-    className,
-    refCallback,
-  } = props;
-  const hasCategories = categoryKey && isCategorized;
-  const id = option!.id;
-
-  return {
-    id,
-    "data-category": hasCategories ? option![categoryKey] : "",
-    className,
-    ref: refCallback,
-    onClick: handleOptionClick,
-    onMouseMove: handleMouseHover,
-  };
-};
-
-const generateSelectInputInnerProps = (
-  props: SelectInputComponentHandlers
-): SelectInputInnerProps => {
-  const {
-    handleInputChange,
-    handleKeyPress,
-    inputValue,
-    innerRef,
-    className,
-    isLoading,
-  } = props;
-  return {
-    onChange: handleInputChange,
-    onKeyDown: handleKeyPress,
-    value: inputValue,
-    disabled: isLoading,
-    ref: innerRef,
-    className,
-  };
-};
 
 export const resolveClassNames = (
   defaultClass: string,
   customClass?: CustomClassName
 ) => {
+  if (!customClass) {
+    return defaultClass;
+  }
   return customClass?.override
     ? customClass?.className
     : `${defaultClass} ${customClass?.className}`;
+};
+
+export const resolveRefs = <T>(
+  defaultRef: RefObject<T>,
+  customRef?: RefObject<T>
+) => {
+  return !isEmpty(customRef) ? customRef : defaultRef;
 };
 
 export const calculateSpaceAndDisplayOptionList = (

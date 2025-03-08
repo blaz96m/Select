@@ -30,6 +30,8 @@ export type SelectStateUpdaters = {
   openDropdown: () => void;
   closeDropdown: () => void;
   resetPage: () => void;
+  setValue: StateSetter<SelectOptionList>;
+  setPage: (page: number) => void;
   loadNextPage: () => void;
   clearInput: () => void;
   setSelectOptions: (options: SelectOptionList) => void;
@@ -47,9 +49,10 @@ export type SelectApi = {
   selectStateUpdaters: SelectStateUpdaters;
   selectFocusState: SelectFocusState;
   selectFocusHandlers: SelectFocusHandlers;
-  handleOptionsSearchTrigger: () => void;
+  handleOptionsSearchTrigger: (inputValue: string) => void;
   onDropdownExpand: () => void;
   usesInputAsync: boolean;
+  onOptionSelect: (isSelected: boolean, option: SelectOptionT) => void;
   isLastPage: () => boolean;
   preventInputUpdate: PreventInputUpdate;
   selectEventHandlers: DefaultSelectEventHandlers;
@@ -63,7 +66,7 @@ export type SelectApi = {
   handlePageReset: () => void;
   clearInputOnSelect: boolean;
   loadNextPage: () => void;
-  filterSearchedOptions: () => void;
+  filterSearchedOptions: (inputValue: string) => void;
 };
 
 export type SelectAsyncApi = {
@@ -78,12 +81,7 @@ export type SelectFocusHandlers = {
     fallbackDirection?: SelectFocusNavigationFallbackDirection
   ) => void;
   focusPreviousOption: () => void;
-  handleOptionFocusOnSelectByClick: (
-    focusedOptionIdx: number,
-    focusedCategory: string,
-    direction?: SelectKeyboardNavigationDirection,
-    fallbackDirection?: SelectFocusNavigationFallbackDirection
-  ) => void;
+
   handleOptionFocusOnSelectByKeyPress: (
     direction: SelectKeyboardNavigationDirection,
     fallbackDirection: SelectFocusNavigationFallbackDirection

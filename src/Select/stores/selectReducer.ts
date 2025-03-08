@@ -19,6 +19,7 @@ export enum SelectReducerActionTypes {
   ADD_OPTION_LISTS = "ADD_OPTION_LISTS",
   ADD_OPTION_CATEGORIES = "ADD_OPTION_CATEGORIES",
   SET_FOCUSED_OPTION = "SET_FOCUSED:OPTION",
+  SET_PAGE = "SET_PAGE",
   GO_TO_NEXT_PAGE = "GO_TO_NEXT_PAGE",
   RESET_PAGE = "RESET_PAGE",
 }
@@ -51,11 +52,10 @@ type AddSelectOptionsListAction = {
   payload: SelectOptionList;
 };
 
-export type SelectPageActions = {
-  type:
-    | SelectReducerActionTypes.GO_TO_NEXT_PAGE
-    | SelectReducerActionTypes.RESET_PAGE;
-};
+export type SelectPageActions =
+  | { type: SelectReducerActionTypes.GO_TO_NEXT_PAGE }
+  | { type: SelectReducerActionTypes.RESET_PAGE }
+  | { type: SelectReducerActionTypes.SET_PAGE; payload: number };
 
 type SelectActions =
   | SelectVisibiltyActions
@@ -91,6 +91,10 @@ export const selectReducer = (
       return isEmpty(state.selectOptions) && isEmpty(action.payload)
         ? state
         : { ...state, selectOptions: action.payload };
+
+    case SelectReducerActionTypes.SET_PAGE:
+      return { ...state, page: action.payload };
+
     case SelectReducerActionTypes.GO_TO_NEXT_PAGE:
       return { ...state, page: state.page + 1 };
 

@@ -14,10 +14,7 @@ import {
   SelectInputProps,
 } from "src/Select/types/selectComponentTypes";
 import { useInput } from "src/general/hooks";
-import {
-  generateComponentInnerProps,
-  resolveClassNames,
-} from "src/Select/utils";
+import { resolveClassNames, resolveRefs } from "src/Select/utils";
 import clsx from "clsx";
 
 import { useSelectContext } from "src/Select/components/SelectProvider";
@@ -31,21 +28,24 @@ const SelectInput = memo(
       handleKeyPress,
       preventInputUpdate,
       customComponentRenderer,
-      hasInput,
       isLoading,
     } = props;
 
-    const innerRef = useRef<HTMLInputElement>(null);
+    console.log();
 
     const selectContext = useSelectContext();
-    console.log(selectContext);
     const {
       components: { SelectInputElement: customComponent },
       classNames: {
         selectInputContainer: customContainerClass,
         selectInputValue: customClass,
       },
+      refs: { inputRef: customInputRef },
     } = selectContext;
+
+    const innerRef = useRef<HTMLInputElement>(null);
+
+    const resolvedRef = resolveRefs(innerRef, customInputRef);
 
     const className = resolveClassNames("select__input", customClass);
     const containerClassName = resolveClassNames(
@@ -53,7 +53,7 @@ const SelectInput = memo(
       customContainerClass
     );
 
-    useImperativeHandle(ref, () => innerRef.current!, []);
+    useImperativeHandle(ref, () => resolvedRef.current!, []);
 
     const [_, handleInputChange] = useInput(
       onInputChange,
@@ -66,7 +66,8 @@ const SelectInput = memo(
       const props = {
         inputValue,
         className,
-        ref: innerRef,
+        containerClassName,
+        ref: resolvedRef,
         handleOptionsSearchTrigger,
         onInputChange,
         handleKeyPress,
@@ -78,6 +79,7 @@ const SelectInput = memo(
     return (
       <div className={containerClassName}>
         <input
+          data-testid="select-input"
           className={className}
           onChange={(e) => {
             e.stopPropagation();
@@ -86,7 +88,7 @@ const SelectInput = memo(
           value={inputValue}
           disabled={isLoading}
           onKeyDown={handleKeyPress}
-          ref={innerRef}
+          ref={resolvedRef}
         />
       </div>
     );

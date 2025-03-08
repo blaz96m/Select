@@ -14,11 +14,7 @@ import {
   SelectOptionProps,
 } from "src/Select/types/selectComponentTypes";
 import { isFunction, isNil } from "lodash";
-import {
-  generateComponentInnerProps,
-  getFocusedOptionIdx,
-  resolveClassNames,
-} from "src/Select/utils";
+import { getFocusedOptionIdx, resolveClassNames } from "src/Select/utils";
 import { useSelectContext } from "src/Select/components/SelectProvider";
 import { FALLBACK_CATEGORY_NAME } from "src/Select/utils/constants";
 
@@ -55,6 +51,7 @@ const SelectOption = memo((props: SelectOptionProps) => {
     "select__option",
     customOptionClassName
   );
+
   const optionDisabledClassName = resolveClassNames(
     "select__option--disabled",
     customOptionDisabledClassName
@@ -100,6 +97,8 @@ const SelectOption = memo((props: SelectOptionProps) => {
         isCategorized ? option[categoryKey!] || FALLBACK_CATEGORY_NAME : ""
       }
       data-selected={isSelected}
+      data-testid="select-option"
+      data-focused={isFocused}
       ref={refCallback}
       id={option.id}
       className={className}

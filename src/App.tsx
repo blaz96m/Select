@@ -1,15 +1,12 @@
-import { useState, memo, useCallback } from "react";
+import { useState, memo, useCallback, useRef } from "react";
 import {
-  SelectOptionT,
   SelectOptionInnerProps,
   SelectMultiValueInnerProps,
   SelectSingleValueProps,
   SelectDropdownIndicatorInnerProps,
   SelectInputInnerProps,
   SelectClearIndicatorInnerProps,
-  BasicComponentInnerProps,
-  SelectOptionList,
-} from "./components/Select/types/selectTypes";
+} from "src/Select/types/selectComponentTypes";
 import "src/style.scss";
 import { SelectOptionProps } from "./components/Select/SelectOption";
 import {
@@ -18,6 +15,7 @@ import {
   includes,
   isEmpty,
   reduce,
+  some,
   split,
   toLower,
   trim,
@@ -54,7 +52,11 @@ import { useSelect } from "./Select/hooks";
 import { Provider, useDispatch, useSelector } from "react-redux";
 import { RootState } from "@reduxjs/toolkit/query";
 import { CategorizedSelectOptions } from "./Select/types/selectGeneralTypes";
-import { SelectCategoryCustomComponentProps } from "./Select/types/selectComponentTypes";
+import {
+  CustomSelectInputComponentProps,
+  CustomSelectOptionComponentProps,
+} from "./Select/types/selectComponentTypes";
+import { M } from "node_modules/vite/dist/node/types.d-aGj9QkWt";
 
 export const getMovieList = async (
   { page = 1, searchQuery = "a" },
@@ -73,7 +75,7 @@ export const getMovieList = async (
 };
 
 let categoryCount = 1;
-const items = Array.from({ length: 5000 }, (_, i) => {
+const items = Array.from({ length: 1000 }, (_, i) => {
   let category = `Category-${categoryCount}`;
   if (i % 5 === 0) {
     categoryCount++;
@@ -81,15 +83,8 @@ const items = Array.from({ length: 5000 }, (_, i) => {
   return {
     id: i,
     name: `Option-${i}`,
-    details: `A movie about ${i}`,
+    details: `The option ${i}`,
     category,
-    test: { 1: [1, 2, 3], 2: [2, 3, 4] },
-    xy: {
-      a: { a: "a", b: "b", c: "c" },
-      b: { a: "a", b: "b", c: "c" },
-      c: { a: "a", b: "b", c: "c" },
-    },
-    languages: ["en", "fr", "de", "sp"],
   };
 });
 
@@ -101,6 +96,8 @@ function App() {
   const [count, setCount] = useState(0);
   const [message, setMessage] = useState("");
   const [lenft, setLenft] = useState("None");
+
+  const [customIsOpen, setCustomIsOpen] = useState(false);
 
   //const [isOpen, setIsOpen] = useState(false);
 
@@ -121,16 +118,67 @@ function App() {
     []
   );
 
+  const getMovieList = useCallback(
+    async ({ page = 1, searchQuery = "a" }, signal?: AbortSignal) => {
+      try {
+        setIsLoading(true);
+        const reselt = await axiosClient.get(
+          `/search/movie?query=${searchQuery || "a"}&page=${page}`
+        );
+        setIsLoading(false);
+        const data = reselt.data;
+        const totalRecords = data["total_results"];
+        return { data: data.results as SelectOptionList, totalRecords };
+      } catch (err) {
+        err;
+      }
+    },
+    []
+  );
+
   const SelectCheckBox = (
-    componentProps: SelectOptionProps,
+    componentProps: CustomSelectOptionComponentProps,
     innerProps: SelectOptionInnerProps
   ) => {
-    const { isSelected, labelKey, option } = componentProps;
+    const {
+      isSelected,
+      option,
+      labelKey,
+      clearInput,
+      closeDropdown,
+      focusInput,
+      onOptionSelect,
+      isDisabled,
+      isMultiValue,
+      clearInputOnSelect,
+      getSelectOptionsMap,
+      isFocused,
+      optionIndex,
+      resetFocus,
+      setValue,
+      value,
+    } = componentProps;
     const { onClick, ...otherProps } = innerProps!;
+
+    const customeOnKlek = () => {
+      const valsLol = isMultiValue
+        ? some(value, (val) => val.id === option.id)
+          ? filter(value, (val) => val.id != option.id)
+          : [...value, option]
+        : [option];
+      setValue(valsLol);
+      clearInputOnSelect && clearInput();
+      focusInput();
+    };
+
     const className = otherProps.className;
     return (
-      <div {...otherProps} className={`${className} select__check`}>
-        <input type="checkbox" checked={isSelected} onClick={onClick} />
+      <div
+        {...otherProps}
+        onClick={customeOnKlek}
+        className={`${className} select__check`}
+      >
+        <input type="checkbox" checked={isSelected} />
         <p>{option[labelKey]}</p>
       </div>
     );
@@ -171,7 +219,7 @@ function App() {
   };
 
   const CustomCategoryComponent = (
-    componentProps: SelectCategoryCustomComponentProps
+    componentProps: SelectCategoryCustomComponentProps,
     innerProps: BasicComponentInnerProps
   ) => {
     const { className } = innerProps;
@@ -203,15 +251,6 @@ function App() {
       !isEmpty(value) && selectStateSetters.clearAllValues();
     };
     return <div onClick={clearThisBitch}>Clear THIS BITCH!!</div>;
-  };
-
-  const CustomInputComponent = (
-    componentProps: SelectInputProps,
-    innerProps: SelectInputInnerProps
-  ) => {
-    const {} = componentProps;
-    const { ref, onChange } = innerProps;
-    return <input {...innerProps} />;
   };
 
   const isDisabled = useCallback((option: SelectOptionT) => {}, [value]);
@@ -287,17 +326,51 @@ function App() {
     []
   );
 
-  const onValueClear = (
-    e: React.MouseEvent<HTMLDivElement, MouseEvent>,
-    option: SelectOptionT
+  const CustomInputComponent = (
+    inputProps: CustomSelectInputComponentProps,
+    innerProps: SelectInputInnerProps
   ) => {
-    e.stopPropagation();
-    const updatedValue = filter(
-      value,
-      (val: SelectOptionT) => val.id !== option.id
+    const {} = inputProps;
+
+    const { className, containerClassName, onChange, onKeyDown, ref, value } =
+      innerProps;
+    return (
+      <div className={containerClassName}>
+        <input
+          data-testid="select-input"
+          className={className}
+          onChange={(e) => {
+            e.stopPropagation();
+            onChange(e);
+          }}
+          value={value}
+          disabled={isLoading}
+          onKeyDown={onKeyDown}
+          ref={ref}
+        />
+      </div>
     );
-    setValue(updatedValue);
   };
+
+  const customInputRef = useRef<HTMLInputElement>(null);
+
+  const customOptionListRef = useRef<HTMLDivElement>(null);
+
+  const onValueClear = useCallback(
+    (
+      e: React.MouseEvent<HTMLDivElement, MouseEvent>,
+      option: SelectOptionT
+    ) => {
+      e.stopPropagation();
+      const updatedValue = filter(
+        value,
+        (val: SelectOptionT) => val.id !== option.id
+      );
+      setValue(updatedValue);
+      customInputRef.current?.focus();
+    },
+    [value]
+  );
 
   const onAfterValueClear = (
     e: React.MouseEvent<HTMLDivElement, MouseEvent>,
@@ -320,22 +393,22 @@ function App() {
         closeDropdownOnSelect={false}
         value={value}
         labelKey="title"
-        //onValueClear={onValueClear}
+        onValueClear={onValueClear}
         //onAfterValueClear={onAfterValueClear}
-        clearInputOnSelect={true}
+        clearInputOnSelect={false}
         categoryKey="original_language"
         isCategorized={true}
         inputValue={inputValue}
         setInputValue={updateInputValue}
         //page={page}
         //setPage={settPage}
-        //isOpen={isOpen}
+        isOpen={customIsOpen}
         //onDropdownClick={onDropdownClick}
-        //setIsOpen={chenge}
-        setSelectOptions={setOptions}
-        selectOptions={selectOptions}
+        setIsOpen={setCustomIsOpen}
+        //setSelectOptions={setOptions}
+        //selectOptions={selectOptions}
         //defaultSelectOptions={items}
-        disableInputEffect={true}
+        disableInputEffect={false}
         onChange={setValue}
         recordsPerPage={20}
         removeSelectedOptionsFromList={false}
@@ -344,22 +417,22 @@ function App() {
         isLoading={isLoading}
         lazyInit={true}
         inputFilterFunction={customFilter}
+        refs={{
+          inputRef: customInputRef,
+          optionListRef: customOptionListRef,
+        }}
         classNames={{
           selectOptionSelected: { className: "red", override: false },
           selectOptionFocused: { className: "orange", override: false },
         }}
-        /*
         customComponents={{
           SelectOptionElement: SelectCheckBox,
+          SelectInputElement: CustomInputComponent,
           //SelectMultiValueElement: CustomMultiVal,
           //SelectSingleValueElement: CustomSingleVal,
           //SelectDropdownIndicatorElement: CustomDropdownIndicator,
           //SelectClearIndicatorElement: ClearIndikator,
-          /*SelectInputElement: {
-            customComponent: CustomInputComponent,
-            renderContainer: true,
-          },
-        }}*/
+        }}
       />
     </>
   );

@@ -29,7 +29,7 @@ import { useScrollManager } from "src/general/hooks";
 import clsx from "clsx";
 import { OPTIONS_EMPTY_TEXT } from "src/Select/utils/constants";
 import { useSelectContext } from ".";
-import { resolveClassNames } from "../utils";
+import { resolveClassNames, resolveRefs } from "../utils";
 import { getObjectKeys } from "src/utils/data-types/objects/helpers";
 
 const OptionList = memo(
@@ -52,6 +52,7 @@ const OptionList = memo(
         selectOptionListEmpty: customEmptyClass,
         selectOptionListWrapper: customContainerClass,
       },
+      refs: { optionListRef: customOptionListRef },
     } = selectContext;
 
     const optionListClassName = resolveClassNames(
@@ -74,13 +75,17 @@ const OptionList = memo(
     );
 
     const bottomScrollActions = { onArrive: handleScrollToBottom };
+
     const innerRef = useRef<HTMLDivElement>(null);
-    useImperativeHandle(ref, () => innerRef.current!);
+    const resolvedRef = resolveRefs(innerRef, customOptionListRef);
+
+    useImperativeHandle(ref, () => resolvedRef.current!);
     useScrollManager<HTMLDivElement>(
-      innerRef,
+      resolvedRef,
       bottomScrollActions,
       {},
-      !isLoading
+      true,
+      isLoading
     );
 
     if (isFunction(customComponent)) {
@@ -88,13 +93,17 @@ const OptionList = memo(
         ...otherProps,
         wrapperClassName,
         listClassName,
-        ref: innerRef,
+        ref: resolvedRef,
       };
       return customComponentRenderer(props, customComponent);
     }
 
     return (
-      <div className={wrapperClassName} ref={innerRef}>
+      <div
+        data-testid="select-option-list"
+        className={wrapperClassName}
+        ref={resolvedRef}
+      >
         <ul className={listClassName}>
           {!isEmpty(displayedOptions) ? (
             map(displayedOptions, (value, key: number | string) => {

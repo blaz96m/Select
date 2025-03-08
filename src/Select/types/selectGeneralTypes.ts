@@ -193,7 +193,7 @@ export type SelectCategoryFocusDetails = {
 
 export type CustomClassName = { className: string; override?: boolean };
 
-export type CustomClassNames = {
+export type SelectCustomClassNames = {
   selectContainer: CustomClassName;
   selectTopContainer: CustomClassName;
   selectSingleValue: CustomClassName;
@@ -217,7 +217,7 @@ export type CustomClassNames = {
   selectOptionSelected: CustomClassName;
 };
 
-export type CustomRefs = {
+export type SelectCustomRefs = {
   inputRef: RefObject<HTMLInputElement>;
   optionListRef: RefObject<HTMLDivElement>;
 };

@@ -79,10 +79,12 @@ import "../styles/_select.scss";
 import { useSelectEventHandlerResolver } from "src/Select/hooks";
 import { useSelectCustomComponentsHandler } from "src/general/hooks";
 
-type SelectComponentProps = SelectProps & {
+type SelectComponentProps = Omit<
+  SelectProps,
+  "customComponents" | "classNames" | "refs"
+> & {
   selectApi: SelectApi;
   selectAsyncApi: SelectAsyncApi;
-  defaultSelectEventHandlers: DefaultSelectEventHandlers;
   customSelectEventHandlers: CustomSelectEventHandlers;
   eventHandlerFollowups: EventHandlerFollowupFunctions;
 };
@@ -93,7 +95,6 @@ const Select = ({
   isOptionDisabled,
   selectApi,
   selectAsyncApi,
-  defaultSelectEventHandlers,
   customSelectEventHandlers,
   eventHandlerFollowups,
   clearInputOnIdicatorClick = true,
@@ -147,6 +148,7 @@ const Select = ({
     selectAsyncApi,
     selectEventHandlers,
     {
+      isMultiValue,
       isCategorized,
       categoryKey,
       fetchOnScrollToBottom,
@@ -192,7 +194,14 @@ const Select = ({
         />
       );
     },
-    [labelKey, isCategorized, categoryKey, handleOptionHover, handleOptionClick]
+    [
+      labelKey,
+      isCategorized,
+      categoryKey,
+      handleOptionHover,
+      handleOptionClick,
+      customComponentRenderers.handleCustomOptionListRender,
+    ]
   );
 
   const renderOptionFromList = useCallback(

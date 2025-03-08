@@ -84,7 +84,6 @@ const useSelect = (selectProps: {
   customCategorizeFunction?: CustomSelectCategorizeFunction;
   recordsPerPage?: number;
   isLoading: boolean | undefined;
-  inputUpdateDebounceDuration?: number;
   isCategorized: boolean;
   inputFilterFunction?: (
     selectOptions: SelectOptionList,
@@ -163,6 +162,7 @@ const useSelect = (selectProps: {
   const selectListContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const selectOptionsRef = useRef<Map<string, HTMLDivElement> | null>(null);
+  const previousInputValueRef = useRef("");
 
   const getSelectOptionsMap = useCallback(() => {
     if (!selectOptionsRef.current) {
@@ -182,6 +182,7 @@ const useSelect = (selectProps: {
   const partitionedOptions = useMemo((): SelectOptionList | null => {
     const options = selectState.selectOptions;
     if (!useAsync && recordsPerPage && !isEmpty(selectState.selectOptions)) {
+      console.log("CALLED PRARTITION COMPUTE");
       return slice(options, 0, selectState.page * recordsPerPage);
     }
     return options;
@@ -189,6 +190,7 @@ const useSelect = (selectProps: {
 
   const filteredOptions = useMemo((): SelectOptionList => {
     const options = partitionedOptions || selectOptions;
+    console.log("CALLED FILTER COMPUTE");
     return filterListBySelectedValues(
       options,
       value,
@@ -198,6 +200,7 @@ const useSelect = (selectProps: {
   }, [partitionedOptions, value, removeSelectedOptionsFromList]);
 
   const sortedOptions = useMemo((): SelectOptionList => {
+    console.log("CALLED SORT COMPUTE");
     return isFunction(sortFunction)
       ? sortFunction(filteredOptions)
       : filteredOptions;
@@ -206,6 +209,7 @@ const useSelect = (selectProps: {
   const categorizedOptions = useMemo((): CategorizedSelectOptions | null => {
     if (isCategorized && !categoryKey) throw new Error(NO_CATEGORY_KEY);
     const options = sortedOptions;
+    console.log("CALLED CATEGORY  COMPUTE");
     const res = isCategorized
       ? isFunction(customCategorizeFunction)
         ? customCategorizeFunction(options)
@@ -242,7 +246,6 @@ const useSelect = (selectProps: {
   );
 
   const {
-    handleOptionFocusOnSelectByClick,
     resetFocus,
     handleOptionFocusOnSelectByKeyPress,
     focusNextOption,
@@ -288,7 +291,6 @@ const useSelect = (selectProps: {
   }, [focusInput, focusedOptionIndex, focusedOptionCategory]);
 
   const onDropdownCollapse = useCallback(() => {
-    console.log("CALLED");
     resetFocus();
   }, [resetFocus]);
 
@@ -298,17 +300,17 @@ const useSelect = (selectProps: {
         ? clearValue(option.id)
         : selectValue(option);
     },
-    [removeSelectedOptionsFromList, clearValue, selectValue]
+    [removeSelectedOptionsFromList, clearValue, selectValue, value]
   );
 
   // TODO REFACTOR MAYBEEE (CHANGE NAME)
   const isLastPage = useCallback(() => {
-    const totalRecords = getOriginalOptions()?.length;
-    if (totalRecords && recordsPerPage) {
-      return page * recordsPerPage < totalRecords;
+    const totalRecordsNumber = selectOptions.length;
+    if (totalRecordsNumber && recordsPerPage) {
+      return page * recordsPerPage < totalRecordsNumber;
     }
     return false;
-  }, [page, recordsPerPage]);
+  }, [page, recordsPerPage, selectOptions]);
 
   const handleValueSelectOnKeyPress = useCallback(() => {
     if (
@@ -355,7 +357,6 @@ const useSelect = (selectProps: {
     (inputValue: string) => {
       setInputValue(inputValue);
       !isOpen && openDropdown();
-
       if (!isMultiValue && clearInputOnSelect && !isEmpty(value)) {
         clearAllValues();
       }
@@ -405,15 +406,6 @@ const useSelect = (selectProps: {
 
       if (!closeDropdownOnSelect) {
         focusInput();
-        const { focusDirection, focusFallbackDirection } =
-          getFocusDirectionsOnSelect(isSelected);
-
-        handleOptionFocusOnSelectByClick(
-          optionIdx,
-          optionCategory,
-          focusDirection,
-          focusFallbackDirection
-        );
       } else {
         closeDropdown();
         resetFocus();
@@ -431,25 +423,41 @@ const useSelect = (selectProps: {
     focusInput();
   };
 
-  const filterSearchedOptions = useCallback(() => {
-    const originalOptions = getOriginalOptions();
-    const filteredOptions = isFunction(customInputFilterFunction)
-      ? customInputFilterFunction(originalOptions, inputValue)
-      : filterOptionListBySearchValue(originalOptions, labelKey, inputValue);
-    setSelectOptions(filteredOptions);
-  }, [selectOptions, inputValue, customInputFilterFunction]);
+  const filterSearchedOptions = useCallback(
+    (inputValue: string) => {
+      const originalOptions = getOriginalOptions();
+      const filteredOptions = isFunction(customInputFilterFunction)
+        ? customInputFilterFunction(originalOptions, inputValue)
+        : filterOptionListBySearchValue(originalOptions, labelKey, inputValue);
+      setSelectOptions(filteredOptions);
+      handlePageReset();
+      previousInputValueRef.current = inputValue;
+      if (
+        selectListContainerRef.current &&
+        selectListContainerRef.current.scrollTop &&
+        selectListContainerRef.current.scroll
+      ) {
+        selectListContainerRef.current.scroll({ top: 0 });
+      }
+    },
+    [selectOptions, customInputFilterFunction]
+  );
 
   // Gets passed to the useEffect of the input component, will not run if async search is enabled
-  const handleOptionsSearchTrigger = useCallback(() => {
-    if (usesInputAsync || disableInputEffect) return;
-    if (!inputValue) {
-      return filterSearchedOptions();
-    }
-    const timeoutId = setTimeout(() => {
-      filterSearchedOptions();
-    }, 600);
-    return timeoutId;
-  }, [usesInputAsync, filterSearchedOptions, disableInputEffect]);
+  const handleOptionsSearchTrigger = useCallback(
+    (inputValue: string) => {
+      const inputUpdated = inputValue !== previousInputValueRef.current;
+      if (usesInputAsync || disableInputEffect || !inputUpdated) return;
+      if (!inputValue) {
+        return filterSearchedOptions(inputValue);
+      }
+      const timeoutId = setTimeout(() => {
+        filterSearchedOptions(inputValue);
+      }, 600);
+      return timeoutId;
+    },
+    [usesInputAsync, filterSearchedOptions, disableInputEffect]
+  );
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent<HTMLInputElement>) => {
@@ -502,6 +510,7 @@ const useSelect = (selectProps: {
       handleOptionClick,
       handleValueClearClick,
     },
+    onOptionSelect,
     focusInput,
     loadNextPage,
     onDropdownExpand,

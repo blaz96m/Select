@@ -23,6 +23,7 @@ import {
   SelectInputProps,
   SelectMultiValueProps,
   SelectOptionProps,
+  CustomSelectOptionComponentProps,
 } from "src/Select/types/selectComponentTypes";
 import {
   SelectEventHandlers,
@@ -36,6 +37,7 @@ type SelectProps = {
   isCategorized: boolean;
   fetchOnScrollToBottom: boolean | undefined;
   clearInputOnIdicatorClick: boolean;
+  isMultiValue: boolean;
 };
 
 const useSelectCustomComponentsHandler = (
@@ -55,6 +57,10 @@ const useSelectCustomComponentsHandler = (
     selectStateUpdaters,
     focusInput,
     isLastPage,
+    getSelectOptionsMap,
+    onOptionSelect,
+    clearInputOnSelect,
+    selectDomRefs,
   } = selectApi;
 
   const { isLastPage: isLastPageAsync } = selectAsyncApi;
@@ -68,29 +74,26 @@ const useSelectCustomComponentsHandler = (
     closeDropdown,
     clearAllValues,
     clearValue,
-    selectValue,
+    setValue,
     clearInput,
   } = selectStateUpdaters;
+
+  const { inputRef } = selectDomRefs;
 
   const {
     categoryKey,
     isCategorized,
     fetchOnScrollToBottom,
     clearInputOnIdicatorClick,
+    isMultiValue,
   } = selectProps;
 
   const { handleInputChange, handlePageChange } = selectEventHandlers;
 
   const { handleValueSelectOnKeyPress } = selectDefaultEventHandlers;
 
-  const {
-    focusNextOption,
-    focusPreviousOption,
-    handleOptionFocusOnSelectByClick,
-    resetFocus,
-    setFocusedOptionCategory,
-    setFocusedOptionIndex,
-  } = selectFocusHandlers;
+  const { focusNextOption, focusPreviousOption, resetFocus } =
+    selectFocusHandlers;
 
   const handleCustomInputRender = useCallback(
     (
@@ -99,6 +102,7 @@ const useSelectCustomComponentsHandler = (
         "customComponentRenderer" | "hasInput"
       > & {
         className: string;
+        containerClassName: string;
         ref: RefObject<HTMLInputElement>;
       },
       customComponent: CustomSelectInputComponent
@@ -124,6 +128,7 @@ const useSelectCustomComponentsHandler = (
         isLoading,
         handleKeyPress,
         onInputChange,
+        containerClassName,
         ref,
         className,
       } = selectInputProps;
@@ -132,6 +137,7 @@ const useSelectCustomComponentsHandler = (
         onChange: (e: ChangeEvent<HTMLInputElement>) =>
           onInputChange(e.target.value),
         onKeyDown: (e: KeyboardEvent<HTMLInputElement>) => handleKeyPress(e),
+        containerClassName,
         disabled: isLoading,
         value: inputValue,
         ref,
@@ -162,34 +168,23 @@ const useSelectCustomComponentsHandler = (
       },
       customComponent: CustomSelectOptionComponent
     ) => {
-      const {
-        option,
-        refCallback,
-        onClick,
-        isSelected,
-        optionIndex,
-        className,
-        isFocused,
-        handleHover,
-        isDisabled,
-      } = selectOptionProps;
+      const { className, onClick, refCallback, handleHover, ...otherProps } =
+        selectOptionProps;
 
-      const customProps = {
-        clearValue,
-        selectValue,
+      const { option, isSelected, optionIndex, isFocused } = otherProps;
+
+      const customProps: CustomSelectOptionComponentProps = {
+        ...otherProps,
+        onOptionSelect,
+        getSelectOptionsMap,
         value,
+        isMultiValue,
+        setValue,
         clearInput,
         focusInput,
-        handleOptionFocusOnSelectByClick,
+        clearInputOnSelect,
         closeDropdown,
         resetFocus,
-        isFocused,
-        optionIndex,
-        isSelected,
-        option,
-        setFocusedOptionCategory,
-        setFocusedOptionIndex,
-        isDisabled,
       };
 
       const optionCategory = option[categoryKey!] || "";
@@ -210,13 +205,7 @@ const useSelectCustomComponentsHandler = (
 
       return customComponent(customProps, innerProps);
     },
-    [
-      selectValue,
-      clearValue,
-      handleOptionFocusOnSelectByClick,
-      categoryKey,
-      isCategorized,
-    ]
+    [onOptionSelect, categoryKey, isCategorized]
   );
 
   const handleCustomOptionListRender = useCallback(

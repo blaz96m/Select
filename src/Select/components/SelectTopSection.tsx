@@ -23,7 +23,7 @@ const SelectTopContainer = memo(
     );
 
     return (
-      <div className={className} onClick={onClick}>
+      <div data-testid="select-top" className={className} onClick={onClick}>
         {children}
       </div>
     );

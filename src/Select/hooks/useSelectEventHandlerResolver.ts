@@ -58,10 +58,12 @@ const useSelectEventHandlerResolver = (
     selectFocusHandlers,
     selectEventHandlers,
     loadNextPage,
-    handlePageReset,
+    selectDomRefs,
   } = selectApi;
 
   const { loadNextPageAsync, fetchOnScrollToBottom } = selectAsyncApi;
+
+  const { inputRef } = selectDomRefs;
 
   const handlePageChange = fetchOnScrollToBottom
     ? loadNextPageAsync
@@ -69,12 +71,8 @@ const useSelectEventHandlerResolver = (
 
   const defaultEventHandlers = selectEventHandlers;
 
-  const {
-    resetFocus,
-    handleOptionFocusOnSelectByClick,
-    setFocusedOptionCategory,
-    setFocusedOptionIndex,
-  } = selectFocusHandlers;
+  const { resetFocus, setFocusedOptionCategory, setFocusedOptionIndex } =
+    selectFocusHandlers;
 
   const { focusedOptionCategory, focusedOptionIndex } = selectFocusState;
 
@@ -88,16 +86,10 @@ const useSelectEventHandlerResolver = (
         onInputChange(inputValue, value);
       } else {
         defaultEventHandlers.handleInputChange(inputValue);
-        handlePageReset();
         isFunction(onAfterInputUpdate) && onAfterInputUpdate(inputValue, value);
       }
     },
-    [
-      defaultEventHandlers.handleInputChange,
-      onInputChange,
-      onAfterInputUpdate,
-      handlePageReset,
-    ]
+    [defaultEventHandlers.handleInputChange, onInputChange, onAfterInputUpdate]
   );
 
   const handleOptionClick = useCallback(
@@ -110,8 +102,6 @@ const useSelectEventHandlerResolver = (
       if (isFunction(onOptionClick)) {
         onOptionClick(option, isSelected);
         // Keep the focus logic due to its state being controlled.
-        !closeDropdownOnSelect &&
-          handleOptionFocusOnSelectByClick(focusedOptionIdx, focusedCategory);
         closeDropdownOnSelect && resetFocus();
       } else {
         defaultEventHandlers.handleOptionClick(
@@ -120,7 +110,6 @@ const useSelectEventHandlerResolver = (
           focusedOptionIdx,
           focusedCategory
         );
-        clearInputOnSelect && inputValue && handlePageReset();
 
         isFunction(onAfterOptionClick) &&
           onAfterOptionClick(option, isSelected);
@@ -131,9 +120,7 @@ const useSelectEventHandlerResolver = (
       defaultEventHandlers.handleOptionClick,
       clearInputOnSelect,
       closeDropdownOnSelect,
-      inputValue,
       resetFocus,
-      handlePageReset,
       onAfterOptionClick,
     ]
   );
@@ -161,9 +148,7 @@ const useSelectEventHandlerResolver = (
         return onClearIndicatorClick(e, inputValue, value);
 
       defaultEventHandlers.handleClearIndicatorClick(e);
-      if (inputValue && clearInputOnIdicatorClick) {
-        handlePageReset();
-      }
+
       isFunction(onAfterClearIndicatorClick) &&
         onAfterClearIndicatorClick(e, inputValue, value);
     },
@@ -171,7 +156,6 @@ const useSelectEventHandlerResolver = (
       onClearIndicatorClick,
       onAfterClearIndicatorClick,
       clearInputOnIdicatorClick,
-      handlePageReset,
       defaultEventHandlers.handleClearIndicatorClick,
     ]
   );

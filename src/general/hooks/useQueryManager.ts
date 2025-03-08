@@ -36,6 +36,8 @@ import {
   resolveAndGetRequestParams,
   setConfig,
 } from "src/general/utils/queryManager/helpers";
+import { setPage } from "src/Store";
+import { resolveStateSetters } from "src/Select/utils";
 
 type CustomStateSetters = {
   setSearchQuery: Dispatch<SetStateAction<string>> | ((value: string) => void);
@@ -90,6 +92,7 @@ export type RequestConfig = {
   fetchOnInit: boolean;
   recordsPerPage: number;
   fetchOnInputChange: boolean;
+  inputFetchDeboubceDuration: number;
   preventFetchOnInputChange?: (searchQuery: string) => boolean;
 };
 
@@ -196,7 +199,10 @@ const useQueryManager = <ResponseItemT>(
   }, []);
 
   const resetPage = useCallback(() => {
-    dispatch({ type: QueryManagerReducerActionTypes.RESET_PAGE });
+    const customSetter = customState?.setPage;
+    isFunction(customSetter)
+      ? customSetter(1)
+      : dispatch({ type: QueryManagerReducerActionTypes.RESET_PAGE });
   }, []);
 
   const setSearchQuery = useCallback(
@@ -232,6 +238,7 @@ const useQueryManager = <ResponseItemT>(
   };
 
   useEffect(() => {
+    debugger;
     const abortController = new AbortController();
     const signal = abortController.signal;
     const requestConfig = getRequestConfig();
@@ -248,6 +255,8 @@ const useQueryManager = <ResponseItemT>(
 
     if (!preventFetchOnPageChange) {
       fetch({}, signal);
+    } else if (pageChangeTriggeredByInput) {
+      previousSearchQueryValueRef.current = searchQuery;
     }
     return () => abortController.abort();
   }, [page]);
@@ -255,8 +264,12 @@ const useQueryManager = <ResponseItemT>(
   useEffect(() => {
     const abortController = new AbortController();
     const signal = abortController.signal;
-    const { isDisabled, fetchOnInputChange, preventFetchOnInputChange } =
-      getRequestConfig();
+    const {
+      isDisabled,
+      fetchOnInputChange,
+      preventFetchOnInputChange,
+      inputFetchDeboubceDuration,
+    } = getRequestConfig();
 
     let timeoutId: NodeJS.Timeout | undefined;
 
@@ -280,13 +293,21 @@ const useQueryManager = <ResponseItemT>(
       const fetchImmediately = !searchQuery && previousSearchQueryValue;
 
       if (fetchImmediately) {
+        if (page === 1) {
+          previousSearchQueryValueRef.current = searchQuery;
+        } else {
+          resetPage();
+        }
         fetch({ page: 1 }, signal);
-        previousSearchQueryValueRef.current = searchQuery;
       } else {
         timeoutId = setTimeout(async () => {
+          if (page === 1) {
+            previousSearchQueryValueRef.current = searchQuery;
+          } else {
+            resetPage();
+          }
           fetch({ page: 1 }, signal);
-          previousSearchQueryValueRef.current = searchQuery;
-        }, 700);
+        }, inputFetchDeboubceDuration);
       }
     }
     const cleanup = () => {

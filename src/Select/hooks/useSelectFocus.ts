@@ -124,24 +124,6 @@ const useSelectFocus = (selectProps: SelectProps): SelectFocusApi => {
     [handleOptionFocusChange, focusedOptionIndex, focusedOptionCategory]
   );
 
-  const handleOptionFocusOnSelectByClick = useCallback(
-    (
-      focusedOptionIdx: number,
-      focusedCategory: string,
-      direction: SelectKeyboardNavigationDirection = "next",
-      fallbackDirection: SelectFocusNavigationFallbackDirection = "previous"
-    ) =>
-      handleOptionFocusChange(
-        direction,
-        focusedOptionIdx,
-        focusedCategory,
-        fallbackDirection,
-        true,
-        false
-      ),
-    [handleOptionFocusChange]
-  );
-
   const handleOptionFocusOnSelectByKeyPress = useCallback(
     (
       direction: SelectKeyboardNavigationDirection = "next",
@@ -254,7 +236,6 @@ const useSelectFocus = (selectProps: SelectProps): SelectFocusApi => {
     selectFocusHandlers: {
       focusNextOption,
       focusPreviousOption,
-      handleOptionFocusOnSelectByClick,
       handleOptionFocusOnSelectByKeyPress,
       setFocusOnHover,
       setFocusedOptionIndex,

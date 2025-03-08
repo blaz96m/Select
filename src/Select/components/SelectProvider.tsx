@@ -8,9 +8,10 @@ import {
   useCallback,
 } from "react";
 import {
-  CustomClassNames,
+  SelectCustomClassNames,
   CustomSelectEventHandlers,
   EventHandlerFollowupFunctions,
+  SelectCustomRefs,
 } from "src/Select/types/selectGeneralTypes";
 
 import {
@@ -19,29 +20,19 @@ import {
 } from "src/Select/types/selectComponentTypes";
 
 import { SelectComponent } from "src/Select/components";
-import {
-  useSelect,
-  useSelectAsync,
-  useSelectStateResolver,
-} from "src/Select/hooks";
-import { selectReducer } from "src/Select/stores";
-import { initializeState } from "src/Select/utils";
-import { omit, isFunction, noop, every } from "lodash";
+import { useSelect, useSelectAsync } from "src/Select/hooks";
+import { every } from "lodash";
 import { getObjectKeys } from "src/utils/data-types/objects/helpers";
 
-const arePropsEqual = (
-  oldProps: SelectProps & { customComponents: SelectCustomComponents },
-  newProps: SelectProps & { customComponents: SelectCustomComponents }
-) => {
-  return every(getObjectKeys(oldProps), (propName) => {
-    if (propName === "customComponents" || propName === "classNames")
+const arePropsEqual = (oldProps: SelectProps, newProps: SelectProps) => {
+  return every(getObjectKeys(oldProps), (propName: keyof SelectProps) => {
+    if (
+      propName === "customComponents" ||
+      propName === "classNames" ||
+      propName === "refs"
+    )
       return true;
     else {
-      if (
-        oldProps[propName as keyof typeof oldProps] !==
-        newProps[propName as keyof typeof newProps]
-      ) {
-      }
       return (
         oldProps[propName as keyof typeof oldProps] ===
         newProps[propName as keyof typeof newProps]
@@ -51,20 +42,24 @@ const arePropsEqual = (
 };
 
 type SelectContext = {
-  components: SelectCustomComponents;
-  classNames: Partial<CustomClassNames>;
+  components: Partial<SelectCustomComponents>;
+  classNames: Partial<SelectCustomClassNames>;
+  refs: Partial<SelectCustomRefs>;
 };
 
 const SelectContext = createContext<SelectContext>({
   components: {},
   classNames: {},
+  refs: {},
 });
 
 export const SelectProvider = memo(
   ({
     customComponents = {},
+    classNames = {},
+    refs = {},
     ...props
-  }: SelectProps & { customComponents: SelectCustomComponents }) => {
+  }: SelectProps) => {
     const {
       labelKey,
       categoryKey,
@@ -80,7 +75,6 @@ export const SelectProvider = memo(
       preventInputUpdate,
       inputFilterFunction,
       optionFilter,
-      inputUpdateDebounceDuration,
       value,
       setSelectOptions: customSetSelectOptions,
       isOpen: customIsOpen,
@@ -90,8 +84,9 @@ export const SelectProvider = memo(
       setPage: customSetPage,
       setInputValue: customSetInputValue,
       inputValue: customInputValue,
-      classNames = {},
       useAsync = false,
+      debounceInputUpdate = false,
+      inputUpdateDebounceDuration = 700,
       clearInputOnSelect = true,
       isCategorized = false,
       disableInputEffect = false,
@@ -141,7 +136,6 @@ export const SelectProvider = memo(
       fetchOnInputChange,
       hasInput,
       clearInputOnSelect,
-      inputUpdateDebounceDuration,
       removeSelectedOptionsFromList,
       categoryKey,
       isLoading,
@@ -149,12 +143,12 @@ export const SelectProvider = memo(
       inputFilterFunction,
     });
 
-    const { selectEventHandlers } = selectApi;
-
     const { selectAsyncApi } = useSelectAsync(selectApi, {
       isLazyInit: lazyInit,
       updateSelectOptionsAfterFetch,
+      inputUpdateDebounceDuration,
       useAsync,
+      debounceInputUpdate,
       recordsPerPage,
       fetchOnInputChange,
       fetchOnScroll,
@@ -166,6 +160,7 @@ export const SelectProvider = memo(
       () => ({
         components: customComponents,
         classNames,
+        refs,
       }),
       []
     );
@@ -195,7 +190,6 @@ export const SelectProvider = memo(
           {...props}
           selectApi={selectApi}
           selectAsyncApi={selectAsyncApi}
-          defaultSelectEventHandlers={selectEventHandlers}
           customSelectEventHandlers={customSelectEventHandlers}
           eventHandlerFollowups={selectEventHandlerFollowups}
         />

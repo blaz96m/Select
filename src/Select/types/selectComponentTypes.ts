@@ -23,7 +23,8 @@ import {
   SelectOptionFilter,
   KeyDownHandler,
   SelectKeyboardNavigationDirection,
-  CustomClassNames,
+  SelectCustomClassNames,
+  SelectCustomRefs,
 } from "src/Select/types/selectGeneralTypes";
 
 import { StateSetter } from "src/Select/types/selectStateTypes";
@@ -71,13 +72,13 @@ export type SelectCustomComponentProps =
   | CustomSelectInputComponentProps;
 
 export type SelectCustomComponents = {
-  SelectOptionElement?: CustomSelectOptionComponent;
-  SelectMultiValueElement?: CustomSelectMultiValueComponent;
-  SelectDropdownIndicatorElement?: CustomSelectDropdownIndicatorComponent;
-  SelectClearIndicatorElement?: CustomSelectClearIndicatorComponent;
-  SelectOptionListElement?: CustomOptionListComponent;
-  SelectCategoryElement?: CustomSelectCategoryComponent;
-  SelectInputElement?: CustomSelectInputComponent;
+  SelectOptionElement: CustomSelectOptionComponent;
+  SelectMultiValueElement: CustomSelectMultiValueComponent;
+  SelectDropdownIndicatorElement: CustomSelectDropdownIndicatorComponent;
+  SelectClearIndicatorElement: CustomSelectClearIndicatorComponent;
+  SelectOptionListElement: CustomOptionListComponent;
+  SelectCategoryElement: CustomSelectCategoryComponent;
+  SelectInputElement: CustomSelectInputComponent;
 };
 
 // #SELECT COMPONENT
@@ -94,6 +95,7 @@ export type SelectProps = {
   isCategorized: boolean;
   fetchOnScroll: boolean;
   disableInputEffect: boolean;
+  customComponents: Partial<SelectCustomComponents>;
   clearInputOnIdicatorClick: boolean;
   lazyInit: boolean;
   hasInput: boolean;
@@ -115,7 +117,8 @@ export type SelectProps = {
   onAfterScrollToBottom?: CustomScrollToBottomHandler;
   onKeyDown?: KeyDownHandler;
   closeDropdownOnSelect?: boolean;
-  inputUpdateDebounceDuration?: number;
+  debounceInputUpdate?: boolean;
+  inputUpdateDebounceDuration: number;
   inputValue?: string;
   categoryKey?: keyof SelectOptionT & string;
   clearInputOnSelect?: boolean;
@@ -137,7 +140,8 @@ export type SelectProps = {
   onPageChange?: (page: number) => void;
   showClearIndicator?: boolean;
   isLoading?: boolean;
-  classNames: Partial<CustomClassNames>;
+  classNames: Partial<SelectCustomClassNames>;
+  refs: Partial<SelectCustomRefs>;
   categorizeFunction?: CustomSelectCategorizeFunction;
   recordsPerPage?: number;
 };
@@ -175,27 +179,30 @@ export type SelectOptionFromCategoryRenderer = (
   selectedOptions: SelectOptionList | null
 ) => JSX.Element;
 
-export type CustomSelectOptionComponentProps = {
-  clearValue: (optionId: keyof SelectOptionT) => void;
-  selectValue: (option: SelectOptionT) => void;
+export type CustomSelectOptionComponentProps = Omit<
+  SelectOptionProps,
+  | "className"
+  | "onClick"
+  | "refCallback"
+  | "handleHover"
+  | "customComponentRenderer"
+> & {
+  onOptionSelect: (isSelected: boolean, option: SelectOptionT) => void;
   value: SelectOptionList;
-  clearInput: (optionId: keyof SelectOptionT) => void;
+  setValue: StateSetter<SelectOptionList>;
+  clearInput: () => void;
   focusInput: () => void;
+  getSelectOptionsMap: () => Map<string, HTMLDivElement>;
+  labelKey: keyof SelectOptionT;
+  clearInputOnSelect: boolean;
+  isMultiValue: boolean;
   isDisabled: boolean;
-  handleOptionFocusOnSelectByClick: (
-    focusedOptionIdx: number,
-    focusedCategory: string,
-    direction?: SelectKeyboardNavigationDirection,
-    fallbackDirection?: SelectFocusNavigationFallbackDirection
-  ) => void;
   closeDropdown: () => void;
   resetFocus: () => void;
   isFocused: boolean;
   optionIndex: number;
   isSelected: boolean;
   option: SelectOptionT;
-  setFocusedOptionCategory: StateSetter<string>;
-  setFocusedOptionIndex: StateSetter<number>;
 };
 
 export type SelectOptionInnerProps = {
@@ -315,8 +322,7 @@ export type SelectInputProps = {
   onInputChange: (inputValue: string) => void;
   inputValue: string;
   handleKeyPress: KeyDownHandler;
-  hasInput: boolean;
-  handleOptionsSearchTrigger: () => void;
+  handleOptionsSearchTrigger: (inputValue: string) => void;
   customComponentRenderer: CustomSelectInputRenderer;
   preventInputUpdate: PreventInputUpdate;
   isLoading?: boolean;
@@ -333,13 +339,14 @@ type CustomSelectInputRenderer = (
     "customComponentRenderer" | "hasInput"
   > & {
     className: string;
+    containerClassName: string;
     ref: RefObject<HTMLInputElement>;
   },
   customComponent: CustomSelectInputComponent
 ) => JSX.Element;
 
 export type CustomSelectInputComponentProps = {
-  filterSearchedOptions: () => void;
+  filterSearchedOptions: (inputValue: string) => void;
   selectOptions: SelectOptionList;
   displayedOptions: SelectOptionList | CategorizedSelectOptions;
   value: SelectOptionList;
@@ -362,6 +369,7 @@ export type SelectInputInnerProps = {
   value: string;
   ref: React.RefObject<HTMLInputElement>;
   className: string;
+  containerClassName: string;
   disabled?: boolean;
 };
 
