@@ -1,10 +1,12 @@
-@use "src/general/utils/styles/" as *;
+$dropdown-color: #afafaf;
+$blue: #6cbffa;
+$blue-light: #c3e5fd;
+
 .select {
   &__container {
     display: flex;
     flex-direction: column;
     position: relative;
-    width: 400px;
   }
   &__top {
     &__container {

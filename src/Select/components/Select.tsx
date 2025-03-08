@@ -29,7 +29,7 @@ import { SelectApi, SelectAsyncApi } from "src/Select/types/selectStateTypes";
 
 import { SelectProps } from "src/Select/types/selectComponentTypes";
 
-import "../styles/_select.scss";
+import "src/Select/styles/_select.scss";
 
 import { useSelectEventHandlerResolver } from "src/Select/hooks";
 import { useSelectCustomComponentsHandler } from "src/general/hooks";

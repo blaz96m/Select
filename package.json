@@ -1,24 +1,25 @@
 {
-  "name": "şelect-ui",
-  "private": true,
-  "version": "0.0.0",
+  "name": "select-ui",
+  "version": "0.1.0",
   "type": "module",
   "files": [
     "dist"
   ],
-  "main": ".dist/select-ui.umd.cjs",
-  "module": "./dist/select-ui.js",
+  "main": "./dist/selectUi.umd.cjs",
+  "style": "./dist/style.css",
+  "module": "./dist/selectUi.js",
   "exports": {
     ".": {
-      "import": "./dist/select-ui.js",
-      "require": "./dist/select-ui.umd.cjs"
+      "import": "./dist/selectUi.js",
+      "require": "./dist/selectUi.umd.cjs"
     }
   },
   "scripts": {
     "dev": "vite",
     "test": "vitest",
     "prebuild": "npx rimraf dist",
-    "build": "tsc -b && vite build",
+    "build:css": "sass src/Select/styles/_select.scss dist/style.css",
+    "build": "npm run build:css && tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
@@ -56,6 +57,7 @@
     "eslint-plugin-react-refresh": "^0.4.9",
     "globals": "^15.15.0",
     "jsdom": "^26.0.0",
+    "sass": "^1.85.1",
     "sass-embedded": "^1.79.4",
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.26.0",
