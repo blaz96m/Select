@@ -1,0 +1,278 @@
+.select__container {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.select__disabled {
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.select__top__container {
+  border: 1px solid #afafaf;
+  border-radius: 7px;
+  padding: 0.6rem 0.7rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+}
+
+.select__top__container:focus-within {
+  outline: 1px solid #1e90ff;
+}
+
+.select__top__value-section {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  user-select: none;
+}
+
+.select__top__value-section.is-multi {
+  align-items: start;
+}
+
+.select__top__value-section:focus-within .select__top__container {
+  outline: 1px solid #1e90ff;
+}
+
+.select__top__indicator-section {
+  display: flex;
+  align-items: center;
+}
+
+.select__input {
+  width: auto;
+  pointer-events: none;
+  flex-wrap: wrap;
+  max-width: 100%;
+  border: 0;
+  outline: none;
+}
+
+.select__input.hidden {
+  opacity: 0;
+}
+
+.select__input__wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  flex-grow: 1;
+  max-width: 100%;
+}
+
+.select__input:disabled {
+  background-color: transparent;
+}
+
+.select__input:focus .dropdown__top__container {
+  outline: 1px solid blue;
+}
+
+.select__category {
+  border-bottom: 1px solid #e6e6e6;
+  padding-bottom: 0.6rem;
+}
+
+.select__category__options-list {
+  margin: 0;
+  padding: 0;
+}
+
+.select__category__label {
+  margin: 0;
+  user-select: none;
+  color: #888888;
+  font-weight: 800;
+  text-transform: uppercase;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.select__category__header {
+  padding-inline: 1rem;
+  padding-top: 0.75rem;
+  margin-bottom: 0.25rem;
+}
+
+.select__category__header:first-child {
+  padding-top: 1rem;
+}
+
+.select__values {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  width: 100%;
+  gap: 7px;
+}
+
+.select__spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #dddddd;
+  border-radius: 50%;
+  display: inline-block;
+  box-sizing: border-box;
+  animation: rotation 1s linear infinite;
+  animation: loading 0.75s infinite linear;
+}
+
+@keyframes loading {
+  from {
+    -webkit-transform: rotate(0deg);
+  }
+  to {
+    -webkit-transform: rotate(359deg);
+  }
+}
+
+.select__value {
+  width: 100%;
+  display: flex;
+  gap: 5px;
+}
+
+.select__value--multi {
+  background-color: #d8d8d8b7;
+  max-height: 60px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  font-size: 15px;
+  position: relative;
+  cursor: pointer;
+}
+
+.select__value--multi span {
+  padding: 3px;
+}
+
+.select__value--icon__container {
+  position: relative;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  min-width: 20px;
+  justify-content: center;
+  border-color: rgb(230, 230, 230);
+}
+
+.select__value--icon__container svg {
+  color: black;
+  transition: 0.2s linear;
+}
+
+.select__value--icon__container:hover {
+  background-color: #cf1b1b;
+  svg {
+    color: white;
+  }
+  transition: 0.2s linear;
+}
+
+.select__value__wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.select__value__list {
+  padding: 0;
+  margin: 0;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-grow: 1;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+}
+
+.select__value__list.empty {
+  justify-content: center;
+  align-items: center;
+}
+
+.select__input__wrapper {
+  flex-grow: 1;
+  overflow: hidden;
+  width: 20px;
+  border: none;
+}
+
+.select__options__wrapper {
+  border: 1px solid #afafaf;
+  border-radius: 7px;
+  margin-top: 5px;
+  max-height: 270px;
+  overflow-y: auto;
+  width: 100%;
+}
+
+.select__options__wrapper--empty {
+  min-height: 60px;
+}
+
+.select__options__list {
+  margin: 0;
+  padding: 0;
+  min-height: inherit;
+}
+
+.select__options__list--empty {
+  display: flex;
+  min-height: inherit;
+  justify-content: center;
+  align-items: center;
+}
+
+.select__option {
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  background-color: transparent;
+  will-change: background, transform;
+  backface-visibility: hidden;
+}
+
+.select__option--selected {
+  background-color: #6cbffa;
+  color: white;
+}
+
+.select__option--disabled {
+  cursor: default;
+  background-color: rgba(204, 204, 204, 0.384);
+  opacity: 0.6;
+}
+.select__option--disabled:hover {
+  background-color: rgba(204, 204, 204, 0.384);
+  color: black;
+}
+
+.select__option--focused {
+  background-color: #c3e5fd;
+  color: white;
+}
+
+.select__option:first-child {
+  padding-top: 0.5rem;
+}
+
+.select__indicator {
+  height: 100%;
+  width: 100%;
+  padding: 0.2rem 0.3rem;
+  color: rgb(151, 151, 151);
+}
+
+.select__indicator.disabled {
+  opacity: 0.6;
+}
+
+.select__indicator--clear {
+  color: rgb(151, 151, 151);
+}

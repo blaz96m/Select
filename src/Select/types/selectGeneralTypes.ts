@@ -19,8 +19,14 @@ export type SelectCategoryT = {
 
 // # EVENT HANDLERS
 
+export type CustomInputChangeHandler = (
+  e: ChangeEvent<HTMLInputElement>,
+  optionList: SelectOptionList,
+  value?: SelectOptionList
+) => void;
+
 export type InputChangeHandler = (
-  inputValue: string,
+  e: ChangeEvent<HTMLInputElement>,
   value?: SelectOptionList
 ) => void;
 
@@ -39,7 +45,8 @@ export type ValueClearClickHandler = (
 
 export type OptionClickHandler = (
   option: SelectOptionT,
-  isFocused: boolean
+  isFocused: boolean,
+  isDisabled: boolean
 ) => void;
 
 export type OptionHoverHandler = (
@@ -63,13 +70,17 @@ export type SelectEventHandlers = {
 
 export type DefaultSelectEventHandlers = Omit<
   SelectEventHandlers,
-  "handleScrollToBottom" | "handleValueClearClick" | "handlePageChange"
+  | "handleScrollToBottom"
+  | "handleValueClearClick"
+  | "handlePageChange"
+  | "handleInputChange"
 > & {
   handleValueClearClick: (
     e: MouseEvent<HTMLDivElement>,
     optionId: string
   ) => void;
   handleValueSelectOnKeyPress: () => void;
+  handleInputChange: (inputValue: string, value?: SelectOptionList) => void;
 };
 
 // # CUSTOM EVENT HANDLERS
@@ -81,7 +92,8 @@ export type CustomValueClearClickHandler = (
 
 export type CustomOptionClickHandler = (
   option: SelectOptionT,
-  isSelected: boolean
+  isSelected: boolean,
+  isDisabled: boolean
 ) => void;
 
 export type CustomClearIndicatorClickHandler = (
@@ -114,7 +126,7 @@ export type CustomKeyDownHandler = (
 ) => void;
 
 export type CustomSelectEventHandlers = {
-  onInputChange?: InputChangeHandler;
+  onInputChange?: CustomInputChangeHandler;
   onValueClear?: CustomValueClearClickHandler;
   onOptionClick?: CustomOptionClickHandler;
   onClearIndicatorClick?: CustomClearIndicatorClickHandler;
@@ -124,7 +136,7 @@ export type CustomSelectEventHandlers = {
 };
 
 export type EventHandlerFollowupFunctions = {
-  onAfterInputUpdate?: InputChangeHandler;
+  onAfterInputChange?: CustomInputChangeHandler;
   onAfterValueClear?: CustomValueClearClickHandler;
   onAfterOptionClick?: CustomOptionClickHandler;
   onAfterClearIndicatorClick?: CustomClearIndicatorClickHandler;
@@ -149,13 +161,10 @@ export type SelectFetchFunction = (
   params: {
     page?: number;
     searchQuery?: string;
+    recordsPerPage?: number;
   },
   signal?: AbortSignal
 ) => Promise<{ data: SelectOptionList; totalRecords: number }> | Promise<void>;
-
-export type CustomSelectCategorizeFunction = (
-  options: SelectOptionList
-) => CategorizedSelectOptions;
 
 export type SelectSorterFunction = (
   options: SelectOptionList
@@ -179,6 +188,7 @@ export type SelectDomRefs = {
   selectListContainerRef: React.RefObject<HTMLDivElement>;
   inputRef: React.RefObject<HTMLInputElement>;
   selectOptionsRef: React.MutableRefObject<Map<string, HTMLDivElement> | null>;
+  selectTopRef: React.RefObject<HTMLDivElement>;
 };
 
 export type SelectAsyncStateUpdaters = {
@@ -196,6 +206,7 @@ export type CustomClassName = { className: string; override?: boolean };
 export type SelectCustomClassNames = {
   selectContainer: CustomClassName;
   selectTopContainer: CustomClassName;
+  selectDisabled: CustomClassName;
   selectSingleValue: CustomClassName;
   selectMultiValue: CustomClassName;
   selectMultiValueIconContainer: CustomClassName;

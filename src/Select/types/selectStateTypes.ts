@@ -51,7 +51,11 @@ export type SelectApi = {
   selectFocusHandlers: SelectFocusHandlers;
   handleOptionsFilter: (inputValue: string) => void;
   usesInputAsync: boolean;
-  onOptionSelect: (isSelected: boolean, option: SelectOptionT) => void;
+  onOptionSelect: (
+    isSelected: boolean,
+    option: SelectOptionT,
+    isDisabled: boolean
+  ) => void;
   isLastPage: () => boolean;
   preventInputUpdate: PreventInputUpdate;
   selectEventHandlers: DefaultSelectEventHandlers;
@@ -60,6 +64,7 @@ export type SelectApi = {
   setOriginalOptions: (options: SelectOptionList) => void;
   getSelectOptionsMap: () => Map<string, HTMLDivElement>;
   closeDropdownOnSelect: boolean;
+  closeDropdown: () => void;
   focusInput: () => void;
   selectDomRefs: SelectDomRefs;
   handlePageReset: () => void;

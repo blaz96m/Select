@@ -2,7 +2,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronDown, faChevronUp } from "@fortawesome/free-solid-svg-icons";
 import { isFunction } from "lodash";
 import clsx from "clsx";
-import { useSelectContext } from "src/Select/components/SelectProvider";
+import { useSelectContext } from "src/Select/context";
 import { SelectDropdownIndicatorProps } from "src/Select/types/selectComponentTypes";
 import { resolveClassNames } from "src/Select/utils";
 

@@ -40,7 +40,7 @@ import { SelectApi, SelectAsyncApi } from "src/Select/types/selectStateTypes";
 import { FALLBACK_CATEGORY_NAME } from "src/Select/utils/constants";
 
 type SelectProps = {
-  categoryKey: keyof SelectOptionT;
+  categoryKey?: keyof SelectOptionT;
   isCategorized: boolean;
   fetchOnScrollToBottom: boolean | undefined;
   clearInputOnIdicatorClick: boolean;
@@ -150,8 +150,7 @@ const useSelectCustomComponentsHandler = (
       } = selectInputProps;
 
       const customInputComponentInnerProps = {
-        onChange: (e: ChangeEvent<HTMLInputElement>) =>
-          onInputChange(e.target.value),
+        onChange: (e: ChangeEvent<HTMLInputElement>) => onInputChange(e),
         onKeyDown: (e: KeyboardEvent<HTMLInputElement>) => handleKeyPress(e),
         containerClassName,
         disabled: isLoading,
@@ -185,7 +184,8 @@ const useSelectCustomComponentsHandler = (
       const { className, onClick, refCallback, handleHover, ...otherProps } =
         selectOptionProps;
 
-      const { option, isSelected, optionIndex, isFocused } = otherProps;
+      const { option, isSelected, optionIndex, isFocused, isDisabled } =
+        otherProps;
 
       const customProps: CustomSelectOptionComponentProps = {
         ...otherProps,
@@ -204,7 +204,7 @@ const useSelectCustomComponentsHandler = (
       const innerProps = {
         ref: refCallback,
         id: option.id,
-        onClick: () => onClick(option, isSelected),
+        onClick: () => onClick(option, isSelected, isDisabled),
         className,
         "data-selected": isSelected,
         "data-category": isCategorized

@@ -49,7 +49,6 @@ const useScrollManager = <T extends HTMLElement>(
     (scrollEvent: WheelEvent, throttleAfterActionExecution = true) => {
       const target = targetRef.current;
       if (!target || !captureEnabled || preventScroll) {
-        scrollEvent.preventDefault();
         return;
       }
       const isScrolledToBottom = isScrolledToEnd(targetRef);

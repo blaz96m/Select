@@ -289,6 +289,15 @@ export const getFocusedOptionIdx = (
     : 0;
 };
 
+export const getSelectOptionByFocusDetails = (
+  options: SelectOptionList | CategorizedSelectOptions,
+  focusedOptionIdx: number,
+  focusedCategory?: keyof SelectOptionT
+) =>
+  focusedCategory
+    ? (options as CategorizedSelectOptions)[focusedCategory][focusedOptionIdx]
+    : (options as SelectOptionList)[focusedOptionIdx];
+
 export const getNextCategoryFocusDetailsInDirection = (
   focusedOptionIdx: number,
   focusedCategory: keyof SelectOptionT,

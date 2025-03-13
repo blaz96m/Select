@@ -3,7 +3,7 @@ import { faClose } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { isFunction } from "lodash";
 import clsx from "clsx";
-import { useSelectContext } from "src/Select/components/SelectProvider";
+import { useSelectContext } from "src/Select/context";
 
 const SelectClearIndicator = ({
   handleClearIndicatorClick,

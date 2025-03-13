@@ -2,7 +2,7 @@ import { useState } from "react";
 import { DefaultSelectProps } from "src/Select/tests/utils/testingUtils";
 import { SelectOptionList } from "src/Select/types/selectGeneralTypes";
 
-import { Select } from "src/Select/components";
+import { Select } from "src/Select/main";
 
 let categoryCount = 1;
 const items = Array.from({ length: 1000 }, (_, i) => {

@@ -53,7 +53,6 @@ const useSelectAsync = (
   const updateSelectOptions = useCallback(
     async (response: ResponseDetails<SelectOptionT>) => {
       const { data, params } = response;
-      // TODO - REMOVE
       if (params && params.page !== 1) {
         const klinData = filter(
           data,

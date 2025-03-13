@@ -2,7 +2,7 @@ import { memo } from "react";
 import { isEmpty, isFunction, map } from "lodash";
 
 import { SelectCategoryProps } from "src/Select/types/selectComponentTypes";
-import { useSelectContext } from "src/Select/components/SelectProvider";
+import { useSelectContext } from "src/Select/context";
 import { resolveClassNames } from "../utils";
 
 const SelectCategory = memo((props: SelectCategoryProps) => {

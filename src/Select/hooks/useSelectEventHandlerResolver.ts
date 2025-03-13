@@ -1,5 +1,5 @@
 import { isFunction } from "lodash";
-import { KeyboardEvent, MouseEvent, useCallback } from "react";
+import { KeyboardEvent, MouseEvent, useCallback, ChangeEvent } from "react";
 
 import {
   EventHandlerFollowupFunctions,
@@ -33,7 +33,7 @@ const useSelectEventHandlerResolver = (
     onKeyDown,
   } = customEventHandlers;
   const {
-    onAfterInputUpdate,
+    onAfterInputChange,
     onAfterOptionClick,
     onAfterDropdownClick,
     onAfterClearIndicatorClick,
@@ -65,33 +65,39 @@ const useSelectEventHandlerResolver = (
 
   const { focusedOptionCategory, focusedOptionIndex } = selectFocusState;
 
-  const { value, isOpen, page, inputValue } = selectState;
+  const { value, isOpen, page, inputValue, selectOptions } = selectState;
 
   const { clearInputOnIdicatorClick } = selectProps;
 
   const handleInputChange = useCallback(
-    (inputValue: string) => {
+    (e: ChangeEvent<HTMLInputElement>) => {
       if (isFunction(onInputChange)) {
-        onInputChange(inputValue, value);
+        onInputChange(e, selectOptions, value);
       } else {
-        defaultEventHandlers.handleInputChange(inputValue);
-        isFunction(onAfterInputUpdate) && onAfterInputUpdate(inputValue, value);
+        defaultEventHandlers.handleInputChange(e.target.value);
+        isFunction(onAfterInputChange) &&
+          onAfterInputChange(e, selectOptions, value);
       }
     },
-    [defaultEventHandlers.handleInputChange, onInputChange, onAfterInputUpdate]
+    [
+      defaultEventHandlers.handleInputChange,
+      onInputChange,
+      onAfterInputChange,
+      selectOptions,
+    ]
   );
 
   const handleOptionClick = useCallback(
-    (option: SelectOptionT, isSelected: boolean) => {
+    (option: SelectOptionT, isSelected: boolean, isDisabled: boolean) => {
       if (isFunction(onOptionClick)) {
-        onOptionClick(option, isSelected);
+        onOptionClick(option, isSelected, isDisabled);
         // Keep the focus logic due to its state being controlled.
         closeDropdownOnSelect && resetFocus();
       } else {
-        defaultEventHandlers.handleOptionClick(option, isSelected);
+        defaultEventHandlers.handleOptionClick(option, isSelected, isDisabled);
 
         isFunction(onAfterOptionClick) &&
-          onAfterOptionClick(option, isSelected);
+          onAfterOptionClick(option, isSelected, isDisabled);
       }
     },
     [
@@ -156,7 +162,6 @@ const useSelectEventHandlerResolver = (
     if (isFunction(onScrollToBottom))
       return onScrollToBottom(displayedOptions, page);
     handlePageChange();
-
     isFunction(onAfterScrollToBottom) &&
       onAfterScrollToBottom(displayedOptions, page + 1);
   }, [

@@ -5,7 +5,7 @@ import { SelectInputProps } from "src/Select/types/selectComponentTypes";
 import { useInput } from "src/general/hooks";
 import { resolveClassNames, resolveRefs } from "src/Select/utils";
 
-import { useSelectContext } from "src/Select/components/SelectProvider";
+import { useSelectContext } from "src/Select/context/SelectProvider";
 
 const SelectInput = memo(
   forwardRef<HTMLInputElement, SelectInputProps>((props, ref) => {

@@ -1,7 +1,13 @@
-import { forwardRef, memo, useImperativeHandle, useRef } from "react";
+import {
+  forwardRef,
+  memo,
+  useCallback,
+  useImperativeHandle,
+  useRef,
+} from "react";
 import { isEmpty, isFunction, map } from "lodash";
 import {
-  SelectOptionList,
+  SelectOptionList as SelectOptionListT,
   SelectOptionT,
 } from "src/Select/types/selectGeneralTypes";
 import {
@@ -9,13 +15,13 @@ import {
   SelectOptionRenderer,
   SelectOptionListProps,
 } from "src/Select/types/selectComponentTypes";
-import { useScrollManager } from "src/general/hooks";
+import { useOutsideClickHandler, useScrollManager } from "src/general/hooks";
 import clsx from "clsx";
 import { OPTIONS_EMPTY_TEXT } from "src/Select/utils/constants";
-import { useSelectContext } from ".";
+import { useSelectContext } from "src/Select/context";
 import { resolveClassNames, resolveRefs } from "../utils";
 
-const OptionList = memo(
+const SelectOptionList = memo(
   forwardRef<HTMLDivElement, SelectOptionListProps>((props, ref) => {
     const { customComponentRenderer, ...otherProps } = props;
     const {
@@ -23,7 +29,10 @@ const OptionList = memo(
       isLoading,
       renderFunction,
       displayedOptions,
+      selectTopRef,
       handleScrollToBottom,
+      closeDropdown,
+      isLastPage,
     } = otherProps;
 
     const selectContext = useSelectContext();
@@ -65,14 +74,25 @@ const OptionList = memo(
       "select__options__wrapper--empty": isEmpty(displayedOptions),
     });
 
+    const preventScroll = isLastPage() || isLoading;
+
     const bottomScrollActions = { onArrive: handleScrollToBottom };
 
+    const handleOutsideClick = useCallback((e: MouseEvent) => {
+      const target = e.target as Node;
+      // @ts-ignore
+      const targetIsOption = target.hasAttribute("data-selected");
+      if (!selectTopRef.current?.contains(target) && !targetIsOption) {
+        closeDropdown();
+      }
+    }, []);
     useImperativeHandle(ref, () => resolvedRef.current!);
+    useOutsideClickHandler<HTMLDivElement>(resolvedRef, handleOutsideClick);
     useScrollManager<HTMLDivElement>(
       resolvedRef,
       bottomScrollActions,
       {},
-      isLoading
+      preventScroll
     );
 
     if (isFunction(customComponent)) {
@@ -97,7 +117,7 @@ const OptionList = memo(
               if (isCategorized) {
                 return (renderFunction as SelectCategoryComponent)({
                   categoryName: key as string,
-                  categoryOptions: value as SelectOptionList,
+                  categoryOptions: value as SelectOptionListT,
                 });
               }
               return (renderFunction as SelectOptionRenderer)(
@@ -116,4 +136,4 @@ const OptionList = memo(
   })
 );
 
-export default OptionList;
+export default SelectOptionList;

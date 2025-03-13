@@ -3,7 +3,6 @@ import {
   SelectOptionList,
   CustomOptionClickHandler,
   CustomClearIndicatorClickHandler,
-  DropdownClickHandler,
   InputChangeHandler,
   CustomValueClearClickHandler,
   CustomScrollToBottomHandler,
@@ -11,7 +10,6 @@ import {
   CustomPreventInputUpdate,
   SelectFetchFunction,
   SelectSorterFunction,
-  CustomSelectCategorizeFunction,
   SelectCategoryT,
   CategorizedSelectOptions,
   SelectFocusNavigationFallbackDirection,
@@ -25,6 +23,7 @@ import {
   SelectCustomClassNames,
   SelectCustomRefs,
   OptionHoverHandler,
+  CustomInputChangeHandler,
 } from "src/Select/types/selectGeneralTypes";
 
 import { StateSetter } from "src/Select/types/selectStateTypes";
@@ -84,20 +83,18 @@ export type SelectCustomComponents = {
 
 // #SELECT COMPONENT
 
-export type SelectProps = {
+export type SelectComponentProps = {
   value: SelectOptionList | [];
   labelKey: keyof SelectOptionT;
   onChange: StateSetter<SelectOptionList>;
-  isMultiValue: boolean;
-  useAsync: boolean;
+  isMultiValue?: boolean;
+  useAsync?: boolean;
   fetchOnInputChange?: boolean;
   removeSelectedOptionsFromList?: boolean;
-  isCategorized: boolean;
-  fetchOnScroll: boolean;
-  disableInputEffect?: boolean;
-  customComponents?: Partial<SelectCustomComponents>;
+  isCategorized?: boolean;
+  fetchOnScroll?: boolean;
   clearInputOnIdicatorClick?: boolean;
-  lazyInit: boolean;
+  lazyInit?: boolean;
   hasInput?: boolean;
   updateSelectOptionsAfterFetch?: boolean;
   optionFilter?: SelectOptionFilter;
@@ -108,9 +105,9 @@ export type SelectProps = {
   onClearIndicatorClick?: CustomClearIndicatorClickHandler;
   onAfterClearIndicatorClick?: CustomClearIndicatorClickHandler;
   onDropdownClick?: CustomDropdownClickHandler;
-  onAfterDropdownClick?: DropdownClickHandler;
-  onInputChange?: InputChangeHandler;
-  onAfterInputUpdate?: InputChangeHandler;
+  onAfterDropdownClick?: CustomDropdownClickHandler;
+  onInputChange?: CustomInputChangeHandler;
+  onAfterInputChange?: CustomInputChangeHandler;
   onValueClear?: CustomValueClearClickHandler;
   onAfterValueClear?: CustomValueClearClickHandler;
   onScrollToBottom?: CustomScrollToBottomHandler;
@@ -138,13 +135,20 @@ export type SelectProps = {
   setPage?: StateSetter<number>;
   fetchFunction?: SelectFetchFunction;
   sortFunction?: SelectSorterFunction;
-  onPageChange?: (page: number) => void;
   showClearIndicator?: boolean;
   isLoading?: boolean;
-  classNames?: Partial<SelectCustomClassNames>;
-  refs?: Partial<SelectCustomRefs>;
-  categorizeFunction?: CustomSelectCategorizeFunction;
+  isDisabled?: boolean;
   recordsPerPage?: number;
+};
+
+export type SelectProps = SelectComponentProps &
+  Omit<SelectContextProps, "children">;
+
+export type SelectContextProps = {
+  customComponents?: Partial<SelectCustomComponents>;
+  refs?: Partial<SelectCustomRefs>;
+  classNames?: Partial<SelectCustomClassNames>;
+  children: JSX.Element;
 };
 
 // #OPTION COMPONENT
@@ -184,7 +188,11 @@ export type CustomSelectOptionComponentProps = Omit<
   | "handleHover"
   | "customComponentRenderer"
 > & {
-  onOptionSelect: (isSelected: boolean, option: SelectOptionT) => void;
+  onOptionSelect: (
+    isSelected: boolean,
+    option: SelectOptionT,
+    isDisabled: boolean
+  ) => void;
   value: SelectOptionList;
   setValue: StateSetter<SelectOptionList>;
   clearInput: () => void;
@@ -231,9 +239,12 @@ export type SelectOptionListProps = {
   displayedOptions: SelectOptionList | CategorizedSelectOptions;
   renderFunction: SelectCategoryComponent | SelectOptionRenderer;
   customComponentRenderer: CustomSelectOptionListRenderer;
+  closeDropdown: () => void;
+  selectTopRef: RefObject<HTMLDivElement>;
   isCategorized?: boolean;
   isLoading?: boolean;
   handleScrollToBottom: () => void;
+  isLastPage: () => boolean;
 };
 
 export type CustomSelectOptionListProps = {
@@ -316,7 +327,7 @@ export type CustomSelectCategoryProps = Omit<
 // #INPUT COMPONENT
 
 export type SelectInputProps = {
-  onInputChange: (inputValue: string) => void;
+  onInputChange: (e: ChangeEvent<HTMLInputElement>) => void;
   inputValue: string;
   debounceInputUpdate: boolean;
   handleKeyPress: KeyDownHandler;

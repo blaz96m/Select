@@ -2,67 +2,136 @@ import { useCallback } from "react";
 import { filter, isEmpty, isFunction, some } from "lodash";
 
 import { DEFAULT_SELECT_PLACEHOLDER } from "src/Select/utils/constants";
-import {
-  SelectContainer,
-  SelectInput,
-  SelectValue,
-  SelectTopSection,
-  OptionList,
-  SelectOption,
-  SelectValueSection,
-  SelectIndicatorSection,
-  SelectDropdownIndicator,
-  SelectClearIndicator,
-  SelectCategory,
-  SelectLoader,
-} from "src/Select/components";
+
+import SelectContainer from "src/Select/components/SelectContainer";
+import SelectInput from "src/Select/components/SelectInput";
+import SelectValue from "src/Select/components/SelectValue";
+import SelectTopSection from "src/Select/components/SelectTopSection";
+import SelectOptionList from "src/Select/components/SelectOptionList";
+import SelectOption from "src/Select/components/SelectOption";
+import SelectValueSection from "src/Select/components/SelectValueSection";
+import SelectIndicatorSection from "src/Select/components/SelectIndicatorSection";
+import SelectDropdownIndicator from "src/Select/components/SelectDropdownIndicator";
+import SelectClearIndicator from "src/Select/components/SelectClearIndicator";
+import SelectCategory from "src/Select/components/SelectCategory";
+import SelectLoader from "src/Select/components/SelectLoader";
 
 import {
   SelectCategoryT,
   CustomSelectEventHandlers,
-  SelectOptionList,
+  SelectOptionList as SelectOptionListT,
   SelectOptionT,
   EventHandlerFollowupFunctions,
 } from "src/Select/types/selectGeneralTypes";
 
-import { SelectApi, SelectAsyncApi } from "src/Select/types/selectStateTypes";
+import { SelectComponentProps } from "src/Select/types/selectComponentTypes";
 
-import { SelectProps } from "src/Select/types/selectComponentTypes";
+import "src/Select/styles/select.css";
 
-import "src/Select/styles/_select.scss";
-
-import { useSelectEventHandlerResolver } from "src/Select/hooks";
-import { useSelectCustomComponentsHandler } from "src/general/hooks";
-
-type SelectComponentProps = Omit<
-  SelectProps,
-  "customComponents" | "classNames" | "refs"
-> & {
-  selectApi: SelectApi;
-  selectAsyncApi: SelectAsyncApi;
-  customSelectEventHandlers: CustomSelectEventHandlers;
-  eventHandlerFollowups: EventHandlerFollowupFunctions;
-};
+import {
+  useSelectEventHandlerResolver,
+  useSelectCustomComponentsHandler,
+  useSelect,
+  useSelectAsync,
+} from "src/Select/hooks";
 
 const Select = ({
-  isMultiValue,
-  isLoading,
-  isOptionDisabled,
-  selectApi,
-  selectAsyncApi,
-  customSelectEventHandlers,
-  eventHandlerFollowups,
-  debounceInputUpdate = false,
-  clearValueOnInputChange = true,
-  clearInputOnIdicatorClick = true,
-  hasInput = true,
+  labelKey,
+  sortFunction,
+  fetchFunction,
+  recordsPerPage,
   removeSelectedOptionsFromList = true,
-  showClearIndicator = true,
-  categoryKey = "",
+  defaultSelectOptions,
+  onChange,
+  closeDropdownOnSelect,
+  setIsOpen: customSetIsOpen,
+  preventInputUpdate,
+  inputFilterFunction,
+  optionFilter,
+  value,
+  setSelectOptions: customSetSelectOptions,
+  onClearIndicatorClick,
+  onKeyDown,
+  onValueClear,
+  onScrollToBottom,
+  onOptionClick,
+  onInputChange,
+  onDropdownClick,
+  onAfterValueClear,
+  onAfterScrollToBottom,
+  onAfterOptionClick,
+  onAfterInputChange,
+  onAfterDropdownClick,
+  onAfterClearIndicatorClick,
+  isOpen: customIsOpen,
+  categoryKey,
+  isOptionDisabled,
+  selectOptions: customSelectOptions,
+  isLoading,
+  page: customPage,
+  setPage: customSetPage,
+  setInputValue: customSetInputValue,
+  clearInputOnSelect,
+  inputValue: customInputValue,
   placeholder = DEFAULT_SELECT_PLACEHOLDER,
-  labelKey = "name",
+  isDisabled = false,
+  showClearIndicator = true,
+  clearValueOnInputChange = true,
+  useAsync = false,
+  debounceInputUpdate = false,
+  inputUpdateDebounceDuration = 500,
   isCategorized = false,
+  clearInputOnIdicatorClick = true,
+  updateSelectOptionsAfterFetch = true,
+  lazyInit = false,
+  fetchOnScroll = false,
+  isMultiValue = false,
+  hasInput = true,
+  fetchOnInputChange = false,
 }: SelectComponentProps) => {
+  const customState = {
+    customInputValue,
+    customIsOpen,
+    customSelectOptions,
+    customPage,
+  };
+
+  const customStateSetters = {
+    customSetIsOpen,
+    customSetSelectOptions,
+    customSetInputValue,
+    setValue: onChange,
+    customSetPage,
+  };
+
+  const selectApi = useSelect({
+    isMultiValue,
+    labelKey,
+    isCategorized,
+    defaultSelectOptions,
+    value,
+    debounceInputUpdate,
+    inputUpdateDebounceDuration,
+    optionFilter,
+    preventInputUpdate,
+    clearValueOnInputChange,
+    useAsync,
+    clearInputOnIdicatorClick,
+    sortFunction,
+    customState,
+    customStateSetters,
+    fetchOnScroll,
+    recordsPerPage,
+    fetchOnInputChange,
+    hasInput,
+    clearInputOnSelect,
+    removeSelectedOptionsFromList,
+    categoryKey,
+    isLoading,
+    closeDropdownOnSelect,
+    inputFilterFunction,
+  });
+
   const {
     selectDomRefs,
     displayedOptions,
@@ -70,22 +139,59 @@ const Select = ({
     selectFocusHandlers,
     selectFocusState,
     selectState,
+    closeDropdown,
   } = selectApi;
+
+  const { selectAsyncApi } = useSelectAsync(selectApi, {
+    isLazyInit: lazyInit,
+    updateSelectOptionsAfterFetch,
+    inputUpdateDebounceDuration,
+    useAsync,
+    recordsPerPage,
+    fetchOnInputChange,
+    fetchOnScroll,
+    isLoading,
+    fetchFunction,
+  });
 
   const { fetchOnScrollToBottom } = selectAsyncApi;
 
-  const { inputRef, selectListContainerRef } = selectDomRefs;
+  const { inputRef, selectListContainerRef, selectTopRef } = selectDomRefs;
 
-  const { isOpen, inputValue, value } = selectState;
+  const { isOpen, inputValue, value: selectValue } = selectState;
 
   const { resetFocus, isOptionFocused, handleOptionHover } =
     selectFocusHandlers;
 
   const { focusedOptionCategory, focusedOptionIndex } = selectFocusState;
 
+  const isLastPage =
+    useAsync && fetchOnScroll
+      ? selectAsyncApi.isLastPage
+      : selectApi.isLastPage;
+
+  const customSelectEventHandlers: CustomSelectEventHandlers = {
+    onClearIndicatorClick,
+    onDropdownClick,
+    onInputChange,
+    onOptionClick,
+    onScrollToBottom,
+    onValueClear,
+    onKeyDown,
+  };
+
+  const selectEventHandlerFollowups: EventHandlerFollowupFunctions = {
+    onAfterClearIndicatorClick,
+    onAfterDropdownClick,
+    onAfterInputChange,
+    onAfterOptionClick,
+    onAfterScrollToBottom,
+    onAfterValueClear,
+  };
+
   const selectEventHandlers = useSelectEventHandlerResolver(
     customSelectEventHandlers,
-    eventHandlerFollowups,
+    selectEventHandlerFollowups,
     selectApi,
     selectAsyncApi,
     {
@@ -164,7 +270,7 @@ const Select = ({
         isFunction(isOptionDisabled) && isOptionDisabled(option);
       const isSelected =
         !removeSelectedOptionsFromList &&
-        some(value, (val) => val.id == option.id);
+        some(selectValue, (val) => val.id == option.id);
       return handleOptionRender(
         option,
         index,
@@ -173,7 +279,7 @@ const Select = ({
         isSelected
       );
     },
-    [handleOptionRender, isOptionFocused, isOptionDisabled, value]
+    [handleOptionRender, isOptionFocused, isOptionDisabled, selectValue]
   );
 
   const renderOptionFromCategory = useCallback(
@@ -181,7 +287,7 @@ const Select = ({
       option: SelectOptionT,
       index: number,
       focusedOptionIdx: number | null,
-      selectedOptions: SelectOptionList | null
+      selectedOptions: SelectOptionListT | null
     ) => {
       const isFocused = focusedOptionIdx === index;
       const isDisabled =
@@ -208,8 +314,8 @@ const Select = ({
       const isCategoryFocused = categoryName === focusedOptionCategory;
       const focusedOptionIdx = isCategoryFocused ? focusedOptionIndex : -1;
       const selectedOptionsInCategory = filter(
-        value,
-        (val) => val[categoryKey] === categoryName
+        selectValue,
+        (val) => val[categoryKey!] === categoryName
       );
 
       return (
@@ -230,12 +336,16 @@ const Select = ({
         />
       );
     },
-    [focusedOptionCategory, focusedOptionIndex, isOptionDisabled, value]
+    [focusedOptionCategory, focusedOptionIndex, isOptionDisabled, selectValue]
   );
 
   return (
     <Select.Container>
-      <Select.Top onClick={handleDropdownClick}>
+      <Select.Top
+        ref={selectTopRef}
+        isDisabled={isDisabled}
+        onClick={handleDropdownClick}
+      >
         <Select.ValueSection isMultiValue={isMultiValue}>
           <Select.Value
             labelKey={labelKey}
@@ -246,7 +356,7 @@ const Select = ({
             placeholder={placeholder}
             inputValue={inputValue}
             onClear={handleValueClearClick}
-            value={value}
+            value={selectValue}
           />
           {hasInput && (
             <Select.Input
@@ -289,6 +399,9 @@ const Select = ({
       {isOpen && (
         <Select.OptionList
           handleScrollToBottom={handleScrollToBottom}
+          selectTopRef={selectTopRef}
+          isLastPage={isLastPage}
+          closeDropdown={closeDropdown}
           ref={selectListContainerRef}
           customComponentRenderer={
             customComponentRenderers.handleCustomOptionListRender
@@ -312,5 +425,5 @@ Select.Value = SelectValue;
 Select.Input = SelectInput;
 Select.DropdownIndicator = SelectDropdownIndicator;
 Select.ClearIndicator = SelectClearIndicator;
-Select.OptionList = OptionList;
+Select.OptionList = SelectOptionList;
 export default Select;

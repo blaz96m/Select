@@ -10,7 +10,7 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     setupFiles: "./src/tests/setup.ts",
-  },
+  } /*
   build: {
     lib: {
       entry: resolve(__dirname, "src/main.ts"),
@@ -27,5 +27,5 @@ export default defineConfig({
         },
       },
     },
-  },
+  },*/,
 } as UserConfig);

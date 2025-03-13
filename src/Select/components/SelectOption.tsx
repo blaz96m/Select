@@ -3,7 +3,7 @@ import clsx from "clsx";
 import { SelectOptionProps } from "src/Select/types/selectComponentTypes";
 import { isFunction } from "lodash";
 import { resolveClassNames } from "src/Select/utils";
-import { useSelectContext } from "src/Select/components/SelectProvider";
+import { useSelectContext } from "src/Select/context";
 import { FALLBACK_CATEGORY_NAME } from "src/Select/utils/constants";
 
 const SelectOption = memo((props: SelectOptionProps) => {
@@ -59,7 +59,7 @@ const SelectOption = memo((props: SelectOptionProps) => {
     [optionClassName]: true,
     [optionDisabledClassName]: isDisabled,
     [optionSelectedClassName]: isSelected,
-    [optionFocusedClassName]: isFocused,
+    [optionFocusedClassName]: isFocused && !isDisabled,
   });
 
   const refCallback = (node: HTMLDivElement | null) => {
@@ -87,10 +87,11 @@ const SelectOption = memo((props: SelectOptionProps) => {
       data-selected={isSelected}
       data-testid="select-option"
       data-focused={isFocused}
+      data-disabled={isDisabled}
       ref={refCallback}
       id={optionId}
       className={className}
-      onClick={() => onClick(option, isSelected)}
+      onClick={() => onClick(option, isSelected, isDisabled)}
     >
       {option[labelKey]}
     </div>

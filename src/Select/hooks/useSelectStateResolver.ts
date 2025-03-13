@@ -1,4 +1,4 @@
-import { concat, filter, isFunction } from "lodash";
+import { concat, filter, isFunction, update } from "lodash";
 import { useCallback } from "react";
 import {
   SelectOptionList,
@@ -161,7 +161,7 @@ const useSelectStateResolver = (
     (clearedOptionId: keyof SelectOptionT) => {
       const updatedValue = filter(
         value,
-        (val: SelectOptionT) => val.id !== clearedOptionId
+        (val: SelectOptionT) => val.id != clearedOptionId
       );
       setValue(updatedValue);
     },

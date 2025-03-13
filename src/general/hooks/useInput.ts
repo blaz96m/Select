@@ -3,7 +3,10 @@ import { useCallback, useEffect, useState, ChangeEvent, useRef } from "react";
 import { isAsyncFunction } from "src/general/utils/general";
 
 const useInput = (
-  onInputUpdate?: (inputValue: string, ...args: any) => void | number,
+  onInputUpdate?: (
+    e: ChangeEvent<HTMLInputElement>,
+    ...args: any
+  ) => void | number,
   cancelInputUpdate?: (
     e: ChangeEvent<HTMLInputElement>,
     newValue: string,
@@ -33,9 +36,7 @@ const useInput = (
       e.preventDefault();
       return;
     }
-    isFunction(onInputUpdate)
-      ? onInputUpdate(e.target.value)
-      : setInput(inputValue);
+    isFunction(onInputUpdate) ? onInputUpdate(e) : setInput(inputValue);
   };
 
   useEffect(() => {
