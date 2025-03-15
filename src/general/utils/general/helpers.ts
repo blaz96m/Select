@@ -1,4 +1,4 @@
-import { isFunction, isNil } from "lodash";
+import { isFunction, isNil } from "lodash-es";
 
 export const isAsyncFunction = (fn: () => any) =>
   isFunction(fn) && fn?.constructor?.name === "AsyncFunction";

@@ -14,7 +14,7 @@ import {
   first,
   isNumber,
   isFunction,
-} from "lodash";
+} from "lodash-es";
 import {
   SelectOptionList,
   CategorizedSelectOptions,

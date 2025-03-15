@@ -25,7 +25,7 @@ import {
   CustomState,
   CustomStateSetters,
 } from "src/Select/types/selectStateTypes";
-import { isEmpty, isFunction, isNil, isNumber, slice, trim } from "lodash";
+import { isEmpty, isFunction, isNil, isNumber, slice, trim } from "lodash-es";
 import {
   categorizeOptions,
   filterOptionList,

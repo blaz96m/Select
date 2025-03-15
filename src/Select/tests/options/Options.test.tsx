@@ -11,7 +11,7 @@ import {
   SELECT_TOP_TESTID,
   defaultSelectProps,
 } from "../utils/testingUtils";
-import { head } from "lodash";
+import { head } from "lodash-es";
 
 const DEFAULT_RECORDS_PER_PAGE = 10;
 

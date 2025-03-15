@@ -12,7 +12,7 @@ import {
   SELECT_TOP_TESTID,
   defaultSelectProps,
 } from "../utils/testingUtils";
-import { head } from "lodash";
+import { head } from "lodash-es";
 import {} from "vitest/dist/chunks/suite.qtkXWc6R.js";
 
 const DEFAULT_RECORDS_PER_PAGE = 20;

@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { filter, isEmpty, isFunction, some } from "lodash";
+import { filter, isEmpty, isFunction, some } from "lodash-es";
 
 import { DEFAULT_SELECT_PLACEHOLDER } from "src/Select/utils/constants";
 

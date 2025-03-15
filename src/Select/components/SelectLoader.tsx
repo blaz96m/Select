@@ -1,5 +1,5 @@
 import { useSelectContext } from "src/Select/context/SelectProvider";
-import { isFunction } from "lodash";
+import { isFunction } from "lodash-es";
 
 const SelectLoader = () => {
   const context = useSelectContext();

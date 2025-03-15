@@ -1,4 +1,4 @@
-import { isEmpty, isNumber, isObject } from "lodash";
+import { isEmpty, isNumber, isObject } from "lodash-es";
 import { MouseEvent, RefObject, useCallback, useState } from "react";
 import {
   CategorizedSelectOptions,

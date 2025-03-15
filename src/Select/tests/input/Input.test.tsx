@@ -14,7 +14,7 @@ import {
   defaultSelectProps,
 } from "../utils/testingUtils";
 
-import { every, head, toLower } from "lodash";
+import { every, head, toLower } from "lodash-es";
 
 describe("Select Input", () => {
   it("Select Input is not rendered if the hasInputProp is false", () => {

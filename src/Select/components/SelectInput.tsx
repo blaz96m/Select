@@ -1,5 +1,5 @@
 import { memo, forwardRef, useRef, useImperativeHandle } from "react";
-import { isFunction } from "lodash";
+import { isFunction } from "lodash-es";
 
 import { SelectInputProps } from "src/Select/types/selectComponentTypes";
 import { useInput } from "src/general/hooks";

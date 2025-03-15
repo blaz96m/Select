@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { SelectProps } from "src/Select/types/selectComponentTypes";
-import { every } from "lodash";
+import { every } from "lodash-es";
 import { getObjectKeys } from "src/utils/data-types/objects/helpers";
 import { SelectProvider } from "../context";
 import { SelectComponent } from "src/Select/components";

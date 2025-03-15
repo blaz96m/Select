@@ -1,7 +1,7 @@
 import { SelectMultiValueProps } from "src/Select/types/selectComponentTypes";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTimes } from "@fortawesome/free-solid-svg-icons";
-import { isFunction } from "lodash";
+import { isFunction } from "lodash-es";
 import { useSelectContext } from "src/Select/context/SelectProvider";
 import { resolveClassNames } from "../utils";
 import { MouseEvent } from "react";

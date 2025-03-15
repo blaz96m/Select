@@ -11,7 +11,7 @@ import {
   SINGLE_VALUE_TESTID,
   defaultSelectProps,
 } from "../utils/testingUtils";
-import { head } from "lodash";
+import { head } from "lodash-es";
 
 describe("Select Value", () => {
   it("Select value shows up when clicking an option", async () => {

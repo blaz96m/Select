@@ -1,4 +1,4 @@
-import { isEmpty, isFunction, isNumber } from "lodash";
+import { isEmpty, isFunction, isNumber } from "lodash-es";
 import {
   useCallback,
   useReducer,

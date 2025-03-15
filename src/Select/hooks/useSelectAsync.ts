@@ -1,4 +1,4 @@
-import { filter, find, isEmpty } from "lodash";
+import { filter, find, isEmpty } from "lodash-es";
 import { useCallback, useEffect } from "react";
 import {
   SelectOptionT,

@@ -1,7 +1,7 @@
 import { memo, MouseEvent } from "react";
 import clsx from "clsx";
 import { SelectOptionProps } from "src/Select/types/selectComponentTypes";
-import { isFunction } from "lodash";
+import { isFunction } from "lodash-es";
 import { resolveClassNames } from "src/Select/utils";
 import { useSelectContext } from "src/Select/context";
 import { FALLBACK_CATEGORY_NAME } from "src/Select/utils/constants";

@@ -1,7 +1,7 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronUp } from "@fortawesome/free-solid-svg-icons/faChevronUp";
 import { faChevronDown } from "@fortawesome/free-solid-svg-icons/faChevronDown";
-import { isFunction } from "lodash";
+import { isFunction } from "lodash-es";
 import clsx from "clsx";
 import { useSelectContext } from "src/Select/context";
 import { SelectDropdownIndicatorProps } from "src/Select/types/selectComponentTypes";

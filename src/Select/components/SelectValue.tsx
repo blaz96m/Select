@@ -1,4 +1,4 @@
-import { map, isEmpty, head } from "lodash";
+import { map, isEmpty, head } from "lodash-es";
 import { ValueClearClickHandler } from "src/Select/types/selectGeneralTypes";
 import {
   SelectSingleValueProps,

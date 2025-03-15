@@ -5,7 +5,7 @@ import {
   useImperativeHandle,
   useRef,
 } from "react";
-import { isEmpty, isFunction, map } from "lodash";
+import { isEmpty, isFunction, map } from "lodash-es";
 import {
   SelectOptionList as SelectOptionListT,
   SelectOptionT,

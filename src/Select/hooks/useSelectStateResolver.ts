@@ -1,4 +1,4 @@
-import { concat, filter, isFunction, update } from "lodash";
+import { concat, filter, isFunction, update } from "lodash-es";
 import { useCallback } from "react";
 import {
   SelectOptionList,

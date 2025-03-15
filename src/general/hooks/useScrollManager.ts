@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef } from "react";
-import { isFunction } from "lodash";
+import { isFunction } from "lodash-es";
 import { RefObject } from "react";
 import {
   isScrolledToTheStart,

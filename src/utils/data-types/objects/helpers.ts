@@ -6,7 +6,7 @@ import {
   isString,
   isNumber,
   isBoolean,
-} from "lodash";
+} from "lodash-es";
 
 export const concatObjects = (
   obj1: { [key: string]: any },

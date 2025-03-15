@@ -1,4 +1,4 @@
-import { isFunction } from "lodash";
+import { isFunction } from "lodash-es";
 import { KeyboardEvent, MouseEvent, useCallback, ChangeEvent } from "react";
 
 import {
@@ -91,7 +91,6 @@ const useSelectEventHandlerResolver = (
     (option: SelectOptionT, isSelected: boolean, isDisabled: boolean) => {
       if (isFunction(onOptionClick)) {
         onOptionClick(option, isSelected, isDisabled);
-        // Keep the focus logic due to its state being controlled.
         closeDropdownOnSelect && resetFocus();
       } else {
         defaultEventHandlers.handleOptionClick(option, isSelected, isDisabled);
