@@ -30,6 +30,7 @@ const SelectOptionList = memo(
       renderFunction,
       displayedOptions,
       selectTopRef,
+      disableCloseOnOutsideClick,
       handleScrollToBottom,
       closeDropdown,
       isLastPage,
@@ -76,7 +77,9 @@ const SelectOptionList = memo(
 
     const preventScroll = isLastPage() || isLoading;
 
-    const bottomScrollActions = { onArrive: handleScrollToBottom };
+    const bottomScrollActions = {
+      onArrive: { handler: handleScrollToBottom, prevent: preventScroll },
+    };
 
     const handleOutsideClick = useCallback((e: MouseEvent) => {
       const target = e.target as Node;
@@ -86,8 +89,13 @@ const SelectOptionList = memo(
         closeDropdown();
       }
     }, []);
+
     useImperativeHandle(ref, () => resolvedRef.current!);
-    useOutsideClickHandler<HTMLDivElement>(resolvedRef, handleOutsideClick);
+    useOutsideClickHandler<HTMLDivElement>(
+      resolvedRef,
+      handleOutsideClick,
+      disableCloseOnOutsideClick
+    );
     useScrollManager<HTMLDivElement>(
       resolvedRef,
       bottomScrollActions,

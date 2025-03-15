@@ -59,7 +59,7 @@ const SelectOption = memo((props: SelectOptionProps) => {
     [optionClassName]: true,
     [optionDisabledClassName]: isDisabled,
     [optionSelectedClassName]: isSelected,
-    [optionFocusedClassName]: isFocused && !isDisabled,
+    [optionFocusedClassName]: isFocused,
   });
 
   const refCallback = (node: HTMLDivElement | null) => {

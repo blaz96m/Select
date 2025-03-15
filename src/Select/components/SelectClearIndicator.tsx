@@ -1,5 +1,5 @@
 import { SelectClearIndicatorProps } from "src/Select/types/selectComponentTypes";
-import { faClose } from "@fortawesome/free-solid-svg-icons";
+import { faClose } from "@fortawesome/free-solid-svg-icons/faClose";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { isFunction } from "lodash";
 import clsx from "clsx";
@@ -33,7 +33,7 @@ const SelectClearIndicator = ({
       onClick={handleClearIndicatorClick}
       className={className}
     >
-      <FontAwesomeIcon icon={faClose} />
+      <FontAwesomeIcon icon={faClose} size="lg" />
     </div>
   );
 };

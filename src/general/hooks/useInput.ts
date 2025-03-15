@@ -1,4 +1,4 @@
-import { isFunction, isNil, isNumber } from "lodash";
+import { isFunction, isNil, isNumber } from "lodash-es";
 import { useCallback, useEffect, useState, ChangeEvent, useRef } from "react";
 import { isAsyncFunction } from "src/general/utils/general";
 
@@ -40,8 +40,8 @@ const useInput = (
   };
 
   useEffect(() => {
+    let timeoutId: number | undefined;
     if (inputEffectTriggerEnabled) {
-      let timeoutId: number | undefined;
       if (isInitialRef.current) {
         isInitialRef.current = false;
       } else {
@@ -55,12 +55,11 @@ const useInput = (
           }
         }
       }
-
-      if (isNumber(timeoutId)) {
-        return () => clearTimeout(timeoutId);
-      }
     }
-  }, [inputValue]);
+    if (isNumber(timeoutId)) {
+      return () => clearTimeout(timeoutId);
+    }
+  }, [inputValue, inputEffectTriggerEnabled]);
 
   return [inputValue, onInputChange];
 };

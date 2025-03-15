@@ -72,6 +72,7 @@ export type RequestConfig = {
   fetchOnInit: boolean;
   recordsPerPage: number;
   fetchOnInputChange: boolean;
+  fetchOnPageChange: boolean;
   inputFetchDeboubceDuration: number;
   preventFetchOnInputChange?: (searchQuery: string) => boolean;
 };
@@ -222,13 +223,14 @@ const useQueryManager = <ResponseItemT>(
     const abortController = new AbortController();
     const signal = abortController.signal;
     const requestConfig = getRequestConfig();
-    const { isDisabled, fetchOnInit } = requestConfig;
+    const { isDisabled, fetchOnInit, fetchOnPageChange } = requestConfig;
 
     const pageChangeTriggeredByInput =
       searchQuery !== previousSearchQueryValueRef.current;
 
     const preventFetchOnPageChange =
       isDisabled ||
+      (!fetchOnPageChange && !isInitialFetch()) ||
       pageChangeTriggeredByInput ||
       (isInitialFetch() && !fetchOnInit) ||
       isLoading;

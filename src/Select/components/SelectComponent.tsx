@@ -78,6 +78,7 @@ const Select = ({
   showClearIndicator = true,
   clearValueOnInputChange = true,
   useAsync = false,
+  disableCloseOnOutsideClick = false,
   debounceInputUpdate = false,
   inputUpdateDebounceDuration = 500,
   isCategorized = false,
@@ -90,6 +91,7 @@ const Select = ({
   fetchOnInputChange = false,
 }: SelectComponentProps) => {
   const customState = {
+    value,
     customInputValue,
     customIsOpen,
     customSelectOptions,
@@ -109,7 +111,6 @@ const Select = ({
     labelKey,
     isCategorized,
     defaultSelectOptions,
-    value,
     debounceInputUpdate,
     inputUpdateDebounceDuration,
     optionFilter,
@@ -358,21 +359,21 @@ const Select = ({
             onClear={handleValueClearClick}
             value={selectValue}
           />
-          {hasInput && (
-            <Select.Input
-              onInputChange={handleInputChange}
-              debounceInputUpdate={debounceInputUpdate}
-              inputValue={inputValue}
-              handleKeyPress={handleKeyDown}
-              customComponentRenderer={
-                customComponentRenderers.handleCustomInputRender
-              }
-              handleOptionsFilter={selectApi.handleOptionsFilter}
-              preventInputUpdate={selectApi.preventInputUpdate}
-              isLoading={isLoading}
-              ref={inputRef}
-            />
-          )}
+
+          <Select.Input
+            hasInput={hasInput}
+            onInputChange={handleInputChange}
+            debounceInputUpdate={debounceInputUpdate}
+            inputValue={inputValue}
+            handleKeyPress={handleKeyDown}
+            customComponentRenderer={
+              customComponentRenderers.handleCustomInputRender
+            }
+            handleOptionsInputFilter={selectApi.handleOptionsInputFilter}
+            preventInputUpdate={selectApi.preventInputUpdate}
+            isLoading={isLoading}
+            ref={inputRef}
+          />
         </Select.ValueSection>
         <Select.IndicatorSection
           isLoading={isLoading}
@@ -399,6 +400,7 @@ const Select = ({
       {isOpen && (
         <Select.OptionList
           handleScrollToBottom={handleScrollToBottom}
+          disableCloseOnOutsideClick={disableCloseOnOutsideClick}
           selectTopRef={selectTopRef}
           isLastPage={isLastPage}
           closeDropdown={closeDropdown}

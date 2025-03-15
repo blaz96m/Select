@@ -6,6 +6,7 @@ import { useInput } from "src/general/hooks";
 import { resolveClassNames, resolveRefs } from "src/Select/utils";
 
 import { useSelectContext } from "src/Select/context/SelectProvider";
+import clsx from "clsx";
 
 const SelectInput = memo(
   forwardRef<HTMLInputElement, SelectInputProps>((props, ref) => {
@@ -13,12 +14,13 @@ const SelectInput = memo(
       customComponentRenderer,
       onInputChange,
       handleKeyPress,
+      hasInput,
       ...otherProps
     } = props;
 
     const {
       inputValue,
-      handleOptionsFilter,
+      handleOptionsInputFilter,
       preventInputUpdate,
       debounceInputUpdate,
       isLoading,
@@ -39,6 +41,11 @@ const SelectInput = memo(
     const resolvedRef = resolveRefs(innerRef, customInputRef);
 
     const className = resolveClassNames("select__input", customClass);
+
+    const inputClassName = clsx({
+      [className]: true,
+      hidden: !hasInput,
+    });
     const containerClassName = resolveClassNames(
       "select__input__wrapper",
       customContainerClass
@@ -50,7 +57,7 @@ const SelectInput = memo(
       onInputChange,
       preventInputUpdate,
       debounceInputUpdate,
-      handleOptionsFilter,
+      handleOptionsInputFilter,
       inputValue
     );
 
@@ -58,10 +65,11 @@ const SelectInput = memo(
       const props = {
         ...otherProps,
         inputValue,
+        hasInput,
         className,
         containerClassName,
         ref: resolvedRef,
-        handleOptionsFilter,
+        handleOptionsInputFilter,
         onInputChange,
         handleKeyPress,
         preventInputUpdate,
@@ -73,7 +81,7 @@ const SelectInput = memo(
       <div className={containerClassName}>
         <input
           data-testid="select-input"
-          className={className}
+          className={inputClassName}
           onChange={handleInputChange}
           value={inputValue}
           disabled={isLoading}

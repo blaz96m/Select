@@ -47,6 +47,7 @@
   width: auto;
   pointer-events: none;
   flex-wrap: wrap;
+  background: transparent;
   max-width: 100%;
   border: 0;
   outline: none;
@@ -85,7 +86,7 @@
   margin: 0;
   user-select: none;
   color: #888888;
-  font-weight: 800;
+  font-weight: 700;
   text-transform: uppercase;
   cursor: pointer;
   font-size: 13px;
@@ -111,9 +112,11 @@
 
 .select__spinner {
   width: 20px;
+  margin-left: 7px;
   height: 20px;
   border: 2px solid #dddddd;
   border-radius: 50%;
+  border-bottom-color: #1e90ff;
   display: inline-block;
   box-sizing: border-box;
   animation: rotation 1s linear infinite;
@@ -163,6 +166,7 @@
 
 .select__value--icon__container svg {
   color: black;
+
   transition: 0.2s linear;
 }
 
@@ -197,6 +201,10 @@
   align-items: center;
 }
 
+.select__loader {
+  display: flex;
+}
+
 .select__input__wrapper {
   flex-grow: 1;
   overflow: hidden;
@@ -210,6 +218,7 @@
   margin-top: 5px;
   max-height: 270px;
   overflow-y: auto;
+  overscroll-behavior: contain;
   width: 100%;
 }
 
@@ -237,24 +246,29 @@
   will-change: background, transform;
   backface-visibility: hidden;
 }
+.select__option--disabled {
+  cursor: default;
+  background-color: rgba(204, 204, 204, 0.384);
+  opacity: 0.6;
+}
+
+.select__option--focused {
+  background-color: rgba(158, 207, 253, 0.384);
+  color: black;
+}
+
+.select__option--disabled.select__option--focused {
+  background-color: rgba(150, 180, 250, 0.5);
+  cursor: not-allowed;
+}
 
 .select__option--selected {
   background-color: #6cbffa;
   color: white;
 }
 
-.select__option--disabled {
-  cursor: default;
-  background-color: rgba(204, 204, 204, 0.384);
-  opacity: 0.6;
-}
-.select__option--disabled:hover {
-  background-color: rgba(204, 204, 204, 0.384);
-  color: black;
-}
-
-.select__option--focused {
-  background-color: #c3e5fd;
+.select__option--selected.select__option--focused {
+  background-color: #95d1fc;
   color: white;
 }
 

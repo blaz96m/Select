@@ -49,8 +49,8 @@ export type SelectApi = {
   selectStateUpdaters: SelectStateUpdaters;
   selectFocusState: SelectFocusState;
   selectFocusHandlers: SelectFocusHandlers;
-  handleOptionsFilter: (inputValue: string) => void;
-  usesInputAsync: boolean;
+  handleOptionsInputFilter: (inputValue: string) => void;
+  usesInputAsync: boolean | undefined;
   onOptionSelect: (
     isSelected: boolean,
     option: SelectOptionT,
@@ -106,15 +106,16 @@ export type SelectFocusApi = {
 
 export type CustomStateSetters = {
   setValue: StateSetter<SelectOptionList>;
-  customSetInputValue: StateSetter<string> | undefined;
-  customSetSelectOptions: StateSetter<SelectOptionList> | undefined;
-  customSetIsOpen: StateSetter<boolean> | undefined;
-  customSetPage: StateSetter<number> | undefined;
+  customSetInputValue?: StateSetter<string> | undefined;
+  customSetSelectOptions?: StateSetter<SelectOptionList> | undefined;
+  customSetIsOpen?: StateSetter<boolean> | undefined;
+  customSetPage?: StateSetter<number> | undefined;
 };
 
 export type CustomState = {
-  customInputValue: string | undefined;
-  customSelectOptions: SelectOptionList | undefined;
-  customIsOpen: boolean | undefined;
-  customPage: number | undefined;
+  value: SelectOptionList;
+  customInputValue?: string | undefined;
+  customSelectOptions?: SelectOptionList | undefined;
+  customIsOpen?: boolean | undefined;
+  customPage?: number | undefined;
 };

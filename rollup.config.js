@@ -6,6 +6,7 @@ import terser from "@rollup/plugin-terser";
 import peerDepsExternal from "rollup-plugin-peer-deps-external";
 import alias from "@rollup/plugin-alias";
 import postcss from "rollup-plugin-postcss";
+import { visualizer } from "rollup-plugin-visualizer";
 import path from "path";
 
 const projectRootDir = path.resolve(__dirname);
@@ -45,8 +46,10 @@ export default [
       resolve(),
       commonjs(),
       postcss(),
-
       terser(),
+      visualizer({
+        open: true,
+      }),
     ],
     external: ["react", "react-dom", "react/jsx-runtime"],
   },

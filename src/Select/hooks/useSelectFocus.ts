@@ -20,7 +20,7 @@ import {
 
 type SelectProps = {
   displayedOptions: SelectOptionList | CategorizedSelectOptions;
-  isCategorized: boolean;
+  isCategorized?: boolean;
   categoryKey?: string;
   getSelectOptionsMap: () => Map<string, HTMLDivElement>;
   selectListContainerRef: RefObject<HTMLDivElement>;

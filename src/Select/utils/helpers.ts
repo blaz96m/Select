@@ -53,7 +53,7 @@ export const filterOptionListBySearchValue = (
 export const filterOptionList = (
   options: SelectOptionList,
   value: SelectOptionList,
-  removeSelectedOptionsFromList: boolean,
+  removeSelectedOptionsFromList?: boolean,
   customOptionFilter?: SelectOptionFilter
 ): SelectOptionList => {
   const valueIds = map(value, (val) => val.id);

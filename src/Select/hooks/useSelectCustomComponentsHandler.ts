@@ -107,10 +107,7 @@ const useSelectCustomComponentsHandler = (
 
   const handleCustomInputRender = useCallback(
     (
-      selectInputProps: Omit<
-        SelectInputProps,
-        "customComponentRenderer" | "hasInput"
-      > & {
+      selectInputProps: Omit<SelectInputProps, "customComponentRenderer"> & {
         className: string;
         containerClassName: string;
         ref: RefObject<HTMLInputElement>;
@@ -203,7 +200,7 @@ const useSelectCustomComponentsHandler = (
 
       const innerProps = {
         ref: refCallback,
-        id: option.id,
+        id: String(option.id),
         onClick: () => onClick(option, isSelected, isDisabled),
         className,
         "data-selected": isSelected,

@@ -50,6 +50,8 @@ const useSelectAsync = (
 
   const { inputValue, selectOptions, isOpen, page } = selectState;
 
+  const fetchOnPageChange = useAsync && fetchOnScroll;
+
   const updateSelectOptions = useCallback(
     async (response: ResponseDetails<SelectOptionT>) => {
       const { data, params } = response;
@@ -89,6 +91,7 @@ const useSelectAsync = (
       recordsPerPage,
       inputFetchDeboubceDuration: inputUpdateDebounceDuration,
       fetchOnInputChange,
+      fetchOnPageChange: useAsync && fetchOnPageChange,
     }
   );
 

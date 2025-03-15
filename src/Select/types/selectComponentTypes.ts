@@ -117,6 +117,7 @@ export type SelectComponentProps = {
   clearValueOnInputChange?: boolean;
   debounceInputUpdate?: boolean;
   inputUpdateDebounceDuration?: number;
+  disableCloseOnOutsideClick?: boolean;
   inputValue?: string;
   categoryKey?: keyof SelectOptionT & string;
   clearInputOnSelect?: boolean;
@@ -217,7 +218,7 @@ export type SelectOptionInnerProps = {
   "data-selected": boolean;
   key: string | number;
   ref: React.LegacyRef<HTMLDivElement>;
-  id: string | number;
+  id: string;
   className: string;
 };
 
@@ -239,6 +240,7 @@ export type SelectOptionListProps = {
   displayedOptions: SelectOptionList | CategorizedSelectOptions;
   renderFunction: SelectCategoryComponent | SelectOptionRenderer;
   customComponentRenderer: CustomSelectOptionListRenderer;
+  disableCloseOnOutsideClick: boolean;
   closeDropdown: () => void;
   selectTopRef: RefObject<HTMLDivElement>;
   isCategorized?: boolean;
@@ -330,8 +332,9 @@ export type SelectInputProps = {
   onInputChange: (e: ChangeEvent<HTMLInputElement>) => void;
   inputValue: string;
   debounceInputUpdate: boolean;
+  hasInput: boolean;
   handleKeyPress: KeyDownHandler;
-  handleOptionsFilter: (inputValue: string) => void;
+  handleOptionsInputFilter: (inputValue: string) => void;
   customComponentRenderer: CustomSelectInputRenderer;
   preventInputUpdate: PreventInputUpdate;
   isLoading?: boolean;

@@ -37,9 +37,7 @@ export type ClearIndicatorClickHanlder = (
 ) => void;
 
 export type ValueClearClickHandler = (
-  /* eslint-disable-next-line*/
   e: React.MouseEvent<HTMLDivElement>,
-  /* eslint-disable-next-line*/
   option: SelectOptionT
 ) => void;
 

@@ -8,38 +8,45 @@ import {
   isScrollingUp,
 } from "src/general/utils/dom";
 
+type ScrollAction = {
+  handler: (...args: any) => void;
+  prevent?: boolean;
+};
+
 type ScrollActions = {
-  onArrive?: ((...args: any) => void) | null;
-  onLeave?: ((...args: any) => void) | null;
+  onArrive?: ScrollAction;
+  onLeave?: ScrollAction;
 };
 
 const INIFNITE_SCROLL_THROTTLE_AMOUNT = 350;
 
 const useScrollManager = <T extends HTMLElement>(
   targetRef: RefObject<T>,
-  bottomActions: ScrollActions = { onArrive: null, onLeave: null },
-  topActions: ScrollActions = { onArrive: null, onLeave: null },
+  bottomActions: ScrollActions = { onArrive: undefined, onLeave: undefined },
+  topActions: ScrollActions = { onArrive: undefined, onLeave: undefined },
   preventScroll?: boolean,
   captureEnabled = true
 ) => {
   const applyAction = (
     e: WheelEvent,
-    action?: (() => void) | null,
+    action?: ScrollAction,
     throttleAfterActionExecution = true
   ) => {
     // THROTTLE AFTER INFINITE SCROLL LOAD
-    const now = Date.now();
-    if (throttleAfterActionExecution) {
-      if (
-        now - lastScrollTimeRef.current < INIFNITE_SCROLL_THROTTLE_AMOUNT &&
-        throttleAfterActionExecution
-      ) {
-        return e.preventDefault();
+    if (action?.prevent) {
+      const now = Date.now();
+      if (throttleAfterActionExecution) {
+        if (
+          now - lastScrollTimeRef.current < INIFNITE_SCROLL_THROTTLE_AMOUNT &&
+          throttleAfterActionExecution
+        ) {
+          return e.preventDefault();
+        }
+        lastScrollTimeRef.current = Date.now();
       }
-      lastScrollTimeRef.current = Date.now();
     }
-    if (isFunction(action)) {
-      action();
+    if (isFunction(action?.handler)) {
+      action.handler();
       e.preventDefault();
     }
   };
@@ -89,10 +96,14 @@ const useScrollManager = <T extends HTMLElement>(
       }
     },
     [
-      bottomActions.onArrive,
-      bottomActions.onLeave,
-      topActions.onArrive,
-      topActions.onLeave,
+      bottomActions.onArrive?.handler,
+      bottomActions.onArrive?.prevent,
+      bottomActions.onLeave?.handler,
+      bottomActions.onLeave?.prevent,
+      topActions.onArrive?.handler,
+      topActions.onArrive?.prevent,
+      topActions.onLeave?.handler,
+      topActions.onLeave?.prevent,
       captureEnabled,
       preventScroll,
     ]
