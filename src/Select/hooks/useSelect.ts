@@ -63,7 +63,6 @@ const useSelect = (selectProps: {
   recordsPerPage?: number;
   isLoading?: boolean | undefined;
   isCategorized?: boolean;
-
   inputFilterFunction?: (
     selectOptions: SelectOptionList,
     inputValue: string

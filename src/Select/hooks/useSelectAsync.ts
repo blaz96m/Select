@@ -8,9 +8,6 @@ import { SelectApi, SelectAsyncApi } from "src/Select/types/selectStateTypes";
 
 import { useQueryManager } from "src/general/hooks";
 import { ResponseDetails } from "src/general/hooks/useQueryManager";
-import { QueryManagerState } from "src/general/stores/queryManagerReducer";
-
-type SelectAsyncState = Pick<QueryManagerState, "searchQuery" | "page">;
 
 const useSelectAsync = (
   selectApi: SelectApi,
@@ -25,7 +22,7 @@ const useSelectAsync = (
     isLazyInit?: boolean;
     fetchOnScroll?: boolean;
   }
-): { selectAsyncApi: SelectAsyncApi; selectAsyncState: SelectAsyncState } => {
+): { selectAsyncApi: SelectAsyncApi } => {
   const {
     fetchFunction,
     fetchOnInputChange,
@@ -50,7 +47,7 @@ const useSelectAsync = (
 
   const { inputValue, selectOptions, isOpen, page } = selectState;
 
-  const fetchOnPageChange = useAsync && fetchOnScroll;
+  const fetchOnScrollToBottom = useAsync && fetchOnScroll;
 
   const updateSelectOptions = useCallback(
     async (response: ResponseDetails<SelectOptionT>) => {
@@ -67,7 +64,7 @@ const useSelectAsync = (
         const selectOptionListNode =
           selectDomRefs.selectListContainerRef.current;
         if (isEmpty(originalOptions) && updateSelectOptionsAfterFetch) {
-          // Set the original options only once in case the user wants to use frontend pagination, will not work properly if fetch on scroll is enabled
+          // Get a reference of all original options for frontend pagination, will not work if fetch on scroll or fetch on input is enabled
           setOriginalOptions(data);
         }
         if (selectOptionListNode && selectOptionListNode.scrollTop) {
@@ -91,11 +88,9 @@ const useSelectAsync = (
       recordsPerPage,
       inputFetchDeboubceDuration: inputUpdateDebounceDuration,
       fetchOnInputChange,
-      fetchOnPageChange: useAsync && fetchOnPageChange,
+      fetchOnPageChange: useAsync && fetchOnScrollToBottom,
     }
   );
-
-  const fetchOnScrollToBottom = useAsync && fetchOnScroll;
 
   const { isLastPage, fetch, isInitialFetch } = queryManagerApi;
 
@@ -119,7 +114,7 @@ const useSelectAsync = (
     loadNextPageAsync,
   };
 
-  return { selectAsyncApi, selectAsyncState: queryManagerState };
+  return { selectAsyncApi };
 };
 
 export default useSelectAsync;
