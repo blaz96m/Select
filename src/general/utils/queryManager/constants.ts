@@ -5,7 +5,7 @@ export const REQUEST_CONFIG_DEFAULT_VALUES: RequestConfig = {
   fetchOnInit: true,
   defaultSort: "",
   recordsPerPage: 15,
-  inputFetchDeboubceDuration: 500,
+  inputFetchDeboubceDuration: 600,
   fetchOnInputChange: true,
   fetchOnPageChange: true,
 };

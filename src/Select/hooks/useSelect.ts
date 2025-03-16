@@ -206,6 +206,7 @@ const useSelect = (selectProps: {
     categoryKey,
     getSelectOptionsMap,
     selectListContainerRef,
+    removeSelectedOptionsFromList,
   });
 
   const { focusedOptionCategory, focusedOptionIndex } = selectFocusState;

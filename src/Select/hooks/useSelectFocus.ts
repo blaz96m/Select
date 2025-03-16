@@ -24,6 +24,7 @@ type SelectProps = {
   categoryKey?: string;
   getSelectOptionsMap: () => Map<string, HTMLDivElement>;
   selectListContainerRef: RefObject<HTMLDivElement>;
+  removeSelectedOptionsFromList: boolean;
 };
 
 const useSelectFocus = (selectProps: SelectProps): SelectFocusApi => {
@@ -39,6 +40,7 @@ const useSelectFocus = (selectProps: SelectProps): SelectFocusApi => {
     categoryKey,
     getSelectOptionsMap,
     selectListContainerRef,
+    removeSelectedOptionsFromList,
   } = selectProps;
 
   const handleScrollToFocusedOption = useCallback((optionId: string) => {
@@ -151,11 +153,39 @@ const useSelectFocus = (selectProps: SelectProps): SelectFocusApi => {
     [handleOptionFocusChange, focusedOptionIndex, focusedOptionCategory]
   );
 
+  const isLastOptionInList = () => {
+    if (isCategorized) {
+      const categorizedOptions = displayedOptions as CategorizedSelectOptions;
+      const categories = getObjectKeys(categorizedOptions);
+      const categoryOptionsLength =
+        categorizedOptions[focusedOptionCategory].length;
+      return categories.length === 1 && categoryOptionsLength === 1;
+    }
+    return displayedOptions.length === 1;
+  };
+
+  const isLastOptionFocused = () => {
+    if (isCategorized) {
+      const categorizedOptions = displayedOptions as CategorizedSelectOptions;
+      const categoryOptions = categorizedOptions[focusedOptionCategory];
+      return categoryOptions.length - 1 === focusedOptionIndex;
+    }
+    const listOptions = displayedOptions as SelectOptionList;
+    return listOptions.length - 1 === focusedOptionIndex;
+  };
+
   const handleOptionFocusOnSelectByKeyPress = useCallback(
     (
       direction: SelectKeyboardNavigationDirection = "next",
       fallbackDirection: SelectFocusNavigationFallbackDirection = "previous"
     ) => {
+      if (
+        isLastOptionInList() ||
+        (removeSelectedOptionsFromList && !isLastOptionFocused())
+      ) {
+        return;
+      }
+
       handleOptionFocusChange(
         direction,
         focusedOptionIndex,

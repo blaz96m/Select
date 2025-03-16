@@ -1,4 +1,5 @@
 .select__container {
+  width: 350px;
   display: flex;
   flex-direction: column;
   position: relative;
@@ -144,13 +145,16 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-  font-size: 15px;
   position: relative;
+  overflow: hidden;
   cursor: pointer;
 }
 
-.select__value--multi span {
+.select-multi-value__label {
   padding: 3px;
+  max-width: 200px;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 
 .select__value--icon__container {

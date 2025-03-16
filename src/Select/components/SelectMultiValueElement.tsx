@@ -46,7 +46,9 @@ const SelectMultiValueElement = (props: SelectMultiValueProps) => {
   }
   return (
     <div data-testid="select-multi-value" className={className}>
-      <span>{valueLabel}</span>
+      <div className="select-multi-value__label">
+        <span>{valueLabel}</span>
+      </div>
       <div
         className={iconContainerClassName}
         data-testid="select-multi-value-clear"
