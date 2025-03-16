@@ -1,6 +1,6 @@
 {
   "name": "select-ui",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "type": "module",
   "files": [
     "dist"
@@ -28,8 +28,7 @@
     "clsx": "^2.1.1",
     "lodash-es": "^4.17.21",
     "node": "^22.8.0",
-    "rollup": "^4.35.0",
-    "yalc": "^1.0.0-pre.53"
+    "rollup": "^4.35.0"
   },
   "peerDependencies": {
     "react": ">=18.0.0",
