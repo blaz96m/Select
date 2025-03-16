@@ -2,13 +2,8 @@ import { memo } from "react";
 import { SelectProps } from "src/Select/types/selectComponentTypes";
 import { every } from "lodash-es";
 import { getObjectKeys } from "src/utils/data-types/objects/helpers";
-import { SelectProvider } from "../context";
+import { SelectProvider } from "src/Select/context";
 import { SelectComponent } from "src/Select/components";
-import "@fortawesome/fontawesome-svg-core/styles.css";
-import { config } from "@fortawesome/fontawesome-svg-core";
-
-// Prevent FontAwesome from dynamically injecting CSS
-config.autoAddCss = false;
 
 const arePropsEqual = (oldProps: SelectProps, newProps: SelectProps) => {
   return every(getObjectKeys(oldProps), (propName: keyof SelectProps) => {

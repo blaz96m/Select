@@ -38,7 +38,7 @@ export const SelectDropdownIndicator = ({
   }
   return (
     <div className={className}>
-      <FontAwesomeIcon icon={isOpen ? faChevronUp : faChevronDown} size="lg" />
+      <FontAwesomeIcon icon={isOpen ? faChevronUp : faChevronDown} />
     </div>
   );
 };

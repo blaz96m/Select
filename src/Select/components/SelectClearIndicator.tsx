@@ -33,7 +33,7 @@ const SelectClearIndicator = ({
       onClick={handleClearIndicatorClick}
       className={className}
     >
-      <FontAwesomeIcon icon={faClose} size="lg" />
+      <FontAwesomeIcon icon={faClose} />
     </div>
   );
 };

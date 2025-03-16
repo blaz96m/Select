@@ -170,7 +170,7 @@
 
 .select__value--icon__container svg {
   color: black;
-
+  font-size: 16px;
   transition: 0.2s linear;
 }
 
@@ -207,6 +207,10 @@
 
 .select__loader {
   display: flex;
+}
+
+.svg-inline--fa {
+  font-size: 18px;
 }
 
 .select__input__wrapper {
