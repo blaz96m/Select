@@ -10,7 +10,7 @@ import {
 
 type ScrollAction = {
   handler: (...args: any) => void;
-  prevent?: boolean;
+  prevent?: boolean | ((scrollEvent?: WheelEvent) => boolean);
 };
 
 type ScrollActions = {
@@ -20,6 +20,14 @@ type ScrollActions = {
 
 const INIFNITE_SCROLL_THROTTLE_AMOUNT = 350;
 
+const shouldCancelScrollAction = (
+  action: ScrollAction,
+  scrollEvent: WheelEvent
+) => {
+  const { prevent } = action;
+  return isFunction(prevent) ? prevent(scrollEvent) : prevent;
+};
+
 const useScrollManager = <T extends HTMLElement>(
   targetRef: RefObject<T>,
   bottomActions: ScrollActions = { onArrive: undefined, onLeave: undefined },
@@ -27,35 +35,36 @@ const useScrollManager = <T extends HTMLElement>(
   preventScroll?: boolean,
   captureEnabled = true
 ) => {
-  const applyAction = (
+  const lastScrollTimeRef = useRef(0);
+  const handleScrollActionApply = (
     e: WheelEvent,
-    action?: ScrollAction,
+    action: ScrollAction,
     throttleAfterActionExecution = true
   ) => {
     // THROTTLE AFTER INFINITE SCROLL LOAD
-    if (action?.prevent) {
-      const now = Date.now();
-      if (throttleAfterActionExecution) {
-        if (
-          now - lastScrollTimeRef.current < INIFNITE_SCROLL_THROTTLE_AMOUNT &&
-          throttleAfterActionExecution
-        ) {
-          return e.preventDefault();
-        }
-        lastScrollTimeRef.current = Date.now();
-      }
+    if (shouldCancelScrollAction(action, e)) {
+      return;
     }
+
+    const now = Date.now();
+    if (throttleAfterActionExecution) {
+      if (now - lastScrollTimeRef.current < INIFNITE_SCROLL_THROTTLE_AMOUNT) {
+        return e.preventDefault();
+      }
+      lastScrollTimeRef.current = now;
+    }
+
     if (isFunction(action?.handler)) {
       action.handler();
       e.preventDefault();
     }
   };
 
-  const lastScrollTimeRef = useRef(0);
   const handleScroll = useCallback(
     (scrollEvent: WheelEvent, throttleAfterActionExecution = true) => {
       const target = targetRef.current;
       if (!target || !captureEnabled || preventScroll) {
+        scrollEvent.preventDefault();
         return;
       }
       const isScrolledToBottom = isScrolledToEnd(targetRef);
@@ -63,32 +72,32 @@ const useScrollManager = <T extends HTMLElement>(
 
       const userScrollingUp = isScrollingUp(scrollEvent);
       const userScrollingDown = isScrollingDown(scrollEvent);
-      if (isScrolledToBottom && userScrollingDown) {
-        applyAction(
+      if (isScrolledToBottom && userScrollingDown && bottomActions.onArrive) {
+        handleScrollActionApply(
           scrollEvent,
           bottomActions.onArrive,
           throttleAfterActionExecution
         );
       }
 
-      if (isScrolledToBottom && userScrollingUp) {
-        applyAction(
+      if (isScrolledToBottom && userScrollingUp && bottomActions.onLeave) {
+        handleScrollActionApply(
           scrollEvent,
           bottomActions.onLeave,
           throttleAfterActionExecution
         );
       }
 
-      if (isScrolledToTop && userScrollingUp) {
-        applyAction(
+      if (isScrolledToTop && userScrollingUp && topActions.onArrive) {
+        handleScrollActionApply(
           scrollEvent,
           topActions.onArrive,
           throttleAfterActionExecution
         );
       }
 
-      if (isScrolledToTop && userScrollingDown) {
-        applyAction(
+      if (isScrolledToTop && userScrollingDown && topActions.onLeave) {
+        handleScrollActionApply(
           scrollEvent,
           topActions.onLeave,
           throttleAfterActionExecution

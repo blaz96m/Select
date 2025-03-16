@@ -75,10 +75,10 @@ const SelectOptionList = memo(
       "select__options__wrapper--empty": isEmpty(displayedOptions),
     });
 
-    const preventScroll = isLastPage() || isLoading;
+    const preventScroll = isLoading;
 
     const bottomScrollActions = {
-      onArrive: { handler: handleScrollToBottom, prevent: preventScroll },
+      onArrive: { handler: handleScrollToBottom, prevent: isLastPage },
     };
 
     const handleOutsideClick = useCallback((e: MouseEvent) => {
