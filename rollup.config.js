@@ -45,9 +45,7 @@ export default [
       }),
       resolve(),
       commonjs(),
-      postcss({
-        extract: true,
-      }),
+      postcss(),
       terser(),
       visualizer({
         open: true,
