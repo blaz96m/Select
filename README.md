@@ -9,7 +9,7 @@ The goal of this project is to provide a scalable, customizable, and versatile S
 To get started, simply install the package via npm:
 
 ```sh
-npm i select-ui
+npm i react-select-ui
 ```
 
 Once installed, you can import the Select component in your project, and you are good to go.
@@ -54,4 +54,4 @@ const SingleValue = () => {
 export default SingleValue;
 ```
 
-You can learn more about checking out the docs here: https://selectui-docs.netlify.app/
+Please check out the docs for more info: https://selectui-docs.netlify.app/
