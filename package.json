@@ -22,9 +22,6 @@
     "url": "https://github.com/blaz96m/Select"
   },
   "dependencies": {
-    "@fortawesome/fontawesome-svg-core": "^6.6.0",
-    "@fortawesome/free-solid-svg-icons": "^6.6.0",
-    "@fortawesome/react-fontawesome": "^0.2.2",
     "clsx": "^2.1.1",
     "lodash-es": "^4.17.21",
     "node": "^22.8.0",

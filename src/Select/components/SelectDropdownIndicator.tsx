@@ -1,11 +1,9 @@
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faChevronUp } from "@fortawesome/free-solid-svg-icons/faChevronUp";
-import { faChevronDown } from "@fortawesome/free-solid-svg-icons/faChevronDown";
 import { isFunction } from "lodash-es";
 import clsx from "clsx";
 import { useSelectContext } from "src/Select/context";
 import { SelectDropdownIndicatorProps } from "src/Select/types/selectComponentTypes";
 import { resolveClassNames } from "src/Select/utils";
+import { SelectDropdownIndicatorIcon } from "src/Select/components";
 
 export const SelectDropdownIndicator = ({
   isOpen,
@@ -38,7 +36,7 @@ export const SelectDropdownIndicator = ({
   }
   return (
     <div className={className}>
-      <FontAwesomeIcon icon={isOpen ? faChevronUp : faChevronDown} />
+      <SelectDropdownIndicatorIcon isOpen={isOpen} />
     </div>
   );
 };

@@ -11,3 +11,5 @@ export { default as SelectDropdownIndicator } from "./SelectDropdownIndicator";
 export { default as SelectClearIndicator } from "./SelectClearIndicator";
 export { default as SelectCategory } from "./SelectCategory";
 export { default as SelectComponent } from "./SelectComponent";
+export { default as SelectDropdownIndicatorIcon } from "./SelectDropdownIndicatorIcon";
+export { default as SelectClearIndicatorIcon } from "./SelectClearIndicatorIcon";

@@ -10,6 +10,10 @@
   opacity: 0.5;
 }
 
+.icon__container {
+  display: flex;
+}
+
 .select__top__container {
   border: 1px solid #afafaf;
   border-radius: 7px;
@@ -287,7 +291,7 @@
 .select__indicator {
   height: 100%;
   width: 100%;
-  padding: 0.2rem 0.3rem;
+  padding: 0.2rem 0.26rem;
   color: rgb(151, 151, 151);
 }
 
