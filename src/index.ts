@@ -1,3 +1,4 @@
+import "src/Select/styles/select.css";
 export { Select } from "src/Select/main";
 export { useSelect, useSelectAsync } from "src/Select/hooks";
 export * from "src/Select/types/selectComponentTypes";

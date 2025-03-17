@@ -26,8 +26,6 @@ import {
 
 import { SelectComponentProps } from "src/Select/types/selectComponentTypes";
 
-import "src/Select/styles/select.css";
-
 import {
   useSelectEventHandlerResolver,
   useSelectCustomComponentsHandler,
