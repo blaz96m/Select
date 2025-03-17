@@ -1,50 +1,57 @@
-# React + TypeScript + Vite
+# Select UI
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+An elegant and lightweight React component designed for simplicity and performance.
 
-Currently, two official plugins are available:
+The goal of this project is to provide a scalable, customizable, and versatile Select component, designed to meet the needs of modern applications. As you explore the features, we hope you'll see how it can be tailored to fit a wide range of use cases.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Getting Started
 
-## Expanding the ESLint configuration
+To get started, simply install the package via npm:
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
-
-- Configure the top-level `parserOptions` property like this:
-
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+```sh
+npm i select-ui
 ```
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+Once installed, you can import the Select component in your project, and you are good to go.
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
+```sh
+import { useState } from "react";
+import { Select } from "react-select-ui";
 
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
+type Plant = {
+  id: number;
+  name: string;
+  type: string;
+};
+
+const options = [
+  { id: 1, name: "Orange", type: "fruit" },
+  { id: 2, name: "Lemon", type: "fruit" },
+  { id: 3, name: "Banana", type: "fruit" },
+  { id: 4, name: "Cherry", type: "fruit" },
+  { id: 5, name: "Peach", type: "fruit" },
+  { id: 6, name: "Onion", type: "vegetable" },
+  { id: 7, name: "Potato", type: "vegetable" },
+  { id: 8, name: "Broccoli", type: "vegetable" },
+  { id: 9, name: "Carrot", type: "vegetable" },
+  { id: 10, name: "Spinach", type: "vegetable" },
+];
+
+const SingleValue = () => {
+  const [value, setValue] = useState<Plant[]>([]);
+
+  return (
+    <Select
+      value={value}
+      defaultSelectOptions={options}
+      onChange={setValue}
+      labelKey="name"
+      hasInput={false}
+    />
+  );
+};
+
+export default SingleValue;
 ```
+
+You can learn more about checking out the docs here: https://selectui-docs.netlify.app/

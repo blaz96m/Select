@@ -155,9 +155,9 @@
 
 .select-multi-value__label {
   padding: 3px;
-  max-width: 200px;
   text-overflow: ellipsis;
   overflow: hidden;
+  font-size: 12px;
 }
 
 .select__value--icon__container {
