@@ -68,6 +68,6 @@ export default [
       }),
       dts.default(),
     ],
-    external: ["react", "react-dom", "react/jsx-runtime"],
+    external: [/\.css/, "react", "react-dom", "react/jsx-runtime"],
   },
 ];
