@@ -6,6 +6,8 @@ The goal of this project is to provide a scalable, customizable, and versatile S
 
 ## Getting Started
 
+⚠️ **Warning:** This project is compatible with React v18. Support for React v19 is not available yet.
+
 To get started, simply install the package via npm:
 
 ```sh
