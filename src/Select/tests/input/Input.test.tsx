@@ -17,16 +17,17 @@ import {
 import { every, head, toLower } from "lodash-es";
 
 describe("Select Input", () => {
-  it("Select Input is not rendered if the hasInputProp is false", () => {
-    const { container } = render(
+  it("Select Input is disabled if the hasInputProp is false", () => {
+    const { getByTestId } = render(
       <SelectTestApp {...defaultSelectProps} hasInput={false} />
     );
-    const selectInputElement = queryByAttribute(
-      "data-testid",
-      container,
+    const selectTopContainer = getByTestId(SELECT_TOP_TESTID);
+    const selectInputElement = getByTestId(
       SELECT_INPUT_TESTID
-    );
-    expect(selectInputElement).toBeNull();
+    ) as HTMLInputElement;
+    fireEvent.click(selectTopContainer);
+    fireEvent.change(selectInputElement, { target: { value: "Test" } });
+    expect(selectInputElement.value).toBe("");
   });
   it("Select Input is Displayed By Typing After Openning The Dropdown", () => {
     const { getByTestId } = render(<SelectTestApp {...defaultSelectProps} />);
